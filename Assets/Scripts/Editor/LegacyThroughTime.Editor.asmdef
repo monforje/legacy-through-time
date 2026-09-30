@@ -1,0 +1,11 @@
+{
+  "name": "LegacyThroughTime.Editor",
+  "rootNamespace": "LegacyThroughTime.Editor",
+  "references": [
+    "Unity.VisualStudio.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "autoReferenced": false
+}

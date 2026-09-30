@@ -112,3 +112,18 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# go-task checksum cache (sources:/generates:)
+.task/
+
+# Local object storage (S3 stand-in): build output of `task ink`, not source
+/buckets/
+# Copy of buckets/stories bundled into builds by AndroidBuild
+/[Aa]ssets/StreamingAssets/
+/[Aa]ssets/StreamingAssets.meta
+
+# Narrative engine test harness (dotnet): keep project files, drop build output
+!/Tests/**/*.csproj
+/Tests/**/bin/
+/Tests/**/obj/
+/.cache/

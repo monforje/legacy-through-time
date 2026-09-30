@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <AssemblyName>LegacyThroughTime.Narrative.Tests</AssemblyName>
+    <RootNamespace>LegacyThroughTime.Narrative.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <InkDir Condition="'$(InkDir)' == ''">$(INK_DIR)</InkDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="*.cs" />
+    <ProjectReference Include="Engine/Narrative.Engine.csproj" />
+    <!-- Reference oracle: the official ink runtime shipped with inklecate. -->
+    <Reference Include="ink-engine-runtime">
+      <HintPath>$(InkDir)/ink-engine-runtime.dll</HintPath>
+    </Reference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+  </ItemGroup>
+</Project>

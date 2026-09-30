@@ -1,0 +1,85 @@
+version: "3"
+
+vars:
+  UNITY: "{{.UNITY_EDITOR | default (print .HOME \"/Unity/Hub/Editor/6000.6.3f1/Editor/Unity\")}}"
+  ADB: "{{.HOME}}/Unity/Hub/Editor/6000.6.3f1/Editor/Data/PlaybackEngines/AndroidPlayer/SDK/platform-tools/adb"
+  APP_ID: com.dan.legacythroughtime
+  INK_IMAGE: legacy-through-time/inklecate
+  DOTNET_IMAGE: legacy-through-time/dotnet
+  DOTNET: docker run --rm --user "$(id -u):$(id -g)" -e NUGET_PACKAGES=/work/.cache/nuget -v "{{.ROOT_DIR}}:/work" {{.DOTNET_IMAGE}}
+
+tasks:
+  ink:
+    desc: Compile Ink stories content/stories/<story>/<episode>.ink -> buckets/stories/<story>/<episode>.json
+    vars:
+      # Root stories only: skip any .ink whose file name appears in an INCLUDE line.
+      INK_ROOTS:
+        sh: |
+          inc=$(grep -rhoE '^[[:space:]]*INCLUDE[[:space:]]+.+' content/stories --include='*.ink' | sed -E 's/^[[:space:]]*INCLUDE[[:space:]]+//; s/[[:space:]]+$//; s#.*/##' || true)
+          find content/stories -name '*.ink' | while IFS= read -r f; do
+            printf '%s\n' "$inc" | grep -qxF "$(basename "$f")" || echo "$f"
+          done
+    deps: [ink-image]
+    sources: ["content/stories/**/*.ink"]
+    generates: ["buckets/stories/**/*.json"]
+    cmds:
+      - for: { var: INK_ROOTS, split: "\n" }
+        cmd: |
+          out="buckets/{{.ITEM | trimPrefix "content/" | trimSuffix ".ink"}}.json"
+          mkdir -p "$(dirname "$out")"
+          docker run --rm --user "$(id -u):$(id -g)" -v "{{.ROOT_DIR}}:/work" {{.INK_IMAGE}} -o "$out" "{{.ITEM}}"
+
+  ink-image:
+    internal: true
+    sources: [docker/inklecate/Dockerfile]
+    status: ["docker image inspect {{.INK_IMAGE}} >/dev/null 2>&1"]
+    cmds: ["docker build -t {{.INK_IMAGE}} docker/inklecate"]
+
+  test:
+    desc: Narrative engine tests — differential vs the official ink runtime, machine properties, save/load
+    deps: [dotnet-image]
+    cmds:
+      - mkdir -p .cache/nuget
+      - "{{.DOTNET}} dotnet test Tests/Narrative --nologo -v q"
+
+  bench:
+    desc: Narrative engine vs official ink runtime on the real episode (time and allocations per line)
+    deps: [dotnet-image]
+    cmds:
+      - mkdir -p .cache/nuget
+      - "{{.DOTNET}} dotnet test Tests/Narrative -c Release --nologo -v q --filter Category=Benchmark --logger 'console;verbosity=detailed' | grep -E 'ms/op' | sort -u"
+
+  dotnet-image:
+    internal: true
+    deps: [ink-image]
+    sources: [docker/dotnet/Dockerfile]
+    status: ["docker image inspect {{.DOTNET_IMAGE}} >/dev/null 2>&1"]
+    cmds: ["docker build -t {{.DOTNET_IMAGE}} docker/dotnet"]
+
+  apk:
+    desc: Dev APK (IL2CPP debug C++, fastest to build) -> Builds/Android/game-dev.apk
+    deps: [ink]
+    cmds:
+      - task: unity
+        vars: { METHOD: Dev }
+
+  release:
+    desc: Release APK -> Builds/Android/game.apk
+    deps: [ink]
+    cmds:
+      - task: unity
+        vars: { METHOD: Release }
+
+  install:
+    desc: Install the dev APK on the connected phone and launch it
+    cmds:
+      - "{{.ADB}} install -r Builds/Android/game-dev.apk"
+      - "{{.ADB}} shell monkey -p {{.APP_ID}} -c android.intent.category.LAUNCHER 1 >/dev/null"
+
+  unity:
+    internal: true
+    preconditions:
+      - sh: test ! -e Temp/UnityLockfile
+        msg: "Unity Editor has this project open. Close it, or use the Build menu inside the editor."
+    cmds:
+      - "{{.UNITY}} -batchmode -nographics -quit -projectPath . -buildTarget Android -executeMethod LegacyThroughTime.Editor.AndroidBuild.{{.METHOD}} -logFile -"

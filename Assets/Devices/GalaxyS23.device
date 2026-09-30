@@ -1,0 +1,52 @@
+{
+  "friendlyName": "Samsung Galaxy S23",
+  "version": 1,
+  "screens": [
+    {
+      "width": 1080,
+      "height": 2340,
+      "navigationBarHeight": 0,
+      "dpi": 425.0,
+      "orientations": [
+        {
+          "orientation": 1,
+          "safeArea": { "serializedVersion": "2", "x": 0.0, "y": 0.0, "width": 1080.0, "height": 2256.0 },
+          "cutouts": [
+            { "serializedVersion": "2", "x": 497.0, "y": 2256.0, "width": 86.0, "height": 84.0 }
+          ]
+        }
+      ],
+      "presentation": {
+        "borderSize": { "x": 36.0, "y": 36.0, "z": 36.0, "w": 36.0 }
+      }
+    }
+  ],
+  "systemInfo": {
+    "deviceModel": "samsung SM-S911B",
+    "deviceType": 1,
+    "operatingSystem": "Android OS 14 / API-34",
+    "operatingSystemFamily": 0,
+    "processorCount": 8,
+    "processorFrequency": 3360,
+    "processorType": "ARM64 FP ASIMD AES",
+    "supportsAccelerometer": true,
+    "supportsAudio": true,
+    "supportsGyroscope": true,
+    "supportsLocationService": true,
+    "supportsVibration": true,
+    "systemMemorySize": 7456,
+    "graphicsDependentData": [
+      {
+        "graphicsDeviceType": 21,
+        "graphicsMemorySize": 2048,
+        "graphicsDeviceName": "Adreno (TM) 740",
+        "graphicsDeviceVendor": "Qualcomm",
+        "graphicsMultiThreaded": true,
+        "maxTextureSize": 16384,
+        "npotSupport": 2,
+        "supportsInstancing": true,
+        "supportsComputeShaders": true
+      }
+    ]
+  }
+}
