@@ -37,8 +37,13 @@ namespace LegacyThroughTime.Prototype
             tint = new BackdropTint(Stage.BuildBackground(canvas));
             host = new ScreenHost(this, canvas);
 
+            var loading = host.ShowLoading();
+            var started = Time.unscaledTime;
             yield return StoryFile.Read(StoryPath, text => json = text, Fail);
+            var rest = LoadingScreen.MinSeconds - (Time.unscaledTime - started);     // the logo is seen for a moment at least
+            if (rest > 0) yield return new WaitForSecondsRealtime(rest);
             if (json != null) Restart();
+            host.Hide(loading);
         }
 
         void Update()

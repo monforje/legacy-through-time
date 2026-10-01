@@ -10,12 +10,17 @@ namespace LegacyThroughTime.Editor
     public sealed class HeritageSpriteImporter : AssetPostprocessor
     {
         const string Dir = "Assets/Resources/Heritage/";
+        const string LogoDir = "Assets/Resources/Brand/";      // the loading-screen logo: one plain sprite
+        const string IconDir = "Assets/Art/Brand/";            // launcher icon layers: plain textures for PlayerSettings
         // PNGs are @4x; with the default Canvas reference of 100 ppu this gives 1 canvas unit = 1 px of the 360x780 layout.
         public const float PixelsPerUnit = 400f;
 
         void OnPreprocessTexture()
         {
-            if (!assetPath.StartsWith(Dir) || !assetPath.EndsWith(".png")) return;
+            if (!assetPath.EndsWith(".png")) return;
+            if (assetPath.StartsWith(LogoDir)) { ImportBrand(sprite: true); return; }
+            if (assetPath.StartsWith(IconDir)) { ImportBrand(sprite: false); return; }
+            if (!assetPath.StartsWith(Dir)) return;
 
             var importer = (TextureImporter)assetImporter;
             importer.textureType = TextureImporterType.Sprite;
@@ -38,6 +43,21 @@ namespace LegacyThroughTime.Editor
             if (TryReadBorder(Path.GetFileNameWithoutExtension(assetPath), out var border))
                 settings.spriteBorder = border;
             importer.SetTextureSettings(settings);
+        }
+
+        /// Brand art is not 9-sliced: the logo is a sprite at the size of its pixels / 100, the icon layers plain textures.
+        void ImportBrand(bool sprite)
+        {
+            var importer = (TextureImporter)assetImporter;
+            importer.textureType = sprite ? TextureImporterType.Sprite : TextureImporterType.Default;
+            if (sprite) importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = 400;                   // 1536 px wide -> 384 canvas units
+            importer.mipmapEnabled = sprite;
+            importer.filterMode = sprite ? FilterMode.Trilinear : FilterMode.Bilinear;
+            importer.alphaIsTransparency = true;
+            importer.npotScale = TextureImporterNPOTScale.None;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.maxTextureSize = 2048;
         }
 
         // Format of a slices.txt line: `name left bottom right top sliced|tiled fill_center`

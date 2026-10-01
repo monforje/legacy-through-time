@@ -1,0 +1,5 @@
+<!-- Adaptive icon, foreground layer 432x432. The system masks the outer third of the layer (the safe zone is the
+     central 61%), so the art is placed inside 264x264 in the middle. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="432" height="432" viewBox="0 0 432 432">
+  <image xlink:href="icon.png" x="84" y="84" width="264" height="264"/>
+</svg>

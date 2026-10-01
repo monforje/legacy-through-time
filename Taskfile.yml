@@ -91,6 +91,16 @@ tasks:
       - rm -f Assets/Resources/Heritage/*.png
       - cp {{.HERITAGE_DIR}}/png/*.png {{.HERITAGE_DIR}}/slices.txt Assets/Resources/Heritage/
 
+  assets:brand:
+    desc: Brand art - launcher icon layers (adaptive, round, legacy) -> Assets/Art/Brand, loading-screen logo -> Assets/Resources/Brand
+    deps: [svg-image]
+    cmds:
+      - mkdir -p Assets/Art/Brand Assets/Resources/Brand
+      - |
+        docker run --rm --user "$(id -u):$(id -g)" -v "{{.ROOT_DIR}}:/work" -w /work/{{.HERITAGE_DIR}}/brand {{.SVG_IMAGE}} sh -c '
+          for n in icon-bg icon-fg icon-legacy icon-round; do rsvg-convert "$n.svg" -o "/work/Assets/Art/Brand/$n.png"; done'
+      - cp {{.HERITAGE_DIR}}/brand/logo.png Assets/Resources/Brand/logo.png
+
   assets:test:
     desc: Heritage UI generator tests - SVGs well-formed, borders inside sprites, output reproducible, files up to date
     deps: [svg-image]

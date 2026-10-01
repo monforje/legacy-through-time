@@ -43,6 +43,11 @@ namespace LegacyThroughTime.Prototype
             return Current;
         }
 
+        /// The loading screen above everything; the caller hides it with `Hide(loading)` when the first screen is ready.
+        public LoadingScreen ShowLoading() => new LoadingScreen(overlay, overlayAnimator);
+
+        public void Hide(LoadingScreen loading) => owner.StartCoroutine(loading.Hide());
+
         /// A stat banner over whatever is on the screen; a new one replaces the old.
         public void Banner(string text)
         {

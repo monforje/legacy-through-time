@@ -37,6 +37,7 @@ namespace LegacyThroughTime.Editor
                     view.Dispose();
                 });
 
+            Guard(failures, "loading screen", () => new LoadingScreen(canvas, NoAnimator.Instance));
             WalkStory(canvas, failures);
 
             if (Art.Missing > 0) failures.Add($"{Art.Missing} missing sprite(s)/font(s)");

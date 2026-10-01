@@ -66,5 +66,18 @@ namespace LegacyThroughTime.Prototype.Tests
             var missing = named.Where(n => !existing.Contains(n)).ToList();
             Assert.That(missing, Is.Empty, "sprites used by the code but absent from Assets/Resources/Heritage");
         }
+
+        [Test]
+        public void TheBrandArtExists()
+        {
+            // the loading-screen logo and the launcher icon layers (task assets:brand)
+            foreach (var path in new[]
+            {
+                Project.Path_("Assets", "Resources", "Brand", "logo.png"),
+                Project.Path_("Assets", "Art", "Brand", "icon-bg.png"), Project.Path_("Assets", "Art", "Brand", "icon-fg.png"),
+                Project.Path_("Assets", "Art", "Brand", "icon-round.png"), Project.Path_("Assets", "Art", "Brand", "icon-legacy.png"),
+            })
+                Assert.That(File.Exists(path), Is.True, path + " (run `task assets:brand`)");
+        }
     }
 }

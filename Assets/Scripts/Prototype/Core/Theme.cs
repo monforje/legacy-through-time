@@ -11,6 +11,7 @@ namespace LegacyThroughTime.Prototype
         public static readonly Color Scarlet = Hex("E15654");
         public static readonly Color Backdrop = Hex("2F6B4F");      // stand-in for the painted background
 
+        public static readonly Color LoadingBackground = Hex("0B1F17");
         public static readonly Color TitleDimTop = Hex("1C2A22").WithAlpha(.5f);
         public static readonly Color TitleDimBottom = Hex("143020").WithAlpha(.85f);
 

@@ -25,6 +25,7 @@ namespace LegacyThroughTime.Editor
         static void Build(bool development, bool runOnDevice)
         {
             BundleStories();
+            BrandSettings.Apply();
             var android = NamedBuildTarget.Android;
             var projectConfig = PlayerSettings.GetIl2CppCompilerConfiguration(android);
 

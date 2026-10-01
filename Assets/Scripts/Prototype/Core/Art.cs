@@ -26,6 +26,25 @@ namespace LegacyThroughTime.Prototype
             return sprites[name] = s;
         }
 
+        /// The logo of the loading screen (Resources/Brand/logo.png: `task assets:brand`).
+        public static Sprite Logo
+        {
+            get
+            {
+                if (logo) return logo;
+                logo = Resources.Load<Sprite>("Brand/logo");
+                if (!logo)
+                {
+                    Missing++;
+                    Debug.LogError("Logo missing: Resources/Brand/logo.png (run `task assets:brand`)");
+                    logo = ProceduralArt.White;
+                }
+                return logo;
+            }
+        }
+
+        static Sprite logo;
+
         public static Font Font(string name)
         {
             if (fonts.TryGetValue(name, out var f) && f) return f;
