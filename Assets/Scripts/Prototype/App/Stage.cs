@@ -44,13 +44,16 @@ namespace LegacyThroughTime.Prototype
             return (RectTransform)go.transform;
         }
 
-        /// Flat colour (tinted per location in the story) and dark edges; returns the colour layer.
-        public static Image BuildBackground(RectTransform canvas)
+        /// Flat colour (the stand-in, tinted per location), two picture layers for the painted background (the new one
+        /// fades in over the old) and dark edges.
+        public static BackdropTint BuildBackground(RectTransform canvas)
         {
             var colour = Ui.Img(canvas, "Background", ProceduralArt.White);
             colour.color = Theme.Backdrop; Ui.Stretch(colour.rectTransform);
+            var back = Ui.Img(canvas, "PictureBack", null); back.enabled = false;
+            var front = Ui.Img(canvas, "PictureFront", null); front.enabled = false;
             Ui.Stretch(Ui.Img(canvas, "Vignette", ProceduralArt.Vignette()).rectTransform);
-            return colour;
+            return new BackdropTint(colour, back, front);
         }
     }
 }

@@ -26,6 +26,16 @@ namespace LegacyThroughTime.Prototype
             return sprites[name] = s;
         }
 
+        /// Painted background of a location (`# bg: id`, Resources/Art/Backgrounds/<id>.png); null when there is none yet.
+        public static Sprite Background(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            if (backgrounds.TryGetValue(id, out var s) && s) return s;
+            return backgrounds[id] = Resources.Load<Sprite>("Art/Backgrounds/" + id);
+        }
+
+        static readonly Dictionary<string, Sprite> backgrounds = new();
+
         /// The logo of the loading screen (Resources/Brand/logo.png: `task assets:brand`).
         public static Sprite Logo
         {

@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace LegacyThroughTime.Prototype
 {
-    /// Story and scene title between two ornamented brackets over a dimmed landscape.
+    /// Story and scene title between two ornamented brackets over the dimmed painted title background (BackdropTint "title").
     sealed class TitleCard
     {
         const float TopShare = .24f, BottomShare = .56f;       // where the brackets stand, as a share of the screen height
@@ -12,11 +12,6 @@ namespace LegacyThroughTime.Prototype
         {
             var dim = Ui.Img(parent, "Dim", ProceduralArt.Gradient(Theme.TitleDimTop, Theme.TitleDimBottom));
             Ui.Stretch(dim.rectTransform);
-
-            var land = Art.Sprite("title-land");
-            var native = Art.NativeSize(land);
-            var landscape = Ui.Img(parent, "Land", land);
-            Ui.BottomRow(landscape.rectTransform, 0, 0, 0, native.y * (Metrics.RefWidth / native.x));
 
             var box = Ui.Rect(parent, "Title");
             box.anchorMin = A.TopLeft; box.anchorMax = A.TopRight; box.pivot = A.TopCenter;

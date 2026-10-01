@@ -11,6 +11,7 @@ namespace LegacyThroughTime.Editor
     {
         const string Dir = "Assets/Resources/Heritage/";
         const string LogoDir = "Assets/Resources/Brand/";      // the loading-screen logo: one plain sprite
+        const string BgDir = "Assets/Resources/Art/Backgrounds/";   // painted scene backgrounds: plain sprites, compressed
         const string IconDir = "Assets/Art/Brand/";            // launcher icon layers: plain textures for PlayerSettings
         // PNGs are @4x; with the default Canvas reference of 100 ppu this gives 1 canvas unit = 1 px of the 360x780 layout.
         public const float PixelsPerUnit = 400f;
@@ -19,6 +20,7 @@ namespace LegacyThroughTime.Editor
         {
             if (!assetPath.EndsWith(".png")) return;
             if (assetPath.StartsWith(LogoDir)) { ImportBrand(sprite: true); return; }
+            if (assetPath.StartsWith(BgDir)) { ImportBackground(); return; }
             if (assetPath.StartsWith(IconDir)) { ImportBrand(sprite: false); return; }
             if (!assetPath.StartsWith(Dir)) return;
 
@@ -43,6 +45,22 @@ namespace LegacyThroughTime.Editor
             if (TryReadBorder(Path.GetFileNameWithoutExtension(assetPath), out var border))
                 settings.spriteBorder = border;
             importer.SetTextureSettings(settings);
+        }
+
+        /// Backgrounds are shown full-screen once at a time: no mip-maps, compressed (a 1080x1935 PNG is 8 MB raw).
+        void ImportBackground()
+        {
+            var importer = (TextureImporter)assetImporter;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = 100;
+            importer.mipmapEnabled = false;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.alphaIsTransparency = false;
+            importer.npotScale = TextureImporterNPOTScale.None;
+            importer.textureCompression = TextureImporterCompression.Compressed;
+            importer.maxTextureSize = 2048;
         }
 
         /// Brand art is not 9-sliced: the logo is a sprite at the size of its pixels / 100, the icon layers plain textures.

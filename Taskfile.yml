@@ -8,7 +8,7 @@ vars:
   DOTNET_IMAGE: legacy-through-time/dotnet
   SVG_IMAGE: legacy-through-time/svg
   QR_IMAGE: legacy-through-time/qr
-  REPO: monforje/legacy-through-time-builds
+  REPO: monforje/legacy-through-time
   APK_ASSET: game.apk
   HERITAGE_DIR: docs/brainstorm/templates/assets/heritage
   DOTNET: docker run --rm --user "$(id -u):$(id -g)" -e NUGET_PACKAGES=/work/.cache/nuget -v "{{.ROOT_DIR}}:/work" {{.DOTNET_IMAGE}}
@@ -175,7 +175,7 @@ tasks:
       - echo "{{.LINK}} -> Builds/qr.png"
 
   publish:
-    desc: Upload Builds/Android/game.apk as a new release of the public builds repo (the QR from `task qr` then serves it)
+    desc: Upload Builds/Android/game.apk as a new release of the repo (the QR from `task qr` then serves it)
     preconditions:
       - { sh: "test -f Builds/Android/{{.APK_ASSET}}", msg: "no APK - run `task release` first" }
     vars:

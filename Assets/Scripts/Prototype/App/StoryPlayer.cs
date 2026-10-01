@@ -34,7 +34,7 @@ namespace LegacyThroughTime.Prototype
             Stage.Setup();
             lastWidth = Screen.width; lastHeight = Screen.height;
             var canvas = Stage.BuildCanvas();
-            tint = new BackdropTint(Stage.BuildBackground(canvas));
+            tint = Stage.BuildBackground(canvas);
             host = new ScreenHost(this, canvas);
 
             var loading = host.ShowLoading();
@@ -69,6 +69,7 @@ namespace LegacyThroughTime.Prototype
         {
             Ended = false; lastPlate = null;
             machine = StoryMachine.FromJson(json);
+            tint.Set("title");
             host.Show(new Page { Id = "title", Title = new TitleSpec { Name = "Золотая клетка", Scene = "Эпизод 1" } },
                       new Bank(), () => { machine.Advance(); Present(); });
         }
