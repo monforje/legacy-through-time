@@ -12,6 +12,7 @@ namespace LegacyThroughTime.Editor
         const string Dir = "Assets/Resources/Heritage/";
         const string LogoDir = "Assets/Resources/Brand/";      // the loading-screen logo: one plain sprite
         const string BgDir = "Assets/Resources/Art/Backgrounds/";   // painted scene backgrounds: plain sprites, compressed
+        const string AudioDir = "Assets/Resources/Audio/";         // sounds of the story: see docs/audio
         const string IconDir = "Assets/Art/Brand/";            // launcher icon layers: plain textures for PlayerSettings
         // PNGs are @4x; with the default Canvas reference of 100 ppu this gives 1 canvas unit = 1 px of the 360x780 layout.
         public const float PixelsPerUnit = 400f;
@@ -45,6 +46,21 @@ namespace LegacyThroughTime.Editor
             if (TryReadBorder(Path.GetFileNameWithoutExtension(assetPath), out var border))
                 settings.spriteBorder = border;
             importer.SetTextureSettings(settings);
+        }
+
+        /// Music and ambience are long loops: streamed, not decoded into memory (a 2-minute stereo clip is 20 MB raw).
+        /// Ambience, effects and UI sounds are mono; effects and UI are short: decoded once and ready to play without delay.
+        void OnPreprocessAudio()
+        {
+            if (!assetPath.StartsWith(AudioDir)) return;
+            var importer = (AudioImporter)assetImporter;
+            var loop = assetPath.StartsWith(AudioDir + "music/") || assetPath.StartsWith(AudioDir + "ambience/");
+            var settings = importer.defaultSampleSettings;
+            settings.loadType = loop ? AudioClipLoadType.Streaming : AudioClipLoadType.DecompressOnLoad;
+            settings.compressionFormat = AudioCompressionFormat.Vorbis;
+            settings.quality = loop ? .4f : .5f;
+            importer.defaultSampleSettings = settings;
+            importer.forceToMono = !assetPath.StartsWith(AudioDir + "music/");   // only the music is stereo
         }
 
         /// Backgrounds are shown full-screen once at a time: no mip-maps, compressed (a 1080x1935 PNG is 8 MB raw).

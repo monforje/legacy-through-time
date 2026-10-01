@@ -127,3 +127,6 @@ InitTestScene*.unity*
 /Tests/**/bin/
 /Tests/**/obj/
 /.cache/
+
+# Python bytecode of the asset generators
+__pycache__/

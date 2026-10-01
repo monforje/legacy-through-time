@@ -12,6 +12,7 @@ namespace LegacyThroughTime.Prototype
         Color goal = Theme.Backdrop;
         string id;
         float fade = 1;
+        bool pending;          // the picture of the new location is still loading: the old one stays
         int width, height;
 
         public BackdropTint(Image colour, Image back, Image front)
@@ -22,22 +23,30 @@ namespace LegacyThroughTime.Prototype
         public void Set(string backgroundId)
         {
             if (backgroundId == id) return;
+            var previous = id;
             id = backgroundId;
             goal = string.IsNullOrEmpty(backgroundId) ? Theme.Backdrop : Theme.FromTone(Backdrops.For(backgroundId));
-            // what is on top now goes under, the new picture (if any) starts transparent on top
+            // what is on top now goes under, the new picture (if any) starts transparent on top once it is loaded
             back.sprite = front.sprite; back.enabled = front.enabled; back.color = front.color;
-            var sprite = Art.Background(backgroundId);
-            front.sprite = sprite; front.enabled = sprite != null;
+            front.sprite = null; front.enabled = false;
             front.color = new Color(1, 1, 1, 0);
-            fade = 0;
-            Cover(back); Cover(front);
+            fade = 0; pending = true;
+            Cover(back);
+            Art.Background(backgroundId, sprite =>
+            {
+                if (id != backgroundId) return;           // a newer location was asked for meanwhile
+                front.sprite = sprite; front.enabled = sprite != null;
+                fade = 0; pending = false;
+                Cover(front);
+                Art.KeepBackgrounds(backgroundId, previous);
+            });
         }
 
         public void Tick(float deltaTime)
         {
             colour.color = Color.Lerp(colour.color, goal, 1 - Mathf.Exp(-Speed * deltaTime));
             if (Screen.width != width || Screen.height != height) { Cover(back); Cover(front); }
-            if (fade >= 1) return;
+            if (pending || fade >= 1) return;
             fade = Mathf.Min(1, fade + deltaTime / FadeSeconds);
             front.color = new Color(1, 1, 1, front.sprite != null ? fade : 0);
             if (back.enabled) back.color = new Color(1, 1, 1, front.sprite != null ? 1 : 1 - fade);
@@ -50,7 +59,7 @@ namespace LegacyThroughTime.Prototype
             width = Screen.width; height = Screen.height;
             if (image.sprite == null) return;
             var size = image.sprite.rect.size;
-            var k = Mathf.Max(Metrics.RefWidth / size.x, Viewport.Height / size.y);
+            var k = Mathf.Max(Viewport.Width / size.x, Viewport.Height / size.y);
             var rect = image.rectTransform;
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
             rect.anchoredPosition = Vector2.zero;

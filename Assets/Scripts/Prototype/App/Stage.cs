@@ -5,8 +5,8 @@ using UnityEngine.UI;
 
 namespace LegacyThroughTime.Prototype
 {
-    /// Scene scaffolding shared by the screens demo and the story player: camera, input, a canvas that is 360
-    /// units wide on every aspect ratio, and the stand-in for the painted background.
+    /// Scene scaffolding shared by the screens demo and the story player: camera, input, a canvas that is at least
+    /// 360x780 units (Expand), and the stand-in for the painted background.
     static class Stage
     {
         public static void Setup()
@@ -39,8 +39,7 @@ namespace LegacyThroughTime.Prototype
             var scaler = go.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(Metrics.RefWidth, Metrics.RefHeight);
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 0;          // the layout is 360 wide on every aspect ratio
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;   // 360x780 always fits: taller screens add height, wider ones (tablet) add side room
             return (RectTransform)go.transform;
         }
 

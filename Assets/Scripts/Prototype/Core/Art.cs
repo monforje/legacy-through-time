@@ -26,12 +26,34 @@ namespace LegacyThroughTime.Prototype
             return sprites[name] = s;
         }
 
-        /// Painted background of a location (`# bg: id`, Resources/Art/Backgrounds/<id>.png); null when there is none yet.
-        public static Sprite Background(string id)
+        /// Painted background of a location (`# bg: id`, Resources/Art/Backgrounds/<id>.png), loaded in the background so that
+        /// a scene change does not stall a frame. `ready` gets null when there is no picture; it runs at once when it is cached.
+        public static void Background(string id, System.Action<Sprite> ready)
         {
-            if (string.IsNullOrEmpty(id)) return null;
-            if (backgrounds.TryGetValue(id, out var s) && s) return s;
-            return backgrounds[id] = Resources.Load<Sprite>("Art/Backgrounds/" + id);
+            if (string.IsNullOrEmpty(id)) { ready(null); return; }
+            if (backgrounds.TryGetValue(id, out var s) && s) { ready(s); return; }
+            var request = Resources.LoadAsync<Sprite>("Art/Backgrounds/" + id);
+            request.completed += _ => ready(backgrounds[id] = request.asset as Sprite);
+        }
+
+        /// Starts loading a background that is needed soon (the title) so that it is cached by then.
+        public static void Prefetch(string id) => Background(id, _ => { });
+
+        /// Unloads every cached background but `keep`: a 1080x1936 one holds about 1 MB of GPU memory, there are 47 of them.
+        public static void KeepBackgrounds(params string[] keep)
+        {
+            var drop = new List<string>();
+            foreach (var pair in backgrounds)
+                if (System.Array.IndexOf(keep, pair.Key) < 0) drop.Add(pair.Key);
+            foreach (var id in drop)
+            {
+                var sprite = backgrounds[id];
+                backgrounds.Remove(id);
+                if (!sprite) continue;
+                var texture = sprite.texture;
+                Resources.UnloadAsset(sprite);
+                Resources.UnloadAsset(texture);
+            }
         }
 
         static readonly Dictionary<string, Sprite> backgrounds = new();
