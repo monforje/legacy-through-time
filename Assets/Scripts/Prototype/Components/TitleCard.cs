@@ -11,7 +11,7 @@ namespace LegacyThroughTime.Prototype
         public TitleCard(Transform parent, TitleSpec spec, IAnimator anim)
         {
             var dim = Ui.Img(parent, "Dim", ProceduralArt.Gradient(Theme.TitleDimTop, Theme.TitleDimBottom));
-            Ui.Stretch(dim.rectTransform);
+            Ui.Bleed(dim.rectTransform);
 
             var box = Ui.Rect(parent, "Title");
             box.anchorMin = A.TopLeft; box.anchorMax = A.TopRight; box.pivot = A.TopCenter;

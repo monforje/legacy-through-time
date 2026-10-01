@@ -38,6 +38,17 @@ namespace LegacyThroughTime.Editor
                 });
 
             Guard(failures, "loading screen", () => new LoadingScreen(canvas, NoAnimator.Instance));
+            Guard(failures, "menu", () =>
+            {
+                foreach (var progress in new[] { StoryBoard.Progress.New, StoryBoard.Progress.InProgress, StoryBoard.Progress.Finished })
+                    Object.DestroyImmediate(new StoryBoard(canvas, StoryCatalog.All, _ => progress, (_, _) => { }, animated: false).Root.gameObject);
+            });
+            Guard(failures, "settings", () =>
+            {
+                var toast = new SettingsToast(canvas, NoAnimator.Instance);
+                toast.Open(() => { }); toast.Close();
+                Object.DestroyImmediate(SettingsToast.Gear(canvas, () => { }).gameObject);
+            });
             WalkStory(canvas, failures);
 
             if (Art.Missing > 0) failures.Add($"{Art.Missing} missing sprite(s)/font(s)");

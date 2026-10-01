@@ -1,7 +1,7 @@
 # Prototype — экраны чтения в стиле «Наследие»
 
 Весь UI чтения (облачко, варианты выбора, панели, баннеры, титул) строится кодом на uGUI. Ничего не лежит в сцене:
-`StoryPlayer` сам стартует в любой сцене и играет эпизод через движок `Narrative`; `SessionPrototype` — демо с
+`StoryPlayer` сам стартует в любой сцене: загрузка → меню (доска историй) → история через движок `Narrative`; `SessionPrototype` — демо с
 фиксированными экранами (его берут тесты). Дизайн и размеры: `docs/brainstorm/templates/heritage-ui-for-unity.md`.
 
 ## Устройство
@@ -14,16 +14,21 @@ Content/      чистый C# без Unity (тестируется в Docker: ta
   TextRules    неразрывные пробелы, КАПС -> предложение, баннер стата, тайминг печати по словам
   BeatMapper   бит истории -> экран (по соглашениям ink: Имя: текст, # thought, # system ...)
   Backdrops    тон фона по `# bg: id`        DemoFlow  экраны демо       Metrics  числа раскладки
+  StoryCatalog карточки меню: id, название, эпизод, описание, обложка-превью, путь к истории
 Core/         то, что нужно всем компонентам
-  Theme Viewport Art ProceduralArt   цвета, высота холста и вырезы, спрайты и шрифты, текстуры из кода
+  Theme Viewport Art ProceduralArt   цвета, размер холста (Expand: не меньше 360x780) и вырезы, спрайты и шрифты, текстуры из кода
+  Settings      звук вкл/выкл (PlayerPrefs, громкость слушателя)
   Ui            билдеры RectTransform/Image/Text      Interaction  PressButton, Tap
   Tween Easing Effects Animator      анимации на корутинах; IAnimator = «где они играются» (NoAnimator в тестах)
 Components/   по одному классу на элемент интерфейса, каждый строит себя и не знает про соседей
   PlateView (+PlateAnimator)  NameTag  TypedText  OptionButton  OptionStack  TimerDial
   SlidePanel  ChoicePanel  PickerPanel  BalancePill  StatBanner  InfoCloud  TitleCard
+  StoryBoard    главное меню: карточки историй с превью, «Читать / Продолжить / Начать сначала»
+  SettingsToast шестерёнка в углу и тост настроек: звук, «В меню»
   PageView      собирает экран из компонентов по Page; только связывает их (тап во время печати, выбор, конец)
 App/          сцена и жизненный цикл
   Stage ScreenHost StoryFile BackdropTint   каркас сцены, смена экранов и баннеры, чтение истории, цвет фона
+  SaveStore     сохранение на каждой показанной реплике (persistentDataPath/saves/<id>.json, атомарная запись)
   StoryPlayer SessionPrototype              два способа играть: история / демо
 ```
 

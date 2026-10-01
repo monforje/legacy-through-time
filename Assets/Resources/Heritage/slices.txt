@@ -2,7 +2,9 @@ banner 120 88 120 72 sliced 1
 btn-chosen 72 80 72 64 sliced 1
 btn-pressed 72 80 72 64 sliced 1
 btn 72 80 72 64 sliced 1
+card 104 120 104 104 sliced 1
 field 56 56 56 56 sliced 1
+frame 40 40 40 40 sliced 0
 info 128 128 128 128 tiled 1
 key-pressed 64 64 64 64 sliced 1
 key 64 64 64 64 sliced 1

@@ -8,6 +8,7 @@ vars:
   DOTNET_IMAGE: legacy-through-time/dotnet
   SVG_IMAGE: legacy-through-time/svg
   QR_IMAGE: legacy-through-time/qr
+  OXIPNG_IMAGE: legacy-through-time/oxipng
   REPO: monforje/legacy-through-time
   APK_ASSET: game.apk
   HERITAGE_DIR: docs/brainstorm/templates/assets/heritage
@@ -75,6 +76,12 @@ tasks:
       - docker run -d --rm --name ltt-mockups --user "$(id -u):$(id -g)" -p 8080:8080 -v "{{.ROOT_DIR}}/docs/brainstorm/templates:/www:ro" -w /www python:3.13-alpine python _serve.py >/dev/null
       - echo "http://localhost:8080/"
 
+  png:optimize:
+    desc: Lossless PNG recompression (oxipng, metadata stripped) for everything under Assets/ (or DIR=...)
+    cmds:
+      - docker image inspect {{.OXIPNG_IMAGE}} >/dev/null 2>&1 || docker build -t {{.OXIPNG_IMAGE}} docker/oxipng
+      - docker run --rm --user "$(id -u):$(id -g)" -v "{{.ROOT_DIR}}:/work" {{.OXIPNG_IMAGE}} -o 4 --strip safe -r {{.DIR | default "Assets"}}
+
   assets:png:
     desc: Heritage UI - regenerate SVG (build.py) and export @4x PNG + manifest.json (9-slice borders) -> docs/brainstorm/templates/assets/heritage/png
     deps: [svg-image]
@@ -93,6 +100,8 @@ tasks:
       - mkdir -p Assets/Resources/Heritage
       - rm -f Assets/Resources/Heritage/*.png
       - cp {{.HERITAGE_DIR}}/png/*.png {{.HERITAGE_DIR}}/slices.txt Assets/Resources/Heritage/
+      - task: png:optimize
+        vars: { DIR: Assets/Resources/Heritage }
 
   assets:brand:
     desc: Brand art - launcher icon layers (adaptive, round, legacy) -> Assets/Art/Brand, loading-screen logo -> Assets/Resources/Brand

@@ -40,7 +40,7 @@ namespace LegacyThroughTime.Prototype
 
             var catcher = Ui.Img(Root, "Tap", ProceduralArt.White);
             catcher.color = Color.clear; catcher.raycastTarget = true;
-            Ui.Stretch(catcher.rectTransform);
+            Ui.Bleed(catcher.rectTransform);                 // the side room of a tablet takes the tap too
             catcher.gameObject.AddComponent<Tap>().Click = OnTap;
 
             if (page.Title != null) { new TitleCard(Root, page.Title, anim); return; }

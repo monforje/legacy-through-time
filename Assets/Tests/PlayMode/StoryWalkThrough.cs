@@ -18,6 +18,7 @@ namespace LegacyThroughTime.PrototypeTests
         public IEnumerator TheEpisodeCanBePlayedToTheEnd()
         {
             var player = new GameObject("StoryPlayer").AddComponent<StoryPlayer>();
+            player.AutoStart = "golden-cage"; player.Persist = false;      // straight into the story, the reader's save untouched
             var stop = Time.realtimeSinceStartup + 400;
             var screens = 0;
             PageView last = null;

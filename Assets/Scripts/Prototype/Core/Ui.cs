@@ -28,6 +28,24 @@ namespace LegacyThroughTime.Prototype
             return r;
         }
 
+        /// Stretches over the whole canvas even from inside the 360-wide column (dims on a tablet must not end at the column).
+        public static RectTransform Bleed(RectTransform r)
+        {
+            var side = (Viewport.Width - Metrics.RefWidth) / 2;
+            return Stretch(r, -side, 0, -side, 0);
+        }
+
+        /// "Cover" fit of a picture in its parent (clip the parent with a RectMask2D): the box is filled, the overflow
+        /// cut; `focus` is the height of the picture (0 top .. 1 bottom) kept in the middle of the box when it can be.
+        public static void Cover(Image img, Vector2 box, float focus)
+        {
+            if (!img.sprite) return;
+            var size = img.sprite.rect.size;
+            size *= Mathf.Max(box.x / size.x, box.y / size.y);
+            var room = (size.y - box.y) / 2;
+            Box(img.rectTransform, A.Center, A.Center, new Vector2(0, Mathf.Clamp((focus - .5f) * size.y, -room, room)), size);
+        }
+
         /// Point-anchored box: `anchor` is both anchorMin and anchorMax.
         public static RectTransform Box(RectTransform r, Vector2 anchor, Vector2 pivot, Vector2 pos, Vector2 size)
         {
