@@ -1,0 +1,302 @@
+<!doctype html>
+<!-- Копия session-screens.html в стиле DESIGN.md («Наследие. Сквозь время»): стили в heritage.css.
+     Скелет экранов игровой сессии по образцу Your Story Interactive (refs: docs/brainstorm/refs/ysi-*.png).
+     Скелет: зелёный фон заменяет статичный арт с персонажами.
+     Текст взят из «Золотой клетки», эпизод 1. -->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Экраны игровой сессии — Наследие</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&family=Rubik:wght@500;600;700&family=Russo+One&display=swap&subset=cyrillic">
+<link rel="stylesheet" href="heritage.css">
+<style>
+  .row { row-gap: 32px; }
+  figcaption { max-width: calc(var(--w) * var(--scale)); line-height: 1.4; }
+  figcaption b { color: var(--fg); }
+  .fig-tools { display: flex; gap: 8px; }
+
+  /* Окно с кодом экрана */
+  .code-dlg {
+    width: min(900px, calc(100vw - 32px)); max-height: calc(100vh - 32px);
+    padding: 0; border: 2px solid var(--line); border-radius: 14px; box-shadow: var(--stamp);
+    background: var(--parchment); color: var(--fg);
+  }
+  .code-dlg::backdrop { background: rgb(28 42 34 / .6); }
+  .code-dlg header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 2px solid var(--line); position: sticky; top: 0; background: var(--parchment); }
+  .code-dlg header b { margin-right: auto; }
+  .code-dlg section { padding: 12px 16px; display: grid; gap: 8px; }
+  .code-dlg h2 { font-size: var(--fs-meta); letter-spacing: .05em; display: flex; align-items: center; gap: 8px; }
+  .code-dlg pre {
+    max-height: 45vh; overflow: auto; margin: 0; padding: 12px;
+    background: var(--surface); border: 2px solid var(--line); border-radius: 10px;
+    font: 12px/1.5 ui-monospace, monospace; tab-size: 2; white-space: pre;
+  }
+  .code-dlg button { font: inherit; font-size: var(--fs-meta); padding: 4px 10px; background: var(--surface); color: var(--fg); border: 2px solid var(--line); border-radius: 10px; box-shadow: var(--stamp); cursor: pointer; }
+  .code-dlg button:hover { background: var(--rose); }
+</style>
+</head>
+<body>
+  <h1>Экраны игровой сессии</h1>
+  <p class="lead">
+    Раскладка по скриншотам Your Story Interactive (<code>docs/brainstorm/refs</code>). Нижний край плашки всегда на одной линии
+    (≈ 32% высоты от низа), плашка растёт вверх. Варианты выбора прижаты к низу и наползают
+    на плашку, не меняя её. Зелёное — будущий статичный фон с персонажами. Всё нажимается (в том числе с клавиатуры): варианты, стрелки, «Выбрать», «свернуть», «+», подсказки; платные пункты списывают монеты <i class="coin"></i> (на каждом экране стартовый баланс 20). «Сначала» возвращает экран в исходное состояние.
+  </p>
+  <div class="tools">
+    <button type="button" id="reset-all">Сбросить все</button>
+    <button type="button" id="zoom">Крупно</button>
+  </div>
+  <div class="row" id="screens"></div>
+
+  <dialog class="code-dlg" id="code">
+    <header><b id="code-title"></b><button type="button" id="code-close">Закрыть</button></header>
+    <section><h2>HTML <button type="button" data-copy="code-html">Копировать</button></h2><pre id="code-html"></pre></section>
+    <section><h2>CSS <button type="button" data-copy="code-css">Копировать</button></h2><pre id="code-css"></pre></section>
+  </dialog>
+
+<script src="components.js"></script>
+<script>
+  window.GEM_ICON = '<i class="coin"></i>';  // монета вместо 💎 (components.js)
+  const KALFAK_Q = '«Тогда мне казалось, что женщины вышивают цветы. Теперь я знаю: они вышивают память.»';
+  const KALFAK = ['(Надеть калфак.)', '(Не надевать.)', '(Спрятать калфак в сундук.) <span class="cost">8 <i class="coin"></i></span>'];
+
+  const SCREENS = [
+    {
+      title: '0 · Название',
+      note: 'история и эпизод/сцена по центру между скобами (в скелете прямые), фон приглушён',
+      body: `<div class="dim"></div><div class="title"><span>Золотая клетка</span><span>Сцена&nbsp;1: Перед дорогой</span></div>`,
+    },
+    {
+      title: '1 · Рассказ',
+      note: 'ярлычок «…» по центру · ink: <code># narr</code>',
+      body: stage(plate(label('…'), 'Рассвет. Низкое солнце цепляется за край степи. Ветер перебирает сухую траву.', '', 'narr')),
+    },
+    {
+      title: '2 · Факт',
+      note: 'ярлычок «Факт» · в ink пока нет тега',
+      body: stage(plate(label('Факт', 'center fact'), 'Ногайская Орда, 1533&nbsp;год. Сююмбике ещё не в Казани.', '', 'fact')),
+    },
+    {
+      title: '3 · Подсказка',
+      note: 'ярлычок «Подсказка» · сейчас это <code># system</code>',
+      body: stage(plate(label('Подсказка', 'center hint'), 'Открыта информация: «Диван». В будущем вы сможете распознавать, когда слова правителя действительно его решение, а когда за ними стоит совет знати.', '', 'hint')),
+    },
+    {
+      title: '4 · Реплика, ярлычок слева',
+      note: 'героиня · хвостик справа, смотрит влево · <code>Имя: текст</code>',
+      body: stage(LEFT('Сююмбике', 'А если я не буду?')),
+    },
+    {
+      title: '5 · Реплика, ярлычок справа',
+      note: 'все, кроме героини · зеркало экрана 4',
+      body: stage(RIGHT('Сафия', 'Юсуф-бий велел, чтобы вы были готовы до полудня.')),
+    },
+    {
+      title: '6 · Мысль',
+      note: 'плашка героини, текст в кавычках · <code># thought</code>',
+      body: stage(LEFT('Сююмбике', '«Он пахнет сухой травой. И почему-то домом.»')),
+    },
+    {
+      title: '6a · Мысль, облако',
+      note: 'своя плашка: углы круглее, вместо хвостика два кружка; кавычки не нужны · <code># thought</code>',
+      body: stage(plate(label('Сююмбике', 'left'), 'Он пахнет сухой травой. И почему-то домом.', '', 'thought')),
+    },
+    {
+      title: '6b · Мысль, пышное облако',
+      note: 'вариант облака с фестонами и контурными звёздочками · <code># thought</code>',
+      body: stage(plate(label('Сююмбике', 'left'), 'Он пахнет сухой травой. И почему-то домом.', '', 'thought puff')),
+    },
+    {
+      title: '7 · Выбор списком',
+      note: 'плашка та же; варианты сдвинуты вправо и наползают на неё · <i class="coin"></i> платный',
+      body: stage(LEFT('Сююмбике', KALFAK_Q), opts(KALFAK)),
+    },
+    {
+      title: '7a · Выбор списком, зеркало',
+      note: 'плашка с ярлычком справа; варианты сдвинуты влево',
+      body: mirrorStage(
+        RIGHT('Сафия', 'Тогда мне велено привести вас.'),
+        opts(['(Подойти и заговорить первой.)', '(Сделать вид, что всё равно.)', '(Ответить колко.)'])),
+    },
+    {
+      title: '8 · Выбор на время, 4 варианта',
+      note: 'таймер над плашкой; 4 варианта выталкивают плашку вверх (4-й вариант добавлен для проверки)',
+      body: stage(
+        LEFT('Сююмбике', '«Сафия ждёт ответа.»', '<div class="timer"></div>'),
+        opts(['(Подойти и заговорить первой.)', '(Сделать вид, что всё равно.)', '(Ответить колко.)', '(Промолчать.)'])),
+      seconds: 8,
+      timeout: 'Время вышло: Сююмбике промолчала',
+    },
+    {
+      title: '9 · Выбор стрелками',
+      note: 'один блок внизу: ярлычок — действие, вариант между стрелками, «Выбрать»',
+      body: `
+        <div class="picker">
+          <div class="collapse"></div>
+          <span class="label center">Выбери, что сделать с калфаком.</span>
+          <div class="row">
+            <div class="arrow prev"></div>
+            <div class="value"></div>
+            <div class="arrow next"></div>
+          </div>
+          <div class="pick">Выбрать.<span class="cost"></span></div>
+        </div>`,
+      values: [{ t: 'Надеть калфак' }, { t: 'Не надевать' }, { t: 'Спрятать в сундук', cost: 8 }],
+    },
+    {
+      title: '9a · Выбор стрелками за монеты',
+      note: 'цена справа в кнопке «Выбрать.»; над блоком баланс алмазов с «+»; стрелка «свернуть» над ярлычком',
+      body: `
+        <div class="picker">
+          <div class="gems"><i class="coin"></i><span class="bal"></span><span class="plus">+</span></div>
+          <div class="collapse"></div>
+          <span class="label center">Выбери наряд в дорогу.</span>
+          <div class="row">
+            <div class="arrow prev"></div>
+            <div class="value"></div>
+            <div class="arrow next"></div>
+          </div>
+          <div class="pick">Выбрать.<span class="cost"></span></div>
+        </div>`,
+      values: [{ t: 'Вышитый камзол', cost: 8 }, { t: 'Войлочный плащ' }, { t: 'Шёлковый халат', cost: 14 }],
+    },
+    {
+      title: '10 · Изменение стата',
+      note: 'полоса сверху, плашка не меняется · сейчас <code># system</code> «ПАМЯТЬ СТЕПИ +1»',
+      body: `<div class="stat"><span class="icon"></span>+1 Память степи</div>` +
+        stage(LEFT('Сююмбике', '«Оказывается, иногда тебе просто дают одежду и говорят, куда идти.»')),
+    },
+    {
+      title: '11 · Выбор без облака',
+      note: 'варианты в своём блоке внизу; ярлычок — вводная фраза',
+      body: `
+        <div class="choice-panel">
+          <div class="collapse"></div>
+          <span class="label center">Сафия ждёт ответа…</span>
+          <div class="opt">(Подойти и заговорить первой.)</div>
+          <div class="opt">(Ответить колко.)</div>
+          <div class="opt">(Сделать вид, что всё равно.)</div>
+        </div>`,
+    },
+    {
+      title: '12 · Инфо-облачко',
+      note: 'пояснение термина вверху, значок на углу; плашка рассказа остаётся на месте · в ink пока нет тега',
+      body: `<div class="info"><span class="badge">!</span>${nb('Калфак — традиционный женский головной убор татарок.')}</div>` +
+        stage(plate(label('…'), 'Она разворачивает ткань: вышитая рубаха, лёгкий камзол и калфак.', '', 'narr')),
+    },
+  ];
+
+  // Порядок сквозного прохода в prototype.html: номера из заголовков экранов выше.
+  // Экран, которого нет в списке, в прототип не попадает.
+  const FLOW_ORDER = ['0', '1', '2', '3', '12', '5', '4', '6', '6a', '6b', '7', '10', '7a', '11', '9', '9a', '8'];
+  window.SESSION = { SCREENS, FLOW_ORDER };  // prototype.html читает данные отсюда
+
+  // ?data — только данные, без отрисовки (так страницу подключает прототип)
+  if (!location.search.includes('data')) {
+  document.getElementById('screens').innerHTML = SCREENS.map(s => `
+    <figure>
+      <div class="device"></div>
+      <figcaption><b>${s.title}</b><br>${s.note}</figcaption>
+      <div class="fig-tools">
+        <button type="button" class="reset">Сначала</button>
+        <button type="button" class="reset show-code">Код</button>
+      </div>
+    </figure>`).join('');
+  const resets = [...document.querySelectorAll('figure')].map((fig, i) => {
+    const restart = mount(fig.querySelector('.device'), SCREENS[i]);
+    fig.querySelector('.reset:not(.show-code)').addEventListener('click', restart);
+    fig.querySelector('.show-code').addEventListener('click', () => showCode(SCREENS[i]));
+    return restart;
+  });
+  // ---------- Код экрана: разметка и правила heritage.css, которые на неё действуют ----------
+  const esc = t => Object.assign(document.createElement('div'), { textContent: t }).innerHTML;
+  const INLINE = new Set(['SPAN', 'B', 'I', 'CODE']);
+
+  // Разметка с отступами: блок с вложенными блоками раскрывается, остальное — одной строкой
+  function fmtHtml(node, d = 0) {
+    const pad = '  '.repeat(d);
+    if (node.nodeType === 3) { const t = node.textContent.trim(); return t ? pad + esc(t) : ''; }
+    if (![...node.children].some(c => !INLINE.has(c.tagName))) return pad + node.outerHTML.trim();
+    const open = node.outerHTML.slice(0, node.outerHTML.indexOf('>') + 1);
+    const inner = [...node.childNodes].map(c => fmtHtml(c, d + 1)).filter(Boolean);
+    return [pad + open, ...inner, `${pad}</${node.tagName.toLowerCase()}>`].join('\n');
+  }
+
+  // Классы состояний (их ставит скрипт) и псевдоклассы убираются, чтобы правила
+  // для «нажат», «выбран», «свёрнут» и т. п. тоже попали в код компонента.
+  const STATES = /\.(collapsed|chosen|rejected|locked|gone|urgent|shake|revealing|skip|opts-pending|opts-enter)(?![\w-])/g;
+  const PSEUDO = /::?[a-z-]+(\([^)]*\))?/g;
+  const applies = (sel, root) => {
+    const s = sel.replace(PSEUDO, '').replace(STATES, '').trim().replace(/^[>+~]\s*|\s*[>+~]$/g, '');
+    try { return !!s && (root.matches(s) || !!root.querySelector(s)); } catch { return false; }
+  };
+  const fmtRule = (r, pad = '') => {
+    const decls = r.style.cssText.split(/;\s*/).filter(Boolean).map(x => `${pad}  ${x};`);
+    return [`${pad}${r.selectorText} {`, ...decls, `${pad}}`].join('\n');
+  };
+
+  function cssFor(root) {
+    const sheet = [...document.styleSheets].find(s => s.href?.endsWith('heritage.css'));
+    const rules = [...sheet.cssRules];
+    const out = [];
+    for (const r of rules) {
+      if (r instanceof CSSStyleRule && r.selectorText !== ':root' && r.selectorText.split(',').some(s => applies(s, root))) out.push(fmtRule(r));
+      if (r instanceof CSSMediaRule) {
+        const inner = [...r.cssRules].filter(x => x.selectorText?.split(',').some(s => applies(s, root)));
+        if (inner.length) out.push(`@media ${r.conditionText} {\n${inner.map(x => fmtRule(x, '  ')).join('\n')}\n}`);
+      }
+    }
+    let text = out.join('\n\n');
+
+    // Анимации, на которые ссылаются найденные правила
+    const frames = rules.filter(r => r instanceof CSSKeyframesRule && new RegExp(`\\b${r.name}\\b`).test(text));
+    if (frames.length) text += '\n\n' + frames.map(r => r.cssText).join('\n');
+
+    // Переменные из :root, которые используются (в том числе через другие переменные)
+    const roots = rules.filter(r => r.selectorText === ':root');
+    const value = name => roots.map(r => r.style.getPropertyValue(name)).find(v => v)?.trim();
+    const used = new Map();
+    const collect = t => [...t.matchAll(/var\((--[\w-]+)/g)].forEach(([, n]) => {
+      if (used.has(n)) return;
+      const v = value(n);
+      if (v === undefined) return;
+      used.set(n, v); collect(v);
+    });
+    collect(text);
+    const vars = [...used].sort().map(([n, v]) => `  ${n}: ${v};`);
+    return (vars.length ? `:root {\n${vars.join('\n')}\n}\n\n` : '') + text;
+  }
+
+  const dlg = document.getElementById('code');
+  function showCode(s) {
+    const root = document.createElement('div');
+    root.innerHTML = s.body;
+    document.getElementById('code-title').textContent = s.title;
+    document.getElementById('code-html').textContent = [...root.childNodes].map(n => fmtHtml(n)).filter(Boolean).join('\n');
+    document.getElementById('code-css').textContent = cssFor(root);
+    dlg.showModal();
+  }
+  document.getElementById('code-close').addEventListener('click', () => dlg.close());
+  dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });  // клик по затемнению
+  dlg.addEventListener('click', async e => {
+    const btn = e.target.closest('[data-copy]');
+    if (!btn) return;
+    const pre = document.getElementById(btn.dataset.copy);
+    try { await navigator.clipboard.writeText(pre.textContent); }
+    catch { getSelection().selectAllChildren(pre); document.execCommand('copy'); }
+    btn.textContent = 'Скопировано';
+    setTimeout(() => { btn.textContent = 'Копировать'; }, 1200);
+  });
+
+  document.getElementById('reset-all').addEventListener('click', () => resets.forEach(r => r()));
+  document.getElementById('zoom').addEventListener('click', e => {
+    const big = e.target.textContent === 'Крупно';
+    document.documentElement.style.setProperty('--scale', big ? 1 : '');
+    e.target.textContent = big ? 'Мелко' : 'Крупно';
+  });
+  }
+</script>
+</body>
+</html>

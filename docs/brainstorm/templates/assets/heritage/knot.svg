@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="60" viewBox="0 0 64 60">
+<!-- rhombus knot over the top-right corner of a plate -->
+<rect width="64" height="60" fill="#231a17" fill-opacity=".0045"/>
+<path d="M28,13 L47,32 L28,51 L9,32Z" fill="none" stroke="#231a17" stroke-width="5.2" stroke-linejoin="miter"/><path d="M28,13 L47,32 L28,51 L9,32Z" fill="none" stroke="#e15654" stroke-width="2.4" stroke-linejoin="miter"/>
+<path d="M42,11 L57,26 L42,41 L27,26Z" fill="none" stroke="#231a17" stroke-width="5.2" stroke-linejoin="miter"/><path d="M42,11 L57,26 L42,41 L27,26Z" fill="none" stroke="#e15654" stroke-width="2.4" stroke-linejoin="miter"/>
+<path d="M28,22.5 L37.5,32 L28,41.5 L18.5,32Z" fill="none" stroke="#231a17" stroke-width="5.2" stroke-linejoin="miter"/><path d="M28,22.5 L37.5,32 L28,41.5 L18.5,32Z" fill="none" stroke="#e15654" stroke-width="2.4" stroke-linejoin="miter"/>
+<path d="M30.46,15.46 L37.54,22.54" stroke="#231a17" stroke-width="5.2" stroke-linecap="butt"/><path d="M30.46,15.46 L37.54,22.54" stroke="#e15654" stroke-width="2.4" stroke-linecap="butt"/>
+<path d="M28,28.4 L31.6,32 L28,35.6 L24.4,32Z" fill="#f7e9d8" stroke="#231a17" stroke-width="1.4" stroke-linejoin="round"/>
+<path d="M42,23.4 L44.6,26 L42,28.6 L39.4,26Z" fill="#f7e9d8" stroke="#231a17" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M58,2.5 Q59.26,5.74 62.5,7 Q59.26,8.26 58,11.5 Q56.74,8.26 53.5,7 Q56.74,5.74 58,2.5Z" fill="#e15654"/>
+<path d="M7,49.8 Q7.9,52.1 10.2,53 Q7.9,53.9 7,56.2 Q6.1,53.9 3.8,53 Q6.1,52.1 7,49.8Z" fill="#e15654"/>
+</svg>

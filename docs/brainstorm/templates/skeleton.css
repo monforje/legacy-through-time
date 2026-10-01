@@ -1,0 +1,573 @@
+/* Общий скелет макетов экрана чтения.
+   Нарочно без стиля: серые плашки, чёрный текст, зелёный фон-заглушка.
+   Внешний вид меняется токенами в :root, раскладка — классами ниже.
+
+   Рамка S23: 360×780 CSS px = 1080×2340 при плотности 3. */
+
+:root {
+  --w: 360px;
+  --h: 780px;
+  --inset-top: 32px;     /* статус-бар с вырезом камеры (примерно) */
+  --inset-bottom: 24px;  /* жестовая полоса (примерно) */
+  --scale: .62;          /* масштаб рамок на страницах сравнения */
+
+  --bg: #3fa34d;         /* заглушка: статичный фон с нарисованными персонажами */
+  --fg: #111;
+  --surface: #fff;
+  --surface-muted: #e6e6e6;
+  --line: #111;
+  --tag: #cfcfcf;
+  --toast: #111;
+  --toast-fg: #fff;
+
+  --radius: 12px;
+  --gap: 12px;
+
+  /* Типографика: шесть ролей вместо россыпи размеров. Шрифт пока системный,
+     менять его в одном месте. */
+  --font-ui: system-ui, sans-serif;
+  --fs-title: 28px;   /* название истории и сцены */
+  --fs-value: 22px;   /* выбранный вариант между стрелками */
+  --fs-body: 19px;    /* текст плашки, инфо-облачко */
+  --fs-action: 17px;  /* варианты, кнопки, стат, баланс */
+  --fs-label: 15px;   /* ярлычки с именем, облачка-подписи */
+  --fs-meta: 13px;    /* подписи макета, служебное */
+  /* Светлый текст на тёмном выглядит тоньше и теснее: чуть плотнее вес,
+     трекинг и межстрочный интервал. */
+  --on-dark-weight: 500;
+  --on-dark-tracking: .01em;
+}
+
+* { box-sizing: border-box; margin: 0; }
+
+body {
+  background: #f2f2f2;
+  color: var(--fg);
+  font-family: var(--font-ui);
+  font-synthesis: none;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  padding: 24px;
+}
+
+/* ---------- страница сравнения ---------- */
+h1 { font-size: 20px; margin-bottom: 4px; }
+.lead { color: #555; margin-bottom: 24px; max-width: 72ch; line-height: 1.5; text-wrap: pretty; }
+.variant { margin-bottom: 40px; }
+.variant h2 { font-size: 17px; margin-bottom: 4px; }
+.variant p { color: #555; margin-bottom: 14px; max-width: 72ch; line-height: 1.45; text-wrap: pretty; }
+.row { display: flex; gap: 20px; flex-wrap: wrap; }
+figure { display: grid; gap: 8px; align-content: start; }
+figcaption { font-size: var(--fs-meta); color: #555; text-wrap: pretty; }
+
+/* ---------- устройство ---------- */
+.device {
+  /* Уменьшение через transform, а не zoom: в Firefox анимации transform внутри
+     zoom считаются по-разному в процессе и в конце — блок «подпрыгивал».
+     Отрицательные поля убирают лишнее место, которое scale не освобождает. */
+  transform: scale(var(--scale));
+  transform-origin: 0 0;
+  margin: 0 calc(var(--w) * (var(--scale) - 1)) calc(var(--h) * (var(--scale) - 1)) 0;
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  overflow: hidden;
+  border-radius: 28px;
+  outline: 8px solid #000;
+  background: var(--bg);
+  font-size: 16px;
+  line-height: 1.4;
+}
+.device.full { transform: none; margin: 0; }
+.safe { position: absolute; inset: var(--inset-top) 0 var(--inset-bottom) 0; }
+
+/* Где на фоне нарисованы персонажи — только чтобы было к кому вести хвостик */
+.who {
+  position: absolute; top: 160px; bottom: 0;
+  width: 130px;
+  border: 2px dashed rgb(0 0 0 / .35);
+  border-bottom: 0;
+  border-radius: 65px 65px 0 0;
+  padding-top: 24px;
+  text-align: center;
+  font-size: var(--fs-meta);
+  color: rgb(0 0 0 / .5);
+}
+.who.left { left: 20px; }
+.who.right { right: 20px; top: 130px; }
+
+.tap { position: absolute; right: 16px; bottom: 8px; font-size: var(--fs-meta); color: rgb(0 0 0 / .6); }
+
+/* ---------- плашка внизу ---------- */
+.box {
+  position: absolute; left: var(--gap); right: var(--gap); bottom: 36px;
+  min-height: 132px;
+  padding: 22px 18px 18px;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+}
+.box.narr { background: var(--surface-muted); }
+.box.thought { border-style: dashed; font-style: italic; }
+.nametag {
+  position: absolute; top: -15px; left: 16px;
+  padding: 3px 12px;
+  background: var(--tag);
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  font-weight: 700; font-size: var(--fs-label);
+}
+.nametag.right { left: auto; right: 16px; }
+
+/* ---------- облачко с хвостиком ---------- */
+.bubble {
+  position: absolute; bottom: 60px;
+  max-width: 78%;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: 18px;
+}
+.bubble .name { display: block; font-weight: 700; font-size: var(--fs-label); margin-bottom: 2px; }
+.bubble.l { left: var(--gap); }
+.bubble.r { right: var(--gap); }
+.bubble.tail-left::before, .bubble.tail-right::before {
+  content: ""; position: absolute; top: -12px;
+  width: 18px; height: 18px;
+  background: var(--surface);
+  border-left: 2px solid var(--line); border-top: 2px solid var(--line);
+  transform: rotate(45deg);
+}
+.bubble.tail-left::before { left: 44px; }
+.bubble.tail-right::before { right: 44px; }
+.bubble.center { left: 50%; transform: translateX(-50%); width: 84%; max-width: none; }
+
+/* ---------- облако-мысль ---------- */
+.cloud {
+  position: absolute; right: var(--gap); bottom: 60px; max-width: 78%;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 2px dashed var(--line);
+  border-radius: 30px;
+  font-style: italic;
+}
+.cloud::before, .cloud::after {
+  content: ""; position: absolute; border-radius: 50%;
+  background: var(--surface); border: 2px dashed var(--line);
+}
+.cloud::before { width: 16px; height: 16px; right: 50px; top: -22px; }
+.cloud::after { width: 9px; height: 9px; right: 62px; top: -36px; }
+
+/* ---------- системное уведомление ---------- */
+.toast {
+  position: absolute; top: 12px; left: var(--gap); right: var(--gap);
+  padding: 12px 14px;
+  background: var(--toast); color: var(--toast-fg);
+  border-radius: var(--radius);
+  font-size: var(--fs-label); text-align: center;
+}
+.toast b { display: block; font-size: var(--fs-meta); letter-spacing: .05em; margin-bottom: 2px; }
+
+/* =====================================================================
+   Экран чтения по образцу Your Story Interactive (refs: docs/brainstorm/refs)
+   Одна плашка на все типы текста. Её нижний край стоит на линии
+   --plate-line от низа экрана, плашка растёт вверх. Варианты выбора
+   прижаты к --options-line и наползают на плашку; если их много,
+   плашку выталкивает выше.
+   ===================================================================== */
+:root {
+  --plate-line: 250px;    /* ≈ 32% высоты от низа: нижний край плашки */
+  --options-line: 94px;   /* ≈ 12% высоты от низа: нижний край списка вариантов */
+  --side: 20px;           /* поля плашки */
+  --options-shift: 12px;  /* варианты сдвинуты вправо относительно плашки */
+  --options-overlap: 16px;/* насколько варианты наползают на плашку */
+  --plate: #f4f4f4;
+  --dark: #2b2b2b;
+  --dark-fg: #fff;
+  --dark-press: #555;   /* нажатая тёмная кнопка */
+}
+
+/* Правило для всех блоков: содержимое (текст, иконки, стрелки) по центру по высоте. */
+
+.stage {
+  position: absolute; left: var(--side); right: var(--side); bottom: var(--options-line);
+  display: flex; flex-direction: column;
+}
+.plate {
+  position: relative;
+  min-height: 110px;
+  display: flex; align-items: center;
+  padding: 24px 18px 18px;
+  background: var(--plate);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  font-size: var(--fs-body); line-height: 1.4;
+  text-wrap: pretty;
+}
+.stage > .plate:last-child { margin-bottom: calc(var(--plate-line) - var(--options-line)); }
+
+.label {
+  position: absolute; top: -16px;
+  min-height: 30px; min-width: 110px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 4px 22px;
+  text-align: center;
+  background: var(--dark); color: var(--dark-fg);
+  border-radius: 6px;
+  font-size: var(--fs-label); line-height: 1.25;
+  font-weight: var(--on-dark-weight); letter-spacing: var(--on-dark-tracking);
+  text-wrap: balance;
+}
+.label.center { left: 50%; transform: translateX(-50%); }
+.label.left { left: 22px; }
+.label.right { right: 22px; }
+
+/* Хвостик: продолжение облачка, смотрит внутрь экрана — туда, где стоит
+   говорящий. Справа смотрит влево, слева — вправо.
+   Два слоя: ::before — треугольник цвета рамки, ::after — заливка, чей контур
+   отступает от каждой скошенной грани ровно на толщину рамки (2px по нормали),
+   а основание уходит вниз и закрывает рамку плашки. Так обводка идёт по обеим
+   граням и переходит в рамку плашки без стыка.
+   Форма рассчитана под 40×30 и apex на 45% ширины; отступ от края — --tail-inset.
+   ::after шире на 4px, чтобы вместить основание заливки, и сдвинут так, чтобы
+   начало координат совпало с ::before. */
+:root {
+  --tail-w: 40px;
+  --tail-h: 30px;
+  --tail-inset: 70px;
+  --border: 2px;
+}
+.plate.tail-r::before, .plate.tail-r::after,
+.plate.tail-l::before, .plate.tail-l::after {
+  content: ""; position: absolute;
+  top: calc(-1 * var(--tail-h) - var(--border));
+  width: var(--tail-w); height: var(--tail-h);
+  background: var(--line);
+}
+.plate.tail-r::after, .plate.tail-l::after {
+  width: calc(var(--tail-w) + 4px); height: calc(var(--tail-h) + 3px);
+  background: var(--plate);
+}
+.plate.tail-r::before { right: var(--tail-inset); clip-path: polygon(45% 100%, 0 0, 100% 100%); }
+.plate.tail-r::after { right: calc(var(--tail-inset) - 4px); clip-path: polygon(6.97px 7.73px, 22.13px 100%, 40.67px 100%); }
+.plate.tail-l::before { left: var(--tail-inset); clip-path: polygon(0 100%, 100% 0, 55% 100%); }
+.plate.tail-l::after { left: calc(var(--tail-inset) - 4px); clip-path: polygon(37.03px 7.73px, 21.87px 100%, 3.33px 100%); }
+
+/* Плашка мысли: углы круглее, вместо хвостика — два кружка, уходящие вверх
+   туда же, куда смотрел бы хвостик героини (вправо-вверх от плашки, со сдвигом влево). */
+.plate.thought { border-radius: 24px; }
+.plate.thought::before, .plate.thought::after {
+  content: ""; position: absolute;
+  border-radius: 50%;
+  background: var(--plate);
+  border: var(--border) solid var(--line);
+}
+.plate.thought::before { width: 18px; height: 18px; right: var(--tail-inset); top: -26px; }
+.plate.thought::after { width: 10px; height: 10px; right: calc(var(--tail-inset) + 18px); top: -44px; }
+
+/* Список вариантов: сдвинут вправо и наползает на плашку */
+.options {
+  position: relative; z-index: 1;
+  display: grid; gap: 10px;
+  margin: calc(-1 * var(--options-overlap)) calc(-1 * var(--options-shift)) 0 var(--options-shift);
+}
+.opt {
+  min-height: 46px;
+  display: flex; align-items: center;
+  padding: 8px 18px;
+  background: var(--dark); color: var(--dark-fg);
+  border-radius: 6px;
+  font-size: var(--fs-action); line-height: 1.3;
+  font-weight: var(--on-dark-weight); letter-spacing: var(--on-dark-tracking);
+  text-wrap: pretty;
+}
+.opt .cost { margin-left: auto; padding-left: 10px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* Таймер выбора: над правым верхним углом плашки */
+.timer {
+  position: absolute; right: 8px; top: -70px;
+  width: 50px; height: 50px; border-radius: 50%;
+  border: 4px solid var(--dark);
+  background: conic-gradient(var(--dark) 0 var(--p, 100%), var(--plate) var(--p, 100%) 100%);
+}
+
+/* Изменение стата: полоса сверху */
+.stat {
+  position: absolute; top: calc(var(--inset-top) + 24px); left: var(--side); right: var(--side);
+  min-height: 50px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 8px 52px;
+  background: var(--dark); color: var(--dark-fg);
+  border-radius: 6px;
+  font-size: var(--fs-action); line-height: 1.3;
+  font-weight: var(--on-dark-weight); letter-spacing: var(--on-dark-tracking);
+  text-wrap: balance; font-variant-numeric: tabular-nums;
+}
+.stat .icon {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; border: 2px dashed var(--dark-fg); border-radius: 4px;
+}
+
+/* Выбор стрелками: один блок внизу экрана. Ярлычок — действие, которое делаешь
+   выбором; в середине вариант, по бокам стрелки в своих кнопках; ниже «Выбрать». */
+.picker {
+  position: absolute; left: var(--side); right: var(--side); bottom: 34px;
+  display: grid; gap: 14px;
+  padding: 36px 14px 16px;
+  background: var(--plate);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+}
+.picker .label { font-style: italic; width: 78%; top: -22px; }
+.picker .row { display: grid; grid-template-columns: 36px 1fr 36px; gap: 8px; align-items: center; }
+.picker .value {
+  min-height: 64px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--fs-value); line-height: 1.25; text-align: center;
+  text-wrap: balance;
+}
+.picker .arrow {
+  height: 48px;
+  display: grid; place-items: center;
+  background: var(--dark);
+  border-radius: 6px;
+}
+/* Стрелка нарисована рамкой: глиф шрифта не встаёт ровно по центру */
+.picker .arrow::before {
+  content: ""; width: 10px; height: 10px;
+  border-left: 3px solid var(--dark-fg); border-bottom: 3px solid var(--dark-fg);
+}
+.picker .arrow.prev::before { transform: translateX(2px) rotate(45deg); }
+.picker .arrow.next::before { transform: translateX(-2px) rotate(-135deg); }
+.picker .pick {
+  min-height: 50px;
+  display: flex; align-items: center;
+  padding: 0 18px;
+  background: var(--dark); color: var(--dark-fg);
+  border-radius: 6px;
+  font-size: var(--fs-action); line-height: 1.3;
+  font-weight: var(--on-dark-weight); letter-spacing: var(--on-dark-tracking);
+}
+
+/* Название истории и эпизода/сцены: по центру крупно, между двумя
+   горизонтальными скобами (в скелете — прямые линии). Фон приглушён. */
+.dim { position: absolute; inset: 0; background: rgb(0 0 0 / .35); }
+.title {
+  position: absolute; left: var(--side); right: var(--side); top: 26%; bottom: 35%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px;
+  border-top: 3px solid var(--dark-fg); border-bottom: 3px solid var(--dark-fg);
+  padding: 0 12px;
+  color: var(--dark-fg);
+  font-size: var(--fs-title); line-height: 1.25; text-align: center;
+  text-wrap: balance; text-shadow: 0 1px 8px rgb(0 0 0 / .35);
+}
+.title > :first-child { font-weight: 700; }
+.title > :last-child { font-size: var(--fs-value); }
+
+/* Зеркальный список: под плашкой с ярлычком справа варианты сдвинуты влево */
+.stage.mirror .options {
+  margin: calc(-1 * var(--options-overlap)) var(--options-shift) 0 calc(-1 * var(--options-shift));
+}
+
+/* Стрелка «свернуть» над ярлычком блока выбора (refs 10, 11).
+   Тап плавно уводит блок за нижний край экрана; стрелка остаётся видна и
+   разворачивается вверх, повторный тап возвращает блок. Ярлычок и баланс
+   растворяются, а не пропадают скачком. */
+:root {
+  --collapse-time: .45s;
+  --collapse-ease: cubic-bezier(.65, 0, .35, 1);  /* мягкий разгон и торможение */
+}
+.picker, .choice-panel {
+  transition: transform var(--collapse-time) var(--collapse-ease);
+  will-change: transform;
+}
+.picker.collapsed, .choice-panel.collapsed { transform: translateY(calc(100% + 40px)); }
+.picker .gems, .picker .label, .choice-panel .label {
+  transition: opacity calc(var(--collapse-time) * .6) ease;
+}
+.collapsed .gems, .collapsed .label { opacity: 0; }
+.collapse {
+  position: absolute; left: 50%; top: -60px;
+  width: 48px; height: 40px;
+  transform: translateX(-50%);
+  display: grid; place-items: center;
+  cursor: pointer;
+}
+/* Галочка — симметричная полоса-«V»: при повороте на 180° вокруг своего центра
+   она попадает ровно в ту же рамку и становится «^», без сдвигов. */
+.collapse::before {
+  content: ""; width: 20px; height: 11px;
+  background: var(--dark);
+  clip-path: polygon(0 0, 50% 68%, 100% 0, 100% 32%, 50% 100%, 0 32%);
+  transition: transform var(--collapse-time) var(--collapse-ease);
+}
+.collapsed .collapse::before { transform: rotate(180deg); }
+
+/* Платный выбор стрелками: цена в кнопке и баланс алмазов над блоком */
+.picker .pick .cost, .gems .cost { display: flex; align-items: center; gap: 6px; }
+.picker .pick .cost { margin-left: auto; }
+.gems {
+  position: absolute; right: 0; top: -82px;
+  height: 44px; min-width: 130px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 14px;
+  background: var(--dark); color: var(--dark-fg);
+  border-radius: 6px;
+  font-size: var(--fs-action);
+  font-weight: var(--on-dark-weight); letter-spacing: var(--on-dark-tracking);
+  font-variant-numeric: tabular-nums;
+}
+.gems .plus { margin-left: auto; font-size: var(--fs-value); line-height: 1; }
+
+/* Выбор без облака: варианты внутри своего блока внизу экрана.
+   Ярлычок — вводная фраза. Текст вариантов выровнен по левому краю. */
+.choice-panel {
+  position: absolute; left: var(--side); right: var(--side); bottom: 30px;
+  display: grid; gap: 10px;
+  padding: 36px 14px 16px;
+  background: var(--plate);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+}
+.choice-panel .label { width: 70%; }
+
+/* Инфо-облачко: пояснение термина вверху экрана, значок на правом верхнем углу */
+.info {
+  position: absolute; top: calc(var(--inset-top) + 16px); left: 40px; right: 40px;
+  min-height: 120px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px 22px;
+  background: var(--plate);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  font-size: var(--fs-body); line-height: 1.4; text-align: center;
+  text-wrap: pretty;
+}
+.info .badge {
+  position: absolute; top: -16px; right: -16px;
+  width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--dark); color: var(--dark-fg);
+  font-weight: 700;
+}
+
+/* =====================================================================
+   Интерактив: нажатия, состояния, обратная связь
+   ===================================================================== */
+[role="button"] { cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+.opt, .pick, .picker .arrow, .gems { transition: background-color .12s, color .12s, opacity .25s; }
+.opt:active, .pick:active, .picker .arrow:active { background: var(--dark-press); }
+.gems .plus:active { opacity: .6; }
+[role="button"]:focus-visible { outline: 3px solid #fff; outline-offset: 0; box-shadow: 0 0 0 6px var(--line); }
+.collapse:focus-visible { outline-offset: -3px; box-shadow: none; }
+
+/* Выбранный вариант — светлая плашка, остальные гаснут; блок заперт до сброса */
+.opt.chosen, .pick.chosen { background: var(--surface); color: var(--fg); box-shadow: inset 0 0 0 2px var(--line); }
+.opt.rejected { opacity: .4; }
+.locked .opt, .locked .arrow, .locked .pick, .opt.rejected, .opt.chosen { pointer-events: none; }
+.locked .arrow { opacity: .4; }
+.stage:has(.chosen) .opt:not(.chosen), .choice-panel:has(.chosen) .opt:not(.chosen) { opacity: .4; }
+
+/* Появление и закрытие верхних плашек, названия */
+.stat, .info, .dim, .title { transition: opacity .3s, transform .3s; }
+.stat { animation: drop-in .45s var(--collapse-ease) backwards; }
+.stat.gone, .info.gone { opacity: 0; transform: translateY(-16px); pointer-events: none; }
+.dim.gone, .title.gone { opacity: 0; pointer-events: none; }
+@keyframes drop-in { from { opacity: 0; transform: translateY(-24px); } }
+.shake { animation: shake .35s; }
+@keyframes shake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+.picker .pick .cost:empty { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stat, .shake { animation: none; }
+  .picker, .choice-panel, .collapse::before { transition-duration: .01s; }
+}
+
+/* Управление на странице сравнения */
+.tools { display: flex; gap: 8px; margin-bottom: 20px; }
+.tools button, .reset {
+  font: inherit; font-size: var(--fs-meta);
+  padding: 4px 10px; background: #fff; color: var(--fg);
+  border: 1px solid #999; border-radius: 6px; cursor: pointer;
+}
+.reset { justify-self: start; }
+.tools button:hover, .reset:hover { background: #e6e6e6; }
+
+/* =====================================================================
+   Анимации интерфейса
+   Только transform/opacity и отдельные свойства translate/scale, чтобы не
+   перебивать transform, который раскладка использует для позиционирования.
+   Все кривые — экспоненциальное торможение; без отскоков.
+   ===================================================================== */
+:root {
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --reveal-step: 26ms;   /* пауза между словами при наборе текста */
+}
+
+/* Плашка выезжает, ярлычок и хвостик догоняют */
+.plate { animation: plate-in .4s var(--ease-out) backwards; }
+.label { animation: label-in .34s var(--ease-out) .1s backwards; }
+.plate.tail-r::before, .plate.tail-r::after, .plate.tail-l::before, .plate.tail-l::after {
+  transform-origin: 50% 100%;
+  animation: tail-in .34s var(--ease-out) .2s backwards;
+}
+/* Кружки мысли всплывают по очереди: ближний, потом дальний */
+.plate.thought::before { animation: pop-in .34s var(--ease-out) .2s backwards; }
+.plate.thought::after { animation: pop-in .34s var(--ease-out) .32s backwards; }
+@keyframes plate-in { from { opacity: 0; translate: 0 14px; } }
+@keyframes label-in { from { opacity: 0; scale: .8; } }
+@keyframes tail-in  { from { opacity: 0; scale: .4; } }
+
+/* Текст плашки проявляется по словам; тап в процессе показывает остаток сразу */
+.plate .w { animation: word-in .24s ease-out backwards; animation-delay: calc(var(--i) * var(--reveal-step) + .3s); }
+@keyframes word-in { from { opacity: 0; translate: 0 3px; } }
+.skip .plate .w { animation: none; }
+.revealing .opt, .revealing .arrow, .revealing .pick { pointer-events: none; }
+
+/* Варианты выхватываются каскадом после текста */
+/* Варианты видны по умолчанию. Пока идёт набор текста, у блока класс .opts-pending
+   (прячет их), по окончании он снимается и варианты выезжают по очереди (.opts-enter).
+   Так кнопка не может «застрять» невидимой, как с animation-fill. */
+.opts-pending .opt { opacity: 0; translate: 0 16px; }
+.opts-enter .opt { transition-delay: calc(var(--k, 0) * 70ms); }
+.opt, .pick, .picker .arrow {
+  transition: background-color .12s, color .12s, opacity .36s var(--ease-out), translate .36s var(--ease-out), scale .12s var(--ease-out);
+}
+.opt:active, .pick:active, .picker .arrow:active { transition-delay: 0s; }
+.opt:active, .pick:active { scale: .97; }
+.picker .arrow:active { scale: .9; }
+.opt.chosen { animation: chosen-pop .38s var(--ease-out); }
+.opt.rejected { scale: .97; }
+.pick.chosen { animation: chosen-pop .38s var(--ease-out); }
+@keyframes chosen-pop { 40% { scale: 1.04; } }
+
+/* Блок выбора заезжает снизу (через то же состояние .collapsed, что и «свернуть») */
+.picker .gems, .gems { animation: fade-up .4s var(--ease-out) .35s backwards; }
+@keyframes fade-up { from { opacity: 0; translate: 0 8px; } }
+
+/* Таймер: появляется «щелчком», в последние секунды пульсирует */
+.timer { animation: pop-in .42s var(--ease-out) .25s backwards; }
+.timer.urgent { animation: pulse .7s ease-in-out infinite; }
+@keyframes pop-in { from { opacity: 0; scale: .4; } }
+@keyframes pulse { 50% { scale: 1.14; } }
+
+/* Инфо-облачко и значок */
+.info { animation: info-in .42s var(--ease-out) backwards; transform-origin: 50% 0; }
+.info .badge { animation: pop-in .4s var(--ease-out) .25s backwards; }
+@keyframes info-in { from { opacity: 0; scale: .9; } }
+
+/* Название: линии-скобки раскрываются от середины, строки проступают по очереди */
+.dim { animation: fade-in .5s ease-out backwards; }
+.title { animation: title-open .9s var(--ease-out) backwards; }
+.title > span { animation: fade-up .6s var(--ease-out) backwards; }
+.title > :first-child { animation-delay: .4s; }
+.title > :last-child { animation-delay: .65s; }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes title-open { from { clip-path: inset(50% 0 50% 0); } to { clip-path: inset(0); } }
+
+/* Полоса стата: значок щёлкает после въезда */
+.stat .icon { animation: pop-in .4s var(--ease-out) .35s backwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; transition-duration: .01ms !important; }
+}

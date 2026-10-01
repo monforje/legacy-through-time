@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The reading-screen logic that needs no Unity: layout arithmetic, text rules, plate skins,
+       the beat -> screen mapping. Content/ is linked from the game, exactly as Unity compiles it. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <AssemblyName>LegacyThroughTime.Reader.Tests</AssemblyName>
+    <RootNamespace>LegacyThroughTime.Prototype.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="*.cs" />
+    <Compile Include="../../Assets/Scripts/Narrative/**/*.cs" LinkBase="Narrative" />
+    <Compile Include="../../Assets/Scripts/Prototype/Content/**/*.cs" LinkBase="Content" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+  </ItemGroup>
+</Project>

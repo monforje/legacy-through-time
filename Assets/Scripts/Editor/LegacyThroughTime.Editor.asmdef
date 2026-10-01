@@ -2,7 +2,10 @@
   "name": "LegacyThroughTime.Editor",
   "rootNamespace": "LegacyThroughTime.Editor",
   "references": [
-    "Unity.VisualStudio.Editor"
+    "Unity.VisualStudio.Editor",
+    "LegacyThroughTime.Prototype",
+    "UnityEngine.UI",
+    "LegacyThroughTime.Narrative"
   ],
   "includePlatforms": [
     "Editor"

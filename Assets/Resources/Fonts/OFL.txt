@@ -1,0 +1,2 @@
+Russo One, Rubik, Nunito: SIL Open Font License 1.1 - https://openfontlicense.org
+Sources: https://github.com/google/fonts (ofl/russoone, ofl/rubik, ofl/nunito)

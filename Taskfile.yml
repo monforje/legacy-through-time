@@ -6,6 +6,8 @@ vars:
   APP_ID: com.dan.legacythroughtime
   INK_IMAGE: legacy-through-time/inklecate
   DOTNET_IMAGE: legacy-through-time/dotnet
+  SVG_IMAGE: legacy-through-time/svg
+  HERITAGE_DIR: docs/brainstorm/templates/assets/heritage
   DOTNET: docker run --rm --user "$(id -u):$(id -g)" -e NUGET_PACKAGES=/work/.cache/nuget -v "{{.ROOT_DIR}}:/work" {{.DOTNET_IMAGE}}
 
 tasks:
@@ -42,6 +44,13 @@ tasks:
       - mkdir -p .cache/nuget
       - "{{.DOTNET}} dotnet test Tests/Narrative --nologo -v q"
 
+  test:reader:
+    desc: Reading-screen logic tests (layout, text rules, plate skins, story -> screen mapping) - no Unity needed
+    deps: [dotnet-image]
+    cmds:
+      - mkdir -p .cache/nuget
+      - "{{.DOTNET}} dotnet test Tests/Reader --nologo -v q"
+
   bench:
     desc: Narrative engine vs official ink runtime on the real episode (time and allocations per line)
     deps: [dotnet-image]
@@ -55,6 +64,79 @@ tasks:
     sources: [docker/dotnet/Dockerfile]
     status: ["docker image inspect {{.DOTNET_IMAGE}} >/dev/null 2>&1"]
     cmds: ["docker build -t {{.DOTNET_IMAGE}} docker/dotnet"]
+
+  mockups:
+    desc: Serve HTML mockups docs/brainstorm/templates on http://localhost:8080 (stop with `docker stop ltt-mockups`)
+    cmds:
+      - docker rm -f ltt-mockups >/dev/null 2>&1 || true
+      - docker run -d --rm --name ltt-mockups --user "$(id -u):$(id -g)" -p 8080:8080 -v "{{.ROOT_DIR}}/docs/brainstorm/templates:/www:ro" -w /www python:3.13-alpine python _serve.py >/dev/null
+      - echo "http://localhost:8080/"
+
+  assets:png:
+    desc: Heritage UI - regenerate SVG (build.py) and export @4x PNG + manifest.json (9-slice borders) -> docs/brainstorm/templates/assets/heritage/png
+    deps: [svg-image]
+    sources: ["{{.HERITAGE_DIR}}/build.py", "{{.HERITAGE_DIR}}/kit/**/*.py", "{{.HERITAGE_DIR}}/sprites/**/*.py"]
+    generates: ["{{.HERITAGE_DIR}}/png/*.png", "{{.HERITAGE_DIR}}/manifest.json"]
+    cmds:
+      - |
+        docker run --rm --user "$(id -u):$(id -g)" -v "{{.ROOT_DIR}}:/work" -w /work/{{.HERITAGE_DIR}} {{.SVG_IMAGE}} sh -c '
+          python3 build.py && rm -rf png && mkdir png &&
+          for f in *.svg; do rsvg-convert -z 4 "$f" -o "png/${f%.svg}.png"; done'
+
+  assets:unity:
+    desc: Heritage UI - export PNG and copy them with slices.txt into Assets/Resources/Heritage (borders are applied by the importer)
+    deps: ["assets:png"]
+    cmds:
+      - mkdir -p Assets/Resources/Heritage
+      - rm -f Assets/Resources/Heritage/*.png
+      - cp {{.HERITAGE_DIR}}/png/*.png {{.HERITAGE_DIR}}/slices.txt Assets/Resources/Heritage/
+
+  assets:test:
+    desc: Heritage UI generator tests - SVGs well-formed, borders inside sprites, output reproducible, files up to date
+    deps: [svg-image]
+    cmds:
+      - docker run --rm --user "$(id -u):$(id -g)" -v "{{.ROOT_DIR}}:/work" -w /work/{{.HERITAGE_DIR}} {{.SVG_IMAGE}} python3 -B -m unittest discover -s tests
+
+  assets:fonts:
+    desc: Download Russo One / Rubik / Nunito and cut static weights -> Assets/Resources/Fonts
+    deps: [svg-image]
+    cmds:
+      - docker run --rm --user "$(id -u):$(id -g)" -v "{{.ROOT_DIR}}:/work" {{.SVG_IMAGE}} python3 docker/svg/fonts.py Assets/Resources/Fonts
+
+  svg-image:
+    internal: true
+    sources: [docker/svg/Dockerfile]
+    status: ["docker image inspect {{.SVG_IMAGE}} >/dev/null 2>&1"]
+    cmds: ["docker build -t {{.SVG_IMAGE}} docker/svg"]
+
+  prototype:smoke:
+    desc: Build every heritage prototype screen in batchmode (no Play Mode) and report exceptions / missing assets
+    preconditions:
+      - sh: test ! -e Temp/UnityLockfile
+        msg: "Unity Editor has this project open. Close it first."
+    cmds:
+      - "{{.UNITY}} -batchmode -nographics -quit -projectPath . -executeMethod LegacyThroughTime.Editor.PrototypeSmoke.Run -logFile - | grep -E '\\[smoke\\]|error CS|Exception|rror:' || true"
+
+  prototype:play:
+    desc: Play the heritage prototype with synthetic taps in batchmode (PlayMode test) -> Temp/prototype-play.xml
+    preconditions:
+      - sh: test ! -e Temp/UnityLockfile
+        msg: "Unity Editor has this project open (or a crashed batch run left Temp/UnityLockfile). Close the editor first."
+    cmds:
+      - "{{.UNITY}} -batchmode -nographics -projectPath . -runTests -testPlatform PlayMode -assemblyNames LegacyThroughTime.PrototypeTests -testResults {{.ROOT_DIR}}/Temp/prototype-play.xml -logFile Temp/prototype-play.log > /dev/null || true"
+      - grep -oE 'result="[A-Za-z()]+" total="[0-9]+" passed="[0-9]+" failed="[0-9]+"' Temp/prototype-play.xml | head -1
+
+  story:play:
+    desc: Play the whole episode 1 on the heritage screens with synthetic taps in batchmode (PlayMode test) -> Temp/story-play.xml
+    deps: [ink]
+    preconditions:
+      - sh: test ! -e Temp/UnityLockfile
+        msg: "Unity Editor has this project open (or a crashed batch run left Temp/UnityLockfile). Close the editor first."
+    cmds:
+      - mkdir -p Assets/StreamingAssets/stories/golden-cage
+      - cp buckets/stories/golden-cage/episode-01.json Assets/StreamingAssets/stories/golden-cage/
+      - "{{.UNITY}} -batchmode -nographics -projectPath . -runTests -testPlatform PlayMode -assemblyNames LegacyThroughTime.PrototypeTests -testFilter StoryWalkThrough -testResults {{.ROOT_DIR}}/Temp/story-play.xml -logFile Temp/story-play.log > /dev/null || true"
+      - grep -oE 'result="[A-Za-z()]+" total="[0-9]+" passed="[0-9]+" failed="[0-9]+"' Temp/story-play.xml | head -1
 
   apk:
     desc: Dev APK (IL2CPP debug C++, fastest to build) -> Builds/Android/game-dev.apk

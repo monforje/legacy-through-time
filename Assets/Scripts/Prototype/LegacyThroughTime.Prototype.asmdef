@@ -1,0 +1,10 @@
+{
+  "name": "LegacyThroughTime.Prototype",
+  "rootNamespace": "LegacyThroughTime.Prototype",
+  "references": [
+    "UnityEngine.UI",
+    "Unity.InputSystem",
+    "LegacyThroughTime.Narrative"
+  ],
+  "autoReferenced": false
+}

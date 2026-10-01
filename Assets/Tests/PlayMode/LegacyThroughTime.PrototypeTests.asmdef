@@ -1,0 +1,23 @@
+{
+  "name": "LegacyThroughTime.PrototypeTests",
+  "rootNamespace": "LegacyThroughTime.PrototypeTests",
+  "references": [
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner",
+    "UnityEngine.UI",
+    "Unity.InputSystem",
+    "LegacyThroughTime.Prototype",
+    "LegacyThroughTime.Narrative"
+  ],
+  "optionalUnityReferences": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ]
+}

@@ -1,0 +1,127 @@
+<!doctype html>
+<!-- Сквозной прототип: все экраны сессии подряд на одном телефоне.
+     Компоненты и поведение — в components.js, внешний вид — в skeleton.css. -->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Прототип игровой сессии</title>
+<link rel="stylesheet" href="skeleton.css">
+<style>
+  body { display: flex; gap: 40px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+  .phone { flex: none; }
+  /* Телефон и фон стоят на месте; меняется только слой интерфейса:
+     новый проявляется (движение — у самих элементов), старый растворяется. */
+  .ui { position: absolute; inset: 0; }
+  .ui.enter { animation: ui-in .28s cubic-bezier(.22, 1, .36, 1) both; }
+  .ui.leaving { animation: ui-out .2s ease-in both; pointer-events: none; }
+  @keyframes ui-in { from { opacity: 0; } }
+  @keyframes ui-out { to { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .ui.enter, .ui.leaving { animation-duration: .01s; } }
+  .error { max-width: 36ch; padding: 12px 14px; background: #fff; border: 2px solid var(--line); border-radius: 8px; }
+
+  .side { width: 300px; display: grid; gap: 16px; align-content: start; }
+  .side h1 { margin: 0; }
+  .side .hint { color: #555; font-size: var(--fs-meta); line-height: 1.45; text-wrap: pretty; }
+  .bank { font-size: var(--fs-action); font-variant-numeric: tabular-nums; }
+  .steps { list-style: none; padding: 0; display: grid; gap: 2px; }
+  .steps button {
+    width: 100%; text-align: left; font: inherit; font-size: var(--fs-meta);
+    padding: 5px 10px; background: transparent; color: var(--fg);
+    border: 0; border-radius: 6px; cursor: pointer;
+  }
+  .steps button:hover { background: #e6e6e6; }
+  .steps .done { color: #777; }
+  .steps .now { background: var(--dark); color: var(--dark-fg); font-weight: 600; }
+  .steps button:focus-visible { outline: 2px solid var(--fg); }
+  .ctrl { display: flex; gap: 8px; }
+  .ctrl button { white-space: nowrap; font: inherit; font-size: var(--fs-meta); padding: 4px 10px; background: #fff; border: 1px solid #999; border-radius: 6px; cursor: pointer; }
+  .ctrl button:hover { background: #e6e6e6; }
+</style>
+</head>
+<body>
+  <!-- Экраны и порядок прохода берутся из session-screens.html (?data — без отрисовки) -->
+  <iframe id="src" hidden></iframe>
+  <div class="phone" id="phone"></div>
+  <aside class="side">
+    <h1>Прототип сессии</h1>
+    <p class="hint">Проходите тапами: по плашке — дальше, выбор — тоже ведёт дальше. Баланс 💎 общий на весь проход. Список шагов ниже позволяет перепрыгнуть на любой экран.</p>
+    <div class="bank">💎 <span id="bank">20</span></div>
+    <div class="ctrl">
+      <button type="button" id="back">← Назад</button>
+      <button type="button" id="redo">Шаг сначала</button>
+      <button type="button" id="restart">С начала</button>
+    </div>
+    <ol class="steps" id="steps"></ol>
+  </aside>
+
+<script src="components.js"></script>
+<script>
+  const phone = document.getElementById('phone');
+  const bank = { gems: START_GEMS };
+  let FLOW = [], cur = 0, layer = null, active = null;
+
+  // Телефон помещается в окно по высоте: transform, не zoom (см. skeleton.css).
+  const fit = () => document.documentElement.style.setProperty('--scale', Math.min(1, (innerHeight - 64) / 796).toFixed(3));
+  addEventListener('resize', fit); fit();
+
+  // Рамка и фон создаются один раз; экраны меняются слоями внутри неё.
+  const dev = document.createElement('div');
+  dev.className = 'device';
+  phone.append(dev);
+
+  function go(i) {
+    cur = Math.max(0, Math.min(i, FLOW.length - 1));
+    const old = layer, oldActive = active;
+    layer = document.createElement('div');
+    layer.className = 'ui' + (old ? ' enter' : '');
+    dev.append(layer);
+    active = mount(layer, FLOW[cur], {
+      bank,
+      onGems: g => { document.getElementById('bank').textContent = g; },
+      onNext: () => cur === FLOW.length - 1 ? restart() : go(cur + 1),
+    });
+    if (old) {
+      oldActive.stop();
+      old.classList.add('leaving');
+      old.inert = true;
+      setTimeout(() => old.remove(), 220);
+    }
+    document.querySelectorAll('.steps button').forEach((b, k) => {
+      b.className = k < cur ? 'done' : k === cur ? 'now' : '';
+      b.ariaCurrent = k === cur ? 'step' : null;
+    });
+  }
+  function restart() { bank.gems = START_GEMS; document.getElementById('bank').textContent = START_GEMS; go(0); }
+
+  function boot(session) {
+    const byNum = n => session.SCREENS.find(s => s.title.split(' ')[0] === n);
+    FLOW = session.FLOW_ORDER.map(byNum).filter(Boolean).concat(END);
+    document.getElementById('steps').innerHTML = FLOW.slice(0, -1).map((s, k) =>
+      `<li><button type="button" data-i="${k}">${s.title}</button></li>`).join('');
+    go(0);
+  }
+
+  const frame = document.getElementById('src');
+  frame.addEventListener('load', () => {
+    try { boot(frame.contentWindow.SESSION); }
+    catch (err) {
+      phone.innerHTML = '<p class="error">Не удалось прочитать session-screens.html. Откройте прототип через <code>task mockups</code> (http://localhost:8080), а не файлом.</p>';
+      console.error(err);
+    }
+  });
+  frame.src = 'session-screens.html?data&t=' + Date.now();
+
+  document.getElementById('steps').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (b) go(+b.dataset.i);
+  });
+  document.getElementById('back').addEventListener('click', () => go(cur - 1));
+  document.getElementById('redo').addEventListener('click', () => go(cur));
+  document.getElementById('restart').addEventListener('click', restart);
+  addEventListener('keydown', e => {
+    if (e.target.matches('input, textarea, [role="button"], button')) return;
+    if (e.key === 'ArrowLeft') go(cur - 1);
+  });
+</script>
+</body>
+</html>
