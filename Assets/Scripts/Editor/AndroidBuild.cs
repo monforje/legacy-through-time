@@ -1,7 +1,9 @@
+using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
+using LegacyThroughTime.Prototype;
 using UnityEngine;
 
 namespace LegacyThroughTime.Editor
@@ -28,6 +30,15 @@ namespace LegacyThroughTime.Editor
             BrandSettings.Apply();
             var android = NamedBuildTarget.Android;
             var projectConfig = PlayerSettings.GetIl2CppCompilerConfiguration(android);
+            var projectVersion = PlayerSettings.bundleVersion;
+            var projectCode = PlayerSettings.Android.bundleVersionCode;
+
+            // Every build carries the moment it was made: Application.version for the in-game update check, the release tag
+            // of `task publish` (Builds/Android/version.txt), and a versionCode that grows so a newer APK installs over.
+            var now = DateTime.Now;
+            var stamp = BuildStamp.Of(now);
+            PlayerSettings.bundleVersion = stamp;
+            PlayerSettings.Android.bundleVersionCode = BuildStamp.VersionCode(now);
 
             // Unoptimized C++ compiles several times faster; release keeps the project setting.
             if (development)
@@ -50,11 +61,14 @@ namespace LegacyThroughTime.Editor
                     throw new BuildFailedException($"Android build {summary.result}: {summary.totalErrors} error(s)");
 
                 var sizeMb = new FileInfo(summary.outputPath).Length / (1024 * 1024);
-                Debug.Log($"APK: {summary.outputPath} ({sizeMb} MB in {summary.totalTime:mm\\:ss})");
+                Debug.Log($"APK: {summary.outputPath} ({sizeMb} MB in {summary.totalTime:mm\\:ss}), version {stamp}");
+                if (!development) File.WriteAllText(Path.Combine(OutputDir, "version.txt"), stamp);
             }
             finally
             {
                 PlayerSettings.SetIl2CppCompilerConfiguration(android, projectConfig);
+                PlayerSettings.bundleVersion = projectVersion;          // ProjectSettings stays as it is in git
+                PlayerSettings.Android.bundleVersionCode = projectCode;
             }
         }
 

@@ -187,8 +187,11 @@ tasks:
     desc: Upload Builds/Android/game.apk as a new release of the repo (the QR from `task qr` then serves it)
     preconditions:
       - { sh: "test -f Builds/Android/{{.APK_ASSET}}", msg: "no APK - run `task release` first" }
+      - { sh: "! gh release view \"$(cat Builds/Android/version.txt 2>/dev/null)\" --repo {{.REPO}} >/dev/null 2>&1", msg: "this APK is already published - build a new one with `task release`" }
     vars:
-      TAG: '{{.TAG | default (now | date "2006-01-02-1504")}}'
+      # the version stamped into the APK by the build: the game compares it with this tag to offer updates
+      TAG:
+        sh: cat Builds/Android/version.txt 2>/dev/null || date +%Y-%m-%d-%H%M
     cmds:
       - gh release create "{{.TAG}}" "Builds/Android/{{.APK_ASSET}}" --repo {{.REPO}} --title "{{.TAG}}" --notes "Android build"
 

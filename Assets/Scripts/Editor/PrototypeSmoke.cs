@@ -41,12 +41,16 @@ namespace LegacyThroughTime.Editor
             Guard(failures, "menu", () =>
             {
                 foreach (var progress in new[] { StoryBoard.Progress.New, StoryBoard.Progress.InProgress, StoryBoard.Progress.Finished })
-                    Object.DestroyImmediate(new StoryBoard(canvas, StoryCatalog.All, _ => progress, (_, _) => { }, animated: false).Root.gameObject);
+                {
+                    var board = new StoryBoard(canvas, StoryCatalog.All, _ => progress, (_, _) => { }, () => { }, animated: false);
+                    board.ShowUpdate("2099-01-01-0000", () => { });
+                    Object.DestroyImmediate(board.Root.gameObject);
+                }
             });
             Guard(failures, "settings", () =>
             {
                 var toast = new SettingsToast(canvas, NoAnimator.Instance);
-                toast.Open(() => { }); toast.Close();
+                toast.Open(() => { }, () => { }); toast.Close();
                 Object.DestroyImmediate(SettingsToast.Gear(canvas, () => { }).gameObject);
             });
             WalkStory(canvas, failures);

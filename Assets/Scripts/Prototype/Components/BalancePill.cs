@@ -45,7 +45,8 @@ namespace LegacyThroughTime.Prototype
         public static BalancePill Corner(Transform page, int coins)
         {
             var pill = new BalancePill(page, "GemChip", 104, coins, null, NoAnimator.Instance);
-            Ui.Box(pill.Root, A.TopRight, A.TopRight, new Vector2(-Metrics.Side, -(Metrics.InsetTop + 16 + Viewport.ExtraTop)), new Vector2(104, 48));
+            // left of the settings gear in the corner
+            Ui.Box(pill.Root, A.TopRight, A.TopRight, new Vector2(-(Metrics.Side + Metrics.GearSize + 6), -(Metrics.InsetTop + 16 + Viewport.ExtraTop)), new Vector2(104, 48));
             return pill;
         }
 

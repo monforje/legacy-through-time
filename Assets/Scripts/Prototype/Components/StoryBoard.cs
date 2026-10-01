@@ -8,22 +8,26 @@ namespace LegacyThroughTime.Prototype
 {
     /// The main menu: a board of story cards over the dimmed title picture. A card shows the preview (the cover
     /// picture), the title, the episode and its progress, a blurb, and "Читать" / "Продолжить" / "Читать снова";
-    /// a story in progress also gets "Начать сначала" (two taps: the first one asks).
+    /// a story in progress also gets "Начать сначала" (two taps: the first one asks). The header scrolls away with
+    /// the cards; "Выйти из игры" closes the list; a new version of the game shows a card above the stories.
     sealed class StoryBoard
     {
         public enum Progress { New, InProgress, Finished }
 
         const float Pad = 12, PreviewHeight = 188, CardGap = 18, ButtonHeight = 48, RestartHeight = 36, TextSide = 18;
-        const float HeaderHeight = 92, PreviewFocus = .5f;
+        const float HeaderHeight = 92, PreviewFocus = .5f, UpdateHeight = 158;
 
         public readonly RectTransform Root;
         readonly IAnimator anim;
         readonly Func<StoryEntry, Progress> progress;
         readonly Action<StoryEntry, bool> open;          // (story, from the beginning)
+        readonly RectTransform content, body;           // the scrolling list; the cards and the footer in it
+        readonly float bodyTop;
+        RectTransform update;
         bool leaving;
 
         public StoryBoard(RectTransform column, IReadOnlyList<StoryEntry> stories, Func<StoryEntry, Progress> progress,
-                          Action<StoryEntry, bool> open, bool animated)
+                          Action<StoryEntry, bool> open, Action quit, bool animated)
         {
             this.progress = progress; this.open = open;
             Root = Ui.Rect(column, "Menu");
@@ -34,21 +38,79 @@ namespace LegacyThroughTime.Prototype
             var dim = Ui.Img(Root, "Dim", ProceduralArt.Gradient(Theme.TitleDimTop, Theme.TitleDimBottom));
             Ui.Bleed(dim.rectTransform);
 
+            content = BuildList();
             var top = Metrics.InsetTop + 8 + Viewport.ExtraTop;
-            var header = BuildHeader(top);
-            var content = BuildList(top + HeaderHeight);
+            var header = BuildHeader(content, top);
 
-            var y = 6f;
+            bodyTop = top + HeaderHeight;
+            body = Ui.Rect(content, "Body");
+            var y = 0f;
             var cards = new List<RectTransform>();
             foreach (var story in stories)
             {
-                var card = BuildCard(content, story, y);
+                var card = BuildCard(body, story, y);
                 cards.Add(card);
                 y += card.sizeDelta.y + CardGap;
             }
-            content.sizeDelta = new Vector2(0, y);
+            var footer = BuildQuit(body, y, quit);
+            cards.Add(footer);
+            y += ButtonHeight + 28;
+            Ui.TopRow(body, 0, 0, bodyTop, y);
+            Resize();
 
             if (anim.Enabled) Animate(header, cards);
+        }
+
+        void Resize() => content.sizeDelta = new Vector2(0, body.offsetMax.y * -1 + body.rect.height);
+
+        /// A card above the stories: a newer build of the game can be downloaded. "Позже" removes it.
+        public void ShowUpdate(string version, Action download)
+        {
+            if (update || !Root) return;
+            var card = Ui.Sliced(content, "Update", "card");
+            update = card.rectTransform;
+            Ui.TopRow(update, 0, 0, bodyTop, UpdateHeight - CardGap);
+            var title = Ui.Txt(update, "Title", "Вышла новая версия", Art.Head, 20, Theme.Ink);
+            Ui.TopRow(title.rectTransform, TextSide, TextSide, 18, 28);
+            var line = Ui.Txt(update, "Version", "Сборка " + version + ": скачайте и установите поверх", Art.Sub, 13, Theme.Scarlet);
+            Ui.TopRow(line.rectTransform, TextSide, TextSide, 46, 20);
+
+            var button = Ui.Sliced(update, "Download", "btn");
+            Ui.TopRow(button.rectTransform, Pad - 2, 112, 74, ButtonHeight);
+            Ui.Icon(button.rectTransform, "Icon", "download", A.MidLeft, A.MidLeft, new Vector2(16, 1), 22, Theme.Parchment);
+            var label = Ui.Txt(button.rectTransform, "Text", "Обновить", Art.Action, Metrics.FsAction, Theme.Parchment);
+            Ui.Emboss(label);
+            Ui.Stretch(label.rectTransform, 46, 2, 10, 0);
+            PressButton.On(button.gameObject, () => { if (!leaving) download(); }, .97f, button, "btn-pressed");
+
+            var later = Ui.Img(update, "Later", ProceduralArt.White);
+            later.color = Color.clear; later.raycastTarget = true;
+            Ui.Box(later.rectTransform, A.TopRight, A.TopRight, new Vector2(-Pad, -74), new Vector2(96, ButtonHeight));
+            var laterText = Ui.Txt(later.rectTransform, "Text", "Позже", Art.Action, Metrics.FsAction, Theme.Ink.WithAlpha(.7f), TextAnchor.MiddleCenter);
+            Ui.Stretch(laterText.rectTransform);
+            PressButton.On(later.gameObject, HideUpdate, .97f);
+
+            Shift(UpdateHeight);
+            if (anim.Enabled)
+            {
+                var group = Ui.Group(card); group.alpha = 0;
+                anim.Play(Tween.To(.4f, e => group.alpha = e, Easing.Linear));
+            }
+        }
+
+        void HideUpdate()
+        {
+            if (!update) return;
+            UnityEngine.Object.Destroy(update.gameObject);
+            update = null;
+            Shift(-UpdateHeight);
+        }
+
+        /// Moves the cards down (or back up) under the update card.
+        void Shift(float by)
+        {
+            body.anchoredPosition -= new Vector2(0, by);
+            Resize();
         }
 
         /// Fades away and destroys itself; run by the owner (the board's own animator dies with it).
@@ -67,10 +129,10 @@ namespace LegacyThroughTime.Prototype
         }
 
         // ------------------------------------------------------------ header and the scrolling list
-        RectTransform BuildHeader(float top)
+        RectTransform BuildHeader(RectTransform content, float top)
         {
-            var header = Ui.Rect(Root, "Header");
-            Ui.TopRow(header, 56, 56, top, HeaderHeight);
+            var header = Ui.Rect(content, "Header");
+            Ui.TopRow(header, 36, 36, top, HeaderHeight);
             var title = Ui.Txt(header, "Title", "ИСТОРИИ", Art.Head, Metrics.FsTitle, Theme.Parchment, TextAnchor.MiddleCenter);
             Ui.TopRow(title.rectTransform, 0, 0, 10, 40);
             var shadow = title.gameObject.AddComponent<Shadow>();
@@ -79,11 +141,12 @@ namespace LegacyThroughTime.Prototype
             return header;
         }
 
-        RectTransform BuildList(float top)
+        /// The whole column scrolls (the header too), down to the gesture bar.
+        RectTransform BuildList()
         {
             var viewport = Ui.Img(Root, "List", ProceduralArt.White);
             viewport.color = Color.clear; viewport.raycastTarget = true;     // drags anywhere in the list scroll it
-            Ui.Stretch(viewport.rectTransform, 0, Metrics.InsetBottom + Viewport.ExtraBottom, 0, top);
+            Ui.Stretch(viewport.rectTransform, 0, Metrics.InsetBottom + Viewport.ExtraBottom, 0, 0);
             viewport.gameObject.AddComponent<RectMask2D>();
 
             var content = Ui.Rect(viewport.rectTransform, "Cards");
@@ -204,6 +267,20 @@ namespace LegacyThroughTime.Prototype
                     armed = false; label.text = "Начать сначала"; label.color = Theme.Ink.WithAlpha(.75f);
                 }));
             }, .98f);
+        }
+
+        /// "Выйти из игры" under the cards: quiet, parchment on the dim.
+        RectTransform BuildQuit(RectTransform parent, float top, Action quit)
+        {
+            var row = Ui.Img(parent, "Quit", ProceduralArt.White);
+            row.color = Color.clear; row.raycastTarget = true;
+            Ui.TopRow(row.rectTransform, 40, 40, top, ButtonHeight);
+            var label = Ui.Txt(row.rectTransform, "Text", "Выйти из игры", Art.Action, Metrics.FsAction, Theme.Parchment.WithAlpha(.85f), TextAnchor.MiddleCenter);
+            Ui.Stretch(label.rectTransform, 28, 0, 0, 0);
+            var width = Ui.TextWidth(label) + 28;
+            Ui.Icon(row.rectTransform, "Icon", "exit", A.Center, A.MidLeft, new Vector2(-width / 2, 1), 22, Theme.Parchment.WithAlpha(.85f));
+            PressButton.On(row.gameObject, () => { if (!leaving) quit(); }, .97f);
+            return row.rectTransform;
         }
 
         // ------------------------------------------------------------ entrance

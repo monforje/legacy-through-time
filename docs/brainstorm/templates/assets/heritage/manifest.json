@@ -10,6 +10,8 @@
  "chevron": {"size_1x": [16, 20], "size_png": [64, 80]},
  "coin": {"size_1x": [48, 48], "size_png": [192, 192]},
  "disc": {"size_1x": [64, 64], "size_png": [256, 256]},
+ "download": {"size_1x": [32, 32], "size_png": [128, 128]},
+ "exit": {"size_1x": [32, 32], "size_png": [128, 128]},
  "field": {"size_1x": [48, 48], "size_png": [192, 192], "slice": {"top_bottom_left_right_1x": [14, 14, 14, 14], "unity_border_ltrb_png": [56, 56, 56, 56], "type": "sliced", "fill_center": true}},
  "frame": {"size_1x": [32, 32], "size_png": [128, 128], "slice": {"top_bottom_left_right_1x": [10, 10, 10, 10], "unity_border_ltrb_png": [40, 40, 40, 40], "type": "sliced", "fill_center": false}},
  "gear": {"size_1x": [44, 46], "size_png": [176, 184]},

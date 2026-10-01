@@ -117,3 +117,21 @@ def restart(hand):
 def star(hand):
     """The sparkle of a finished story on its card. 24x24."""
     return Sprite('star', 24, 24, sparkle(12, 12, 10.5, SCARLET, INK, 1.6))
+
+
+@REGISTRY.sprite('exit')
+def exit_door(hand):
+    """A door with an arrow leaving it: "quit the game". 32x32."""
+    return Sprite('exit', 32, 32, '\n'.join([
+        f'<path d="M15,5 H6.5 V27 H15" fill="none" stroke="{WHITE}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>',
+        f'<path d="M12,16 H27 M22,10.5 L27.5,16 L22,21.5" fill="none" stroke="{WHITE}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>',
+    ]), halo=WHITE)
+
+
+@REGISTRY.sprite('download')
+def download(hand):
+    """An arrow down into a tray: "update the game". 32x32."""
+    return Sprite('download', 32, 32, '\n'.join([
+        f'<path d="M16,4 V19 M9.5,13 L16,19.5 L22.5,13" fill="none" stroke="{WHITE}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>',
+        f'<path d="M5,20 V26.5 H27 V20" fill="none" stroke="{WHITE}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>',
+    ]), halo=WHITE)

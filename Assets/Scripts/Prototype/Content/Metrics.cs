@@ -15,6 +15,7 @@ namespace LegacyThroughTime.Prototype
         public const float OptionsOverlap = 16;     // and overlap it by this much
         public const float OptionGap = 10;
         public const float InsetTop = 32, InsetBottom = 24;   // status bar and gesture bar of the reference frame
+        public const float GearSize = 44;           // the settings gear in the top-right corner
 
         // Type scale (px)
         public const int FsTitle = 28, FsValue = 22, FsBody = 19, FsAction = 17, FsLabel = 15;

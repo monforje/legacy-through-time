@@ -23,6 +23,7 @@ namespace LegacyThroughTime.Prototype
         StoryMachine machine;
         PlateSpec lastPlate;
         string tintId;
+        string update;                         // tag of a newer release, null when there is none (or it was not checked yet)
         int session;                           // bumps on every menu / story switch: a late callback of the old one is ignored
         int lastWidth, lastHeight;
         readonly Dictionary<string, string> texts = new();     // compiled stories already read
@@ -70,6 +71,7 @@ namespace LegacyThroughTime.Prototype
             var auto = AutoStart != null ? StoryCatalog.Find(AutoStart) : null;
             if (auto != null) Open(auto, true);
             else ShowMenu();
+            if (Updater.Enabled) StartCoroutine(Updater.Check(tag => { update = tag; board?.ShowUpdate(tag, Updater.Download); }));
         }
 
         void Update()
@@ -91,13 +93,23 @@ namespace LegacyThroughTime.Prototype
         }
 
         // ------------------------------------------------------------ menu and settings
-        void OpenSettings() => settings.Open(story != null ? ShowMenu : null);
+        void OpenSettings() => settings.Open(story != null ? ShowMenu : null, Quit);
+
+        /// The line on screen is already saved: leaving is just leaving.
+        static void Quit()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
 
         void Back()
         {
             if (settings.IsOpen) settings.Close();
             else if (story != null) OpenSettings();
-            else Application.Quit();
+            else Quit();
         }
 
         /// The board of stories. Leaving a story needs no saving here: the line on screen is already saved.
@@ -107,7 +119,8 @@ namespace LegacyThroughTime.Prototype
             story = null; machine = null; lastPlate = null;
             host.Clear();
             Scenery("title");
-            board = new StoryBoard(host.Pages, StoryCatalog.All, ProgressOf, Open, animated: true);
+            board = new StoryBoard(host.Pages, StoryCatalog.All, ProgressOf, Open, Quit, animated: true);
+            if (update != null) board.ShowUpdate(update, Updater.Download);
         }
 
         static StoryBoard.Progress ProgressOf(StoryEntry s) =>
