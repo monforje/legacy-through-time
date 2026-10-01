@@ -7,6 +7,9 @@ vars:
   INK_IMAGE: legacy-through-time/inklecate
   DOTNET_IMAGE: legacy-through-time/dotnet
   SVG_IMAGE: legacy-through-time/svg
+  QR_IMAGE: legacy-through-time/qr
+  REPO: monforje/legacy-through-time-builds
+  APK_ASSET: game.apk
   HERITAGE_DIR: docs/brainstorm/templates/assets/heritage
   DOTNET: docker run --rm --user "$(id -u):$(id -g)" -e NUGET_PACKAGES=/work/.cache/nuget -v "{{.ROOT_DIR}}:/work" {{.DOTNET_IMAGE}}
 
@@ -161,6 +164,30 @@ tasks:
     cmds:
       - task: unity
         vars: { METHOD: Release }
+
+  qr:
+    desc: QR code -> Builds/qr.png; the link always serves the APK of the latest GitHub release (the QR never changes). Override with URL=...
+    deps: [qr-image]
+    vars:
+      LINK: '{{.URL | default (print "https://github.com/" .REPO "/releases/latest/download/" .APK_ASSET)}}'
+    cmds:
+      - docker run --rm --user "$(id -u):$(id -g)" -v "{{.ROOT_DIR}}:/work" {{.QR_IMAGE}} -s 16 -m 2 -o Builds/qr.png "{{.LINK}}"
+      - echo "{{.LINK}} -> Builds/qr.png"
+
+  publish:
+    desc: Upload Builds/Android/game.apk as a new release of the public builds repo (the QR from `task qr` then serves it)
+    preconditions:
+      - { sh: "test -f Builds/Android/{{.APK_ASSET}}", msg: "no APK - run `task release` first" }
+    vars:
+      TAG: '{{.TAG | default (now | date "2006-01-02-1504")}}'
+    cmds:
+      - gh release create "{{.TAG}}" "Builds/Android/{{.APK_ASSET}}" --repo {{.REPO}} --title "{{.TAG}}" --notes "Android build"
+
+  qr-image:
+    internal: true
+    sources: [docker/qr/Dockerfile]
+    status: ["docker image inspect {{.QR_IMAGE}} >/dev/null 2>&1"]
+    cmds: ["docker build -t {{.QR_IMAGE}} docker/qr"]
 
   install:
     desc: Install the dev APK on the connected phone and launch it
