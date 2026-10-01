@@ -42,8 +42,11 @@ namespace LegacyThroughTime.Prototype
             yield return StoryFile.Read(StoryPath, text => json = text, Fail);
             var rest = LoadingScreen.MinSeconds - (Time.unscaledTime - started);     // the logo is seen for a moment at least
             if (rest > 0) yield return new WaitForSecondsRealtime(rest);
-            if (json != null) Restart();
+            // The loading screen leaves and the title comes in under it: the title starts when the spinner is gone, so that
+            // its own entrance is seen as the logo dissolves.
             host.Hide(loading);
+            yield return new WaitForSecondsRealtime(LoadingScreen.SpinnerFade);
+            if (json != null) Restart();
         }
 
         void Update()

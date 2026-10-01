@@ -19,6 +19,27 @@ namespace LegacyThroughTime.Prototype
             }
         }
 
+        static Sprite disc;
+
+        /// A soft-edged white disc (dots of the spinner; the game tints it).
+        public static Sprite Disc
+        {
+            get
+            {
+                if (disc) return disc;
+                const int n = 64;
+                var t = NewTexture(n, n);
+                for (var y = 0; y < n; y++)
+                    for (var x = 0; x < n; x++)
+                    {
+                        var d = Mathf.Sqrt(Mathf.Pow(x + .5f - n / 2f, 2) + Mathf.Pow(y + .5f - n / 2f, 2));
+                        t.SetPixel(x, y, new Color(1, 1, 1, Mathf.Clamp01(n / 2f - d)));      // one pixel of anti-aliasing
+                    }
+                t.Apply();
+                return disc = Sprite.Create(t, new Rect(0, 0, n, n), new Vector2(.5f, .5f), 100);
+            }
+        }
+
         // 8-bit alpha has only 256 levels, so a smooth dark gradient stretched over a phone screen shows as
         // visible bands. A fixed pseudo-random offset of about one level breaks the bands up (dithering).
         static float Dither(int x, int y) { unchecked { return ((x * 73856093 ^ y * 19349663) & 255) / 255f - .5f; } }
