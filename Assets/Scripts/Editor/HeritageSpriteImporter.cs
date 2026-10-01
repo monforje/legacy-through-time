@@ -17,6 +17,9 @@ namespace LegacyThroughTime.Editor
         // PNGs are @4x; with the default Canvas reference of 100 ppu this gives 1 canvas unit = 1 px of the 360x780 layout.
         public const float PixelsPerUnit = 400f;
 
+        /// Bump when the settings below change: Unity then reimports every texture and sound with them.
+        public override uint GetVersion() => 2;
+
         void OnPreprocessTexture()
         {
             if (!assetPath.EndsWith(".png")) return;
@@ -39,6 +42,7 @@ namespace LegacyThroughTime.Editor
             importer.filterMode = FilterMode.Trilinear;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.maxTextureSize = 2048;
+            AndroidAstc4x4(importer);
 
             var settings = new TextureImporterSettings();
             importer.ReadTextureSettings(settings);
@@ -92,6 +96,19 @@ namespace LegacyThroughTime.Editor
             importer.npotScale = TextureImporterNPOTScale.None;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.maxTextureSize = 2048;
+            if (sprite) AndroidAstc4x4(importer);
+        }
+
+        /// The UI kit and the logo on Android: ASTC 4x4 is 8 bits a pixel instead of 32 and keeps the thin ink outlines
+        /// (the PNGs are @4x and shown smaller, through mip-maps). Uncompressed they were ~37 MB of the APK.
+        static void AndroidAstc4x4(TextureImporter importer)
+        {
+            var android = importer.GetPlatformTextureSettings("Android");
+            android.overridden = true;
+            android.format = TextureImporterFormat.ASTC_4x4;
+            android.compressionQuality = 100;
+            android.maxTextureSize = 2048;
+            importer.SetPlatformTextureSettings(android);
         }
 
         // Format of a slices.txt line: `name left bottom right top sliced|tiled fill_center`

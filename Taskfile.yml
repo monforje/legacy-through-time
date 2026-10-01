@@ -100,6 +100,8 @@ tasks:
       - mkdir -p Assets/Resources/Heritage
       - rm -f Assets/Resources/Heritage/*.png
       - cp {{.HERITAGE_DIR}}/png/*.png {{.HERITAGE_DIR}}/slices.txt Assets/Resources/Heritage/
+      # the web title landscape: the game paints its title (Art/Backgrounds/title), and Resources ships whatever lies in it
+      - rm -f Assets/Resources/Heritage/title-land.png Assets/Resources/Heritage/title-land.png.meta
       - task: png:optimize
         vars: { DIR: Assets/Resources/Heritage }
 
