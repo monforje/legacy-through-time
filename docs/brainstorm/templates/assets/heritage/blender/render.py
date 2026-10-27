@@ -1,14 +1,14 @@
-"""Renders the Blender kit of the Heritage UI: the same sprites as the SVG kit (names, sizes, 9-slice borders), drawn
-as real objects - enamel in ink rims, paper with grain, silk threads, gilt wire - under a warm lamp.
+"""Renders the Blender kit of the Heritage UI: the sprites of the SVG kit (names, roles) drawn as crafted things -
+tooled leather in gold rims, parchment with stitches and embroidery, cut stones, filigree - under a warm lamp.
 
     blender -b --factory-startup --python-exit-code 1 -P blender/render.py -- [name ...] [--list]
 
 (`task assets:blender`). Writes png3d/<name>.png at @4x and png3d/slices.txt for the Unity importer. Without names it
 renders every sprite of blender/sprites3d.py; the slices file always lists all of them.
 
-Sizes and borders come from the SVG kit's registry unless the sprite overrides them, so both kits are drop-in
-replacements of each other. A sliced sprite has edges of one section along their whole length (they stretch); a
-tiled one repeats its edges and centre at native size, and its paper grain has exactly the period of the tile."""
+Sizes and borders come from the SVG kit's registry unless the sprite overrides them. Every 9-slice sprite is tiled:
+the game's KitImage repeats a whole number of its edge and centre tiles (border-image: round), so the patterns and
+textures, periodic with the tile, never smear or break."""
 import sys
 import tempfile
 import time
@@ -59,6 +59,7 @@ def main():
         spec = specs[name]
         t = time.time()
         studio = Studio(spec.width, spec.height, spec.shear, spec.period, spec.samples)
+        studio.borders = spec.slice
         spec.build(studio, spec.width, spec.height)
         studio.render(raw / f'{name}.png')
         b = spec.slice

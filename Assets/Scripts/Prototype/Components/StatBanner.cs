@@ -19,10 +19,10 @@ namespace LegacyThroughTime.Prototype
         {
             this.anim = anim;
             Root = Ui.Rect(parent, "Stat");
-            var img = Root.gameObject.AddComponent<Image>();
-            img.sprite = Art.Sprite("banner"); img.type = Image.Type.Sliced; img.raycastTarget = true;
+            var img = Root.gameObject.AddComponent<KitImage>();
+            img.sprite = Art.Sprite("banner"); img.type = Art.Tiled("banner") ? Image.Type.Tiled : Image.Type.Sliced; img.raycastTarget = true;
             Ui.Lift(img, 5, .34f);
-            top = -(Metrics.InsetTop + 24 + Viewport.ExtraTop);
+            top = -(Metrics.HudBottom + Viewport.ExtraTop);           // under the gear and the balance, not over them
             Ui.Box(Root, A.TopCenter, A.TopCenter, new Vector2(0, top), new Vector2(Metrics.PlateWidth, Height));
 
             var label = Ui.Txt(Root, "Text", TextRules.NoBreaks(text), Art.Action, Metrics.FsAction, Theme.Parchment, TextAnchor.MiddleCenter);

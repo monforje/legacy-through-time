@@ -25,7 +25,7 @@ namespace LegacyThroughTime.Prototype
             // above the plate for the horn, so the body image reaches that far over the top edge.
             var body = Ui.Rect(Root, "Body");
             Ui.Stretch(body, 0, 0, 0, -Skin.Headroom);
-            var img = body.gameObject.AddComponent<Image>();
+            var img = body.gameObject.AddComponent<KitImage>();
             img.sprite = Art.Sprite(Skin.Sprite); img.raycastTarget = false;
             img.type = Skin.Tiled || Art.Tiled(Skin.Sprite) ? Image.Type.Tiled : Image.Type.Sliced;
             Ui.Lift(img, 8, .34f);

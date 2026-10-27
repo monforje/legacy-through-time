@@ -72,7 +72,7 @@ namespace LegacyThroughTime.Prototype
 
         public static Image Img(Transform parent, string name, Sprite sprite, Image.Type type = Image.Type.Simple, bool fillCenter = true)
         {
-            var img = Rect(parent, name).gameObject.AddComponent<Image>();
+            var img = Rect(parent, name).gameObject.AddComponent<KitImage>();
             img.sprite = sprite; img.type = type; img.fillCenter = fillCenter; img.raycastTarget = false;
             return img;
         }

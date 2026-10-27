@@ -24,16 +24,18 @@ namespace LegacyThroughTime.Prototype.Tests
         }
 
         [Test]
-        public void TheBlenderKitKeepsTheBordersOfTheSvgKit()
+        public void TheBlenderKitFillsTheSameCentresAndTilesTheCloudsAsTheSvgKit()
         {
             RequireBoth();
             var svg = Slices("Heritage");
             foreach (var (name, b) in Slices("Heritage3D"))
             {
                 if (!svg.TryGetValue(name, out var a)) continue;
-                Assert.That(b.Take(4), Is.EqualTo(a.Take(4)), name + ": borders");
                 Assert.That(b[5], Is.EqualTo(a[5]), name + ": fill centre");
             }
+            // a pattern may need a tile of its own, but the layout rounds the clouds to whole tiles of these borders
+            foreach (var name in new[] { "thought", "thought-cloud", "info" })
+                Assert.That(Slices("Heritage3D")[name].Take(4), Is.EqualTo(svg[name].Take(4)), name + ": borders");
         }
 
         [Test]
@@ -45,6 +47,25 @@ namespace LegacyThroughTime.Prototype.Tests
             var pngs = Directory.GetFiles(Dir("Heritage3D"), "*.png").Select(Path.GetFileNameWithoutExtension);
             var missing = pngs.Where(n => svg.ContainsKey(n) && !blender.ContainsKey(n)).ToList();
             Assert.That(missing, Is.Empty, "9-sliced in the SVG kit, without borders in the Blender kit");
+        }
+
+        [Test]
+        public void TheHornOfASpeechPlateIsOnTheSideOppositeToItsNameTag()
+        {
+            RequireBoth();
+            foreach (var style in new[] { PlateStyle.SpeechLeft, PlateStyle.SpeechRight })
+            {
+                var skin = PlateSkins.For(style);
+                foreach (var kit in new[] { "Heritage", "Heritage3D" })
+                {
+                    // the horn lives in the wide, unstretched border of the sprite: `left bottom right top`
+                    var b = Slices(kit)[skin.Sprite].Take(4).Select(int.Parse).ToArray();
+                    var horn = b[2] > b[0] ? TailSide.Right : TailSide.Left;
+                    Assert.That(horn, Is.EqualTo(skin.Tail), $"{style}: {kit}/{skin.Sprite} has its horn on the {horn}");
+                    var tag = skin.TagSide == TagSide.Left ? TailSide.Left : skin.TagSide == TagSide.Right ? TailSide.Right : TailSide.None;
+                    Assert.That(tag, Is.Not.EqualTo(horn), $"{style}: the name tag and the horn are on the same side");
+                }
+            }
         }
 
         [Test]

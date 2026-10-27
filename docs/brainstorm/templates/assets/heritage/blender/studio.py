@@ -27,7 +27,7 @@ ZENITH = (.7, .97)                         # the room is dark from this cosine t
 def _room(z):
     """Strength of the room light from a direction of height z (the cosine to the zenith)."""
     t = min(max((z - ZENITH[0]) / (ZENITH[1] - ZENITH[0]), 0), 1)
-    return FILL / .8 + (FILL * .1 - FILL / .8) * t
+    return FILL / .8 + (FILL * .55 - FILL / .8) * t
 
 
 # The light a flat face gets, per channel: the lamp plus the room over the hemisphere (2 * integral of L(z) z dz).
@@ -58,12 +58,130 @@ def signed_area(pts):
     return sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in zip(pts, pts[1:] + pts[:1])) / 2
 
 
+class Nodes:
+    """Shader node plumbing for the materials. Every texture samples the position in px; with a period (the tile of
+    a tiled sprite) x and y are wrapped into circles of that length in 4D texture space, so a texture repeats
+    exactly once per tile and the round tiles of KitImage join without a seam."""
+
+    def __init__(self, nt, period):
+        self.nt, self.n, self.period = nt, nt.nodes, period
+        geo = self.n.new('ShaderNodeNewGeometry')
+        self.pos = geo.outputs['Position']
+        sep = self.n.new('ShaderNodeSeparateXYZ')
+        self.link(self.pos, sep.inputs[0])
+        self.x, self.y = sep.outputs['X'], sep.outputs['Y']
+
+    def link(self, a, b):
+        self.nt.links.new(a, b)
+
+    def math(self, op, a, b=None):
+        node = self.n.new('ShaderNodeMath')
+        node.operation = op
+        for k, v in enumerate((a, b)):
+            if v is None:
+                continue
+            if isinstance(v, (int, float)):
+                node.inputs[k].default_value = v
+            else:
+                self.link(v, node.inputs[k])
+        return node.outputs[0]
+
+    def mul(self, a, b):
+        return self.math('MULTIPLY', a, b)
+
+    def add(self, a, b):
+        return self.math('ADD', a, b)
+
+    def _place(self, tex, seed, dimensions):
+        """Sets the dimensions of a texture node (its W input exists only in 4D) and feeds the (wrapped) position."""
+        setattr(tex, dimensions, '4D' if self.period else '3D')
+        if self.period:
+            px, py = self.period
+            u, v = self.mul(self.x, math.tau / px), self.mul(self.y, math.tau / py)
+            rx, ry = px / math.tau, py / math.tau      # 1 texture unit = 1 px along the sprite
+            vec = self.n.new('ShaderNodeCombineXYZ')
+            self.link(self.mul(self.math('COSINE', u), rx), vec.inputs[0])
+            self.link(self.mul(self.math('SINE', u), rx), vec.inputs[1])
+            self.link(self.add(self.mul(self.math('COSINE', v), ry), seed), vec.inputs[2])
+            self.link(vec.outputs[0], tex.inputs['Vector'])
+            self.link(self.mul(self.math('SINE', v), ry), tex.inputs['W'])
+            return
+        off = self.n.new('ShaderNodeVectorMath')
+        off.operation = 'ADD'
+        off.inputs[1].default_value = (seed, seed * 1.7, 0)
+        self.link(self.pos, off.inputs[0])
+        self.link(off.outputs[0], tex.inputs['Vector'])
+
+    def noise(self, scale, detail, seed):
+        """Value noise 0..1 with features of about 1/scale px."""
+        tex = self.n.new('ShaderNodeTexNoise')
+        self._place(tex, seed, 'noise_dimensions')
+        tex.inputs['Scale'].default_value = scale
+        tex.inputs['Detail'].default_value = detail
+        tex.inputs['Roughness'].default_value = .55
+        return tex.outputs['Fac']
+
+    def voronoi(self, scale, seed, out='Distance'):
+        """Cells of about 1/scale px: their distance field is a pebbled grain."""
+        tex = self.n.new('ShaderNodeTexVoronoi')
+        self._place(tex, seed, 'voronoi_dimensions')
+        tex.inputs['Scale'].default_value = scale
+        return tex.outputs[out]
+
+    def colour(self, bsdf, color, variations, ao=None, dark=None):
+        """Base colour: the albedo of `color` times 1 + sum(amount * (value - .5)), darkened toward `dark` (or
+        black) where ambient occlusion within ao[0] px finds a crevice, by up to ao[1]."""
+        b = 1.0
+        for value, amount in variations:
+            b = self.add(b, self.mul(self.math('SUBTRACT', value, .5), amount))
+        tint = self.n.new('ShaderNodeVectorMath')
+        tint.operation = 'SCALE'
+        tint.inputs[0].default_value = albedo(color)
+        if isinstance(b, float):
+            tint.inputs['Scale'].default_value = b
+        else:
+            self.link(b, tint.inputs['Scale'])
+        out = tint.outputs[0]
+        if ao:
+            occ = self.n.new('ShaderNodeAmbientOcclusion')
+            occ.samples = 8
+            occ.inputs['Distance'].default_value = ao[0]
+            mix = self.n.new('ShaderNodeMix')
+            mix.data_type = 'RGBA'
+            # the Mix node keeps sockets of every type under the same names: take the colour ones by identifier
+            sock = {s.identifier: s for s in mix.inputs}
+            self.link(self.mul(self.math('SUBTRACT', 1.0, occ.outputs['AO']), ao[1]), sock['Factor_Float'])
+            self.link(out, sock['A_Color'])
+            sock['B_Color'].default_value = (*albedo(dark), 1) if dark else (0, 0, 0, 1)
+            out = next(s for s in mix.outputs if s.identifier == 'Result_Color')
+        self.link(out, bsdf.inputs['Base Color'])
+
+    def bump(self, bsdf, heights, strength, distance):
+        h = 0.0
+        for value, amount in heights:
+            h = self.add(h, self.mul(value, amount))
+        node = self.n.new('ShaderNodeBump')
+        node.inputs['Distance'].default_value = distance
+        # only where the surface faces the camera: on a steep bevel the grain catches the bright room and sparkles
+        geo = self.n.new('ShaderNodeNewGeometry')
+        nz = self.n.new('ShaderNodeSeparateXYZ')
+        self.link(geo.outputs['Normal'], nz.inputs[0])
+        flat = self.n.new('ShaderNodeMapRange')
+        flat.inputs['From Min'].default_value, flat.inputs['From Max'].default_value = .75, .97
+        flat.inputs['To Min'].default_value, flat.inputs['To Max'].default_value = 0, strength
+        self.link(nz.outputs['Z'], flat.inputs['Value'])
+        self.link(flat.outputs['Result'], node.inputs['Strength'])
+        self.link(h, node.inputs['Height'])
+        self.link(node.outputs['Normal'], bsdf.inputs['Normal'])
+
+
 class Studio:
     def __init__(self, width, height, shear=1.0, period=None, samples=160):
         """`period`: (px, py) of the paper grain, the size of the tile of a tiled sprite: the grain then repeats
         without a seam. `shear`: px of drop per px of depth."""
         bpy.ops.wm.read_factory_settings(use_empty=True)
         self.w, self.h, self.k, self.period = width, height, shear, period
+        self.borders = None             # the 9-slice borders of the sprite (render.py): the lattices of its patterns
         self.scene = bpy.context.scene
         self.materials = {}
         self._camera()
@@ -138,6 +256,7 @@ class Studio:
 
     # ------------------------------------------------------------ materials
     def mat(self, kind, color='#ffffff', **o):
+        """A material of the kit. Textures are periodic with the tile of a tiled sprite (see Nodes)."""
         key = (kind, color, tuple(sorted(o.items())))
         if key in self.materials:
             return self.materials[key]
@@ -147,108 +266,62 @@ class Studio:
         bsdf = next(n for n in nt.nodes if n.type == 'BSDF_PRINCIPLED')
         i = bsdf.inputs
         i['Base Color'].default_value = (*albedo(color), 1)
-        if kind == 'enamel':           # glassy enamel of the buttons: a clear coat over a satin colour
-            i['Roughness'].default_value = o.get('rough', .4)
-            i['Coat Weight'].default_value = o.get('coat', .45)
-            i['Coat Roughness'].default_value = .08
-            i['Specular IOR Level'].default_value = .3
-        elif kind == 'lacquer':        # the black-green ink rims and backs: dark lacquer
-            i['Roughness'].default_value = o.get('rough', .5)
-            i['Coat Weight'].default_value = .2
-            i['Coat Roughness'].default_value = .15
-            i['Specular IOR Level'].default_value = .25
-        elif kind == 'metal':          # gilt wires
-            i['Metallic'].default_value = 1
-            i['Roughness'].default_value = o.get('rough', .3)
-        elif kind == 'bronze':         # the coin: half metal, a soft struck sheen rather than a mirror
-            i['Metallic'].default_value = .5
-            i['Roughness'].default_value = .42
-            i['Coat Weight'].default_value = .2
-        elif kind == 'thread':         # silk and cotton threads: a soft sheen
-            i['Roughness'].default_value = .62
-            i['Sheen Weight'].default_value = o.get('sheen', .6)
-            i['Sheen Roughness'].default_value = .35
-            i['Specular IOR Level'].default_value = .3
-        elif kind == 'satin':          # the ribbon of the stat banner
-            i['Roughness'].default_value = .4
-            i['Sheen Weight'].default_value = 1
-            i['Sheen Roughness'].default_value = .25
-        elif kind == 'paper':
-            i['Roughness'].default_value = .9
-            i['Specular IOR Level'].default_value = .2
-            i['Sheen Weight'].default_value = .25
-            self._grain(nt, bsdf, color, o.get('grain', 1.5))
+        g = Nodes(nt, self.period)
+        set_ = lambda name, v: setattr(i[name], 'default_value', v)  # noqa: E731
+        if kind == 'leather':          # tooled leather of the buttons, tags and seals: pebbled grain, worn crevices
+            pebble = g.voronoi(1.1, 3)
+            mottle = g.noise(.12, 3, 11)
+            fine = g.noise(2.2, 2, 5)
+            g.colour(bsdf, color, [(pebble, .1), (mottle, .12), (fine, .05)], ao=(1.6, .5))
+            g.link(g.add(g.mul(pebble, .14), .48), i['Roughness'])
+            g.bump(bsdf, [(pebble, 1.0), (fine, .35)], strength=.5, distance=.3)
+            set_('Sheen Weight', .1); set_('Sheen Roughness', .4); set_('Specular IOR Level', .4)
+            set_('Coat Weight', o.get('coat', .15)); set_('Coat Roughness', .2)
+        elif kind == 'gold':           # antique gold: a soft hammered sheen, patina in the crevices
+            ham = g.noise(.9, 3, 23)
+            g.colour(bsdf, color, [(ham, .08)], ao=(1.2, .45), dark='#4a2f12')
+            g.link(g.add(g.mul(ham, .16), o.get('rough', .2)), i['Roughness'])
+            g.bump(bsdf, [(ham, 1.0)], strength=.12, distance=.2)
+            set_('Metallic', 1)
+        elif kind == 'parchment':      # paper: fibres, cloudy stains, flecks, darker where it is shaded
+            fine = g.noise(1.4, 3, 0)
+            fibre = g.noise(.35, 4, 37)
+            stain = g.noise(.07, 2, 71)
+            fleck = g.voronoi(.45, 91, out='Distance')
+            g.colour(bsdf, color, [(fine, .1 * o.get('grain', 1)), (fibre, .1), (stain, .14), (fleck, .05)], ao=(2.0, .35))
+            set_('Roughness', .88); set_('Specular IOR Level', .2); set_('Sheen Weight', .2)
+            g.bump(bsdf, [(fine, 1.0), (fibre, .7)], strength=.45, distance=.25)
+        elif kind == 'velvet':         # the ribbon of the stat banner: velvet, its pile lit at the edges
+            pile = g.noise(1.8, 2, 13)
+            g.colour(bsdf, color, [(pile, .08)], ao=(1.4, .4))
+            set_('Roughness', .85); set_('Sheen Weight', 1); set_('Sheen Roughness', .3); set_('Specular IOR Level', .2)
+            g.bump(bsdf, [(pile, 1.0)], strength=.25, distance=.2)
+        elif kind == 'gem':            # rubies and emeralds: facets mirror the lamp
+            set_('Roughness', .04); set_('Coat Weight', 1); set_('Coat Roughness', .02); set_('Specular IOR Level', 1)
+        elif kind == 'pearl':
+            set_('Roughness', .28); set_('Coat Weight', .7); set_('Coat Roughness', .1)
+            set_('Thin Film Thickness', 380); set_('Thin Film IOR', 1.5)
+        elif kind == 'wax':            # the seal of the info cloud
+            lump = g.noise(.5, 3, 17)
+            g.colour(bsdf, color, [(lump, .1)], ao=(1.5, .45))
+            set_('Roughness', .3); set_('Coat Weight', .5); set_('Subsurface Weight', .15)
+            g.bump(bsdf, [(lump, 1.0)], strength=.2, distance=.3)
+        elif kind == 'enamel':         # small enamel inlays
+            set_('Roughness', o.get('rough', .3)); set_('Coat Weight', o.get('coat', .6)); set_('Coat Roughness', .05)
+            set_('Specular IOR Level', .4)
+        elif kind == 'thread':         # silk and cotton threads: a soft sheen, darker where they dive in
+            g.colour(bsdf, color, [], ao=(1.0, .45))
+            set_('Roughness', .6); set_('Sheen Weight', o.get('sheen', .7)); set_('Sheen Roughness', .35)
+            set_('Specular IOR Level', .3)
+        elif kind == 'lacquer':        # dark edges and backs
+            g.colour(bsdf, color, [(g.noise(.8, 2, 3), .1)], ao=(1.5, .5))
+            set_('Roughness', o.get('rough', .55)); set_('Coat Weight', .15); set_('Specular IOR Level', .25)
         elif kind == 'matte':          # the white glyph masks
-            i['Roughness'].default_value = .55
-            i['Specular IOR Level'].default_value = .3
+            set_('Roughness', .5); set_('Specular IOR Level', .3)
         else:
             raise ValueError(kind)
         self.materials[key] = m
         return m
-
-    def _grain(self, nt, bsdf, color, amount):
-        """Paper grain and fibres: two noises on the position, tinting the colour and bumping the normal. With a
-        period, the noise runs on a torus (x and y wrapped into circles of that length in 4D noise space), so the
-        grain repeats exactly once per tile."""
-        n = nt.nodes
-        geo = n.new('ShaderNodeNewGeometry')
-        sep = n.new('ShaderNodeSeparateXYZ')
-        nt.links.new(geo.outputs['Position'], sep.inputs[0])
-
-        def math_node(op, a, b=None):
-            node = n.new('ShaderNodeMath')
-            node.operation = op
-            for k, v in enumerate((a, b)):
-                if v is None:
-                    continue
-                if isinstance(v, (int, float)):
-                    node.inputs[k].default_value = v
-                else:
-                    nt.links.new(v, node.inputs[k])
-            return node.outputs[0]
-
-        def noise(scale, detail, seed):
-            tex = n.new('ShaderNodeTexNoise')
-            tex.inputs['Scale'].default_value = scale
-            tex.inputs['Detail'].default_value = detail
-            tex.inputs['Roughness'].default_value = .55
-            if self.period:
-                px, py = self.period
-                tex.noise_dimensions = '4D'
-                u = math_node('MULTIPLY', sep.outputs['X'], math.tau / px)
-                v = math_node('MULTIPLY', sep.outputs['Y'], math.tau / py)
-                rx, ry = px / math.tau, py / math.tau      # radius: 1 noise unit = 1 px along the sprite
-                vec = n.new('ShaderNodeCombineXYZ')
-                nt.links.new(math_node('MULTIPLY', math_node('COSINE', u), rx), vec.inputs[0])
-                nt.links.new(math_node('MULTIPLY', math_node('SINE', u), rx), vec.inputs[1])
-                nt.links.new(math_node('ADD', math_node('MULTIPLY', math_node('COSINE', v), ry), seed), vec.inputs[2])
-                nt.links.new(vec.outputs[0], tex.inputs['Vector'])
-                nt.links.new(math_node('MULTIPLY', math_node('SINE', v), ry), tex.inputs['W'])
-            else:
-                tex.noise_dimensions = '3D'
-                off = n.new('ShaderNodeVectorMath')
-                off.operation = 'ADD'
-                off.inputs[1].default_value = (seed, seed * 1.7, 0)
-                nt.links.new(geo.outputs['Position'], off.inputs[0])
-                nt.links.new(off.outputs[0], tex.inputs['Vector'])
-            return tex.outputs['Fac']
-
-        fine = noise(1.25, 3, 0)           # grain: ~1 px
-        fibre = noise(.3, 2, 37)           # cloudy fibres: ~4 px
-        # brightness 1 +- a few per cent
-        b = math_node('ADD', math_node('MULTIPLY', math_node('SUBTRACT', fine, .5), .13 * amount),
-                      math_node('MULTIPLY', math_node('SUBTRACT', fibre, .5), .1 * amount))
-        b = math_node('ADD', b, 1)
-        tint = n.new('ShaderNodeVectorMath')
-        tint.operation = 'SCALE'
-        tint.inputs[0].default_value = albedo(color)
-        nt.links.new(b, tint.inputs['Scale'])
-        nt.links.new(tint.outputs[0], bsdf.inputs['Base Color'])
-        bump = n.new('ShaderNodeBump')
-        bump.inputs['Strength'].default_value = .35 * amount
-        bump.inputs['Distance'].default_value = .25
-        nt.links.new(math_node('ADD', fine, math_node('MULTIPLY', fibre, .6)), bump.inputs['Height'])
-        nt.links.new(bump.outputs['Normal'], bsdf.inputs['Normal'])
 
     # ------------------------------------------------------------ parts
     def _spline(self, cu, pts, closed, zs=None):
@@ -295,9 +368,8 @@ class Studio:
         zs: the height of every point instead of z (the over-and-under of the knot)."""
         if zs is None:
             pts = dedupe(pts, closed)
-        if twist:
-            pts = resample(pts, .2, closed)
-            zs = None                                   # no sprite twists a thread that goes up and down
+        if twist:                                       # dense points: the tilt turns between them
+            pts, zs = resample_z(pts, zs, .2, closed)
         cu = bpy.data.curves.new('tube', 'CURVE')
         cu.dimensions = '3D'
         cu.fill_mode = 'FULL'
@@ -359,6 +431,63 @@ class Studio:
         ob.scale = (1, 1, flat)
         return self._bake(ob, mat, anchor)
 
+    def tubes(self, paths, r, mat, z=0.0, closed=False, flat=.6, zs=None, anchor=None):
+        """Many cords of one material in one object (stitches, loops of a chain, hatching): flat caps.
+        zs: per path, the heights of its points."""
+        cu = bpy.data.curves.new('tubes', 'CURVE')
+        cu.dimensions = '3D'
+        cu.fill_mode = 'FULL'
+        cu.twist_mode = 'Z_UP'
+        cu.use_fill_caps = not closed
+        cu.bevel_mode = 'ROUND'
+        cu.bevel_depth = r
+        cu.bevel_resolution = 3
+        for k, pts in enumerate(paths):
+            if len(pts) < 2:
+                continue
+            heights = [h / flat for h in zs[k]] if zs else [z / flat] * len(pts)
+            self._spline(cu, pts, closed, heights)
+        ob = bpy.data.objects.new('tubes', cu)
+        ob.scale = (1, 1, flat)
+        return self._bake(ob, mat, anchor if anchor is not None else z + r * flat)
+
+    def beads(self, points, r, mat, z=0.0, flat=.8, anchor=None):
+        """Many small spheres in one object: granulation, pearls, studs."""
+        me = bpy.data.meshes.new('beads')
+        bm = bmesh.new()
+        for x, y in points:
+            geom = bmesh.ops.create_uvsphere(bm, u_segments=16, v_segments=8, radius=r)
+            bmesh.ops.scale(bm, vec=(1, 1, flat), verts=geom['verts'])
+            bmesh.ops.translate(bm, vec=(x, -y, z), verts=geom['verts'])
+        bm.to_mesh(me)
+        bm.free()
+        for p in me.polygons:
+            p.use_smooth = True
+        return self._bake(bpy.data.objects.new('beads', me), mat, anchor if anchor is not None else z + r * flat)
+
+    def facet(self, outline, z0, z1, mat, table=.45, girdle=.25, anchor=None):
+        """A cut stone: a short girdle on the outline, a crown of flat facets up to a table (the outline shrunk to
+        `table` around its centre). Flat shading: every facet mirrors the lamp on its own."""
+        cx = sum(p[0] for p in outline) / len(outline)
+        cy = sum(p[1] for p in outline) / len(outline)
+        bm = bmesh.new()
+        zg = z0 + (z1 - z0) * girdle
+        low = [bm.verts.new((x, -y, z0)) for x, y in outline]
+        mid = [bm.verts.new((x, -y, zg)) for x, y in outline]
+        top = [bm.verts.new((cx + (x - cx) * table, -(cy + (y - cy) * table), z1)) for x, y in outline]
+        n = len(outline)
+        for i in range(n):
+            j = (i + 1) % n
+            bm.faces.new((low[i], low[j], mid[j], mid[i]))
+            bm.faces.new((mid[i], mid[j], top[j], top[i]))
+        bm.faces.new(top)
+        bm.faces.new(low[::-1])
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        me = bpy.data.meshes.new('facet')
+        bm.to_mesh(me)
+        bm.free()
+        return self._bake(bpy.data.objects.new('facet', me), mat, anchor)
+
     def _bake(self, ob, mat, anchor=None):
         """The evaluated part as a mesh in world space, sheared (see the module doc) and given its material."""
         self.scene.collection.objects.link(ob)
@@ -375,6 +504,21 @@ class Studio:
         out = bpy.data.objects.new('part', me)
         self.scene.collection.objects.link(out)
         return out
+
+
+def resample_z(pts, zs, step, closed):
+    """Points every `step` px along the line with their heights interpolated (None: no heights)."""
+    seq = pts + pts[:1] if closed else pts
+    hs = (zs + zs[:1] if closed else zs) if zs else [0.0] * len(seq)
+    out, oz = [seq[0]], [hs[0]]
+    for (a, b), (za, zb) in zip(zip(seq, seq[1:]), zip(hs, hs[1:])):
+        n = max(1, int(math.ceil(math.dist(a, b) / step)))
+        for i in range(1, n + 1):
+            out.append((a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n))
+            oz.append(za + (zb - za) * i / n)
+    if closed:
+        out, oz = out[:-1], oz[:-1]
+    return out, (oz if zs else None)
 
 
 # ---------------------------------------------------------------- after the render

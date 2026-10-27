@@ -18,8 +18,8 @@ namespace LegacyThroughTime.Prototype
         {
             this.bank = bank; this.anim = anim;
             Root = Ui.Rect(parent, name);
-            var img = Root.gameObject.AddComponent<Image>();
-            img.sprite = Art.Sprite("pill"); img.type = Image.Type.Sliced; img.raycastTarget = false;
+            var img = Root.gameObject.AddComponent<KitImage>();
+            img.sprite = Art.Sprite("pill"); img.type = Art.Tiled("pill") ? Image.Type.Tiled : Image.Type.Sliced; img.raycastTarget = false;
             Ui.Lift(img, 5, .34f);
             Group = Root.gameObject.AddComponent<CanvasGroup>();
 

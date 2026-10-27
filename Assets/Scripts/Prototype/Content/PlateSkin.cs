@@ -40,6 +40,9 @@ namespace LegacyThroughTime.Prototype
             PlateStyle.Narr => Plain("plate-mint", ornament: Ornament.Knot),
             PlateStyle.Fact => Plain("plate", ornament: Ornament.None).With(s => s.TagGem = true),
             PlateStyle.Hint => Plain("plate-rose", ornament: Ornament.Knot).With(s => { s.TagSprite = "label-rose"; s.TagDark = true; }),
+            // The name of the sprite says on which side its horn stands (plate-tail-r: in the right part, its wide
+            // right border); the name tag goes on the other side, so that the two never meet. Tested against the
+            // borders of the sprites in Tests/Reader/UiKitTests.
             PlateStyle.SpeechLeft => Plain("plate-tail-r", TagSide.Left).With(s => s.Tail = TailSide.Right),
             PlateStyle.SpeechRight => Plain("plate-tail-l", TagSide.Right).With(s => s.Tail = TailSide.Left),
             PlateStyle.Thought => Cloud("thought"),

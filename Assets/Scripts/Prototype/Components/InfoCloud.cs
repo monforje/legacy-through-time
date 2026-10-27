@@ -17,7 +17,7 @@ namespace LegacyThroughTime.Prototype
         {
             this.anim = anim;
             Root = Ui.Rect(parent, "Info");
-            var img = Root.gameObject.AddComponent<Image>();
+            var img = Root.gameObject.AddComponent<KitImage>();
             img.sprite = Art.Sprite("info"); img.type = Image.Type.Tiled; img.raycastTarget = true;
             Ui.Lift(img, 8, .34f);
 
@@ -26,8 +26,9 @@ namespace LegacyThroughTime.Prototype
             var height = Mathf.Max(MinHeight, Ui.TextHeight(label, width - 2 * PadX) + 2 * PadY);
             height = PlateLayout.RoundUpToTile(height, TileCorners, TileSize);      // the edges repeat whole tiles
             Ui.Stretch(label.rectTransform, PadX, PadY, PadX, PadY);
-            Ui.Box(Root, A.TopCenter, A.TopCenter, new Vector2(0, -(Metrics.InsetTop + 16 + Viewport.ExtraTop)), new Vector2(width, height));
-            Ui.Icon(Root, "Badge", "badge", A.TopRight, A.Center, new Vector2(-2, 3));
+            // under the gear and the balance (they hold the top-right corner), the seal on the free left corner
+            Ui.Box(Root, A.TopCenter, A.TopCenter, new Vector2(0, -(Metrics.HudBottom + Viewport.ExtraTop)), new Vector2(width, height));
+            Ui.Icon(Root, "Badge", "badge", A.TopLeft, A.Center, new Vector2(2, 3));
 
             group = Ui.Group(Root);
             PressButton.On(Root.gameObject, guard(Dismiss), 1);

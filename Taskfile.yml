@@ -155,6 +155,19 @@ tasks:
     cmds:
       - "{{.UNITY}} -batchmode -nographics -quit -projectPath . -executeMethod LegacyThroughTime.Editor.PrototypeSmoke.Run -logFile - | grep -E '\\[smoke\\]|error CS|Exception|rror:' || true"
 
+  ui:shots:
+    desc: Screenshots of the real screens (menu, settings, every demo page, every kind of story screen) with both UI kits -> Builds/ui-shots/{svg,blender}/*.png, 1080x2340
+    deps: [ink]
+    preconditions:
+      - sh: test ! -e Temp/UnityLockfile
+        msg: "Unity Editor has this project open. Close it first."
+    cmds:
+      - mkdir -p Assets/StreamingAssets/stories/golden-cage
+      - cp buckets/stories/golden-cage/episode-01.json Assets/StreamingAssets/stories/golden-cage/
+      - rm -rf Builds/ui-shots
+      - "{{.UNITY}} -batchmode -projectPath . -executeMethod LegacyThroughTime.Editor.UiShots.Run -logFile - | grep -E '\\[shots\\]|error CS|Exception|rror:' || true"
+      - ls Builds/ui-shots/blender | wc -l
+
   prototype:play:
     desc: Play the heritage prototype with synthetic taps in batchmode (PlayMode test) -> Temp/prototype-play.xml
     preconditions:

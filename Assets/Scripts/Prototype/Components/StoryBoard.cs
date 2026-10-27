@@ -61,7 +61,9 @@ namespace LegacyThroughTime.Prototype
             if (anim.Enabled) Animate(header, cards);
         }
 
-        void Resize() => content.sizeDelta = new Vector2(0, body.offsetMax.y * -1 + body.rect.height);
+        // only the height: the width of the list is its side margins (a sizeDelta.x of 0 would drop them, and the
+        // cards would grow past the 296-wide preview, which then shows the emerald under it at the sides)
+        void Resize() => content.sizeDelta = new Vector2(content.sizeDelta.x, body.offsetMax.y * -1 + body.rect.height);
 
         /// A card above the stories: a newer build of the game can be downloaded. "Позже" removes it.
         /// `download` starts the update and reports progress through the callback it is given (null = back to normal).

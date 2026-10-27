@@ -29,8 +29,8 @@ namespace LegacyThroughTime.Prototype
             var costWidth = hasCost ? CostWidth : 0f;
 
             Root = Ui.Rect(parent, "Option");
-            face = Root.gameObject.AddComponent<Image>();
-            face.sprite = Art.Sprite("btn"); face.type = Image.Type.Sliced;
+            face = Root.gameObject.AddComponent<KitImage>();
+            face.sprite = Art.Sprite("btn"); face.type = Art.Tiled("btn") ? Image.Type.Tiled : Image.Type.Sliced;
             Ui.Lift(face, 5, .34f);
             Group = Root.gameObject.AddComponent<CanvasGroup>();
 

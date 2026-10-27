@@ -25,8 +25,8 @@ namespace LegacyThroughTime.Prototype
         public NameTag(Transform parent, NameTagSpec spec)
         {
             Root = Ui.Rect(parent, "Label");
-            var img = Root.gameObject.AddComponent<Image>();
-            img.sprite = Art.Sprite(spec.Sprite); img.type = Image.Type.Sliced; img.raycastTarget = false;
+            var img = Root.gameObject.AddComponent<KitImage>();
+            img.sprite = Art.Sprite(spec.Sprite); img.type = Art.Tiled(spec.Sprite) ? Image.Type.Tiled : Image.Type.Sliced; img.raycastTarget = false;
             Ui.Lift(img, 4, .38f);
 
             var text = Ui.Txt(Root, "Text", spec.Text, Art.Sub, Metrics.FsLabel, spec.Dark ? Theme.Ink : Theme.Parchment,

@@ -204,3 +204,161 @@ def shift(pts, dx=0.0, dy=0.0):
 
 def scale(pts, s, cx=0.0, cy=0.0):
     return [(cx + (x - cx) * s, cy + (y - cy) * s) for x, y in pts]
+
+
+# ---------------------------------------------------------------- the richer kit: shapes and ornaments
+def cartouche(x0, y0, x1, y1, r):
+    """A rectangle with its corners cut in by quarter circles of radius r (concave corners): the plaque of the
+    buttons and tags. Straight sides, so it tiles along both axes."""
+    return (arc(x0, y0, r, .5 * math.pi, 0)[:-1] + arc(x1, y0, r, math.pi, .5 * math.pi)[:-1]
+            + arc(x1, y1, r, 1.5 * math.pi, math.pi)[:-1] + arc(x0, y1, r, 2 * math.pi, 1.5 * math.pi)[:-1])
+
+
+def stroke(pts, r):
+    """The outline of an open polyline drawn with a pen of radius r, round caps and round joins: a closed outline
+    that a slab can fill (the stamped strokes of the glyphs)."""
+    pts = dedupe(pts, closed=False)
+    n = len(pts)
+    seg = [((pts[i + 1][0] - pts[i][0]) / dist(pts[i], pts[i + 1]), (pts[i + 1][1] - pts[i][1]) / dist(pts[i], pts[i + 1]))
+           for i in range(n - 1)]
+
+    def normal(e):
+        return -e[1], e[0]
+
+    def side(sign):
+        out = []
+        for i in range(n):
+            p = pts[i]
+            if i == 0 or i == n - 1:
+                e = seg[0] if i == 0 else seg[-1]
+                nx, ny = normal(e)
+                out.append((p[0] + sign * nx * r, p[1] + sign * ny * r))
+                continue
+            e1, e2 = seg[i - 1], seg[i]
+            n1, n2 = normal(e1), normal(e2)
+            cross = e1[0] * e2[1] - e1[1] * e2[0]
+            if abs(cross) < 1e-6:
+                out.append((p[0] + sign * n1[0] * r, p[1] + sign * n1[1] * r))
+            elif cross * sign < 0:                  # this side is the outer one of the turn: a round join
+                a1 = math.atan2(sign * n1[1], sign * n1[0])
+                a2 = math.atan2(sign * n2[1], sign * n2[0])
+                delta = (a2 - a1 + math.pi) % math.tau - math.pi
+                out += arc(p[0], p[1], r, a1, a1 + delta, max(2, int(abs(delta) * r / STEP)))
+            else:                                   # the inner one: the offset lines meet
+                m = 1 + n1[0] * n2[0] + n1[1] * n2[1]
+                out.append((p[0] + sign * (n1[0] + n2[0]) / m * r, p[1] + sign * (n1[1] + n2[1]) / m * r))
+        return out
+
+    def cap(p, e, start):
+        nx, ny = normal(e)
+        a = math.atan2(ny, nx) if not start else math.atan2(-ny, -nx)
+        return arc(p[0], p[1], r, a, a - math.pi)[1:-1]
+
+    left, right = side(1), side(-1)
+    return left + cap(pts[-1], seg[-1], False) + right[::-1] + cap(pts[0], seg[0], True)
+
+
+def ring(pts, r):
+    """A closed line drawn with a pen of radius r: (outer outline, inner outline) for a slab with a hole."""
+    return offset(pts, r), offset(pts, -r)
+
+
+def spiral(cx, cy, r0, r1, turns, a0=0.0, cw=True):
+    """An Archimedean spiral from radius r0 to r1 (a filigree scroll), `turns` turns starting at angle a0."""
+    total = turns * math.tau
+    n = max(16, int(total * max(r0, r1) / STEP))
+    sign = 1 if cw else -1
+    return [(cx + (r0 + (r1 - r0) * k / n) * math.cos(a0 + sign * total * k / n),
+             cy + (r0 + (r1 - r0) * k / n) * math.sin(a0 + sign * total * k / n)) for k in range(n + 1)]
+
+
+def tulip(cx, cy, s, angle=0.0):
+    """The tulip of the Tatar ornament: three petals, the middle one pointed, s = height, standing on (cx, cy) and
+    pointing up when angle = 0 (radians, clockwise on screen)."""
+    raw = (bezier((0, -1), (.17, -.8), (.24, -.6), (.2, -.36)) + bezier((.2, -.36), (.32, -.5), (.44, -.66), (.5, -.8))[1:]
+           + bezier((.5, -.8), (.58, -.42), (.42, -.04), (0, 0))[1:] + bezier((0, 0), (-.42, -.04), (-.58, -.42), (-.5, -.8))[1:]
+           + bezier((-.5, -.8), (-.44, -.66), (-.32, -.5), (-.2, -.36))[1:] + bezier((-.2, -.36), (-.24, -.6), (-.17, -.8), (0, -1))[1:-1])
+    c, sn = math.cos(angle), math.sin(angle)
+    return [(cx + (x * c - y * sn) * s, cy + (x * sn + y * c) * s) for x, y in raw]
+
+
+def along(pts, spacing, phase=0.0, closed=False):
+    """Points every `spacing` px along the line, the first at `phase` (beads, stitches)."""
+    seq = pts + pts[:1] if closed else pts
+    out, s, target = [], 0.0, phase
+    for a, b in zip(seq, seq[1:]):
+        d = dist(a, b)
+        while d > 0 and target <= s + d + 1e-9:
+            out.append(lerp(a, b, (target - s) / d))
+            target += spacing
+        s += d
+    return out
+
+
+def chain(pts, stitch, width, closed=False, phase=0.0):
+    """Tambour (chain) stitch along the line: one closed loop per stitch, `stitch` long and `width` wide, each
+    starting inside the end of the previous one. Loops as closed outlines for thread tubes."""
+    seq = pts + pts[:1] if closed else pts
+    total = length(seq)
+    count = max(1, int(round((total - phase) / stitch))) if closed else max(1, int((total - phase) // stitch))
+    step = (total - phase) / count if closed else stitch
+    loops = []
+    for k in range(count):
+        s0 = phase + k * step
+        a = _at(seq, s0)
+        b = _at(seq, s0 + step * 1.15)              # a little longer: it reaches into the next one
+        mid, d = lerp(a, b, .5), dist(a, b)
+        if d < 1e-6:
+            continue
+        ex, ey = (b[0] - a[0]) / d, (b[1] - a[1]) / d
+        n = 14
+        loop = []
+        for i in range(n):
+            t = math.tau * i / n
+            u = math.cos(t) * d / 2
+            v = math.sin(t) * width / 2 * (1 - .35 * max(0.0, -math.cos(t)))   # narrower at its tail: a drop
+            loop.append((mid[0] + ex * u - ey * v, mid[1] + ey * u + ex * v))
+        loops.append(loop)
+    return loops
+
+
+def _at(seq, s):
+    """The point at arc length s of a polyline (clamped)."""
+    acc = 0.0
+    for a, b in zip(seq, seq[1:]):
+        d = dist(a, b)
+        if acc + d >= s and d > 0:
+            return lerp(a, b, (s - acc) / d)
+        acc += d
+    return seq[-1]
+
+
+def hatch(poly, spacing, angle):
+    """Parallel segments filling the polygon (satin stitch): lines at `angle` (radians) every `spacing` px,
+    clipped to the polygon by the even-odd rule."""
+    c, s = math.cos(angle), math.sin(angle)
+    rot = [(x * c + y * s, -x * s + y * c) for x, y in poly]      # into a frame where the lines are horizontal
+    ys = [p[1] for p in rot]
+    out = []
+    y = min(ys) + spacing / 2
+    while y < max(ys):
+        xs = []
+        for (x0, y0), (x1, y1) in zip(rot, rot[1:] + rot[:1]):
+            if (y0 <= y < y1) or (y1 <= y < y0):
+                xs.append(x0 + (y - y0) * (x1 - x0) / (y1 - y0))
+        xs.sort()
+        for a, b in zip(xs[0::2], xs[1::2]):
+            if b - a > .3:
+                out.append([(a * c - y * s, a * s + y * c), (b * c - y * s, b * s + y * c)])
+        y += spacing
+    return out
+
+
+def transform(pts, dx=0.0, dy=0.0, s=1.0, angle=0.0, mirror=False):
+    """Scale, rotate (clockwise on screen), mirror in x and move a motif drawn around (0, 0)."""
+    c, sn = math.cos(angle), math.sin(angle)
+    out = []
+    for x, y in pts:
+        x = -x if mirror else x
+        out.append((dx + (x * c - y * sn) * s, dy + (x * sn + y * c) * s))
+    return out
