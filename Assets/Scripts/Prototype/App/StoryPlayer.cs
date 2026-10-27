@@ -72,7 +72,7 @@ namespace LegacyThroughTime.Prototype
             var auto = AutoStart != null ? StoryCatalog.Find(AutoStart) : null;
             if (auto != null) Open(auto, true);
             else ShowMenu();
-            if (Updater.Enabled) StartCoroutine(Updater.Check(tag => { update = tag; board?.ShowUpdate(tag, ShowUpdateProgress); }));
+            if (Updater.Enabled) StartCoroutine(Updater.Check(tag => { update = tag; board?.ShowUpdate(tag, ShowUpdateProgress, auto: Updater.CanInstall()); }));
         }
 
         void Update()

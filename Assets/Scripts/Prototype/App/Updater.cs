@@ -9,7 +9,8 @@ namespace LegacyThroughTime.Prototype
     /// Updates from the repository: asks GitHub for the latest release and, when it is newer than this build
     /// (BuildStamp), the menu offers it. "Обновить" downloads the APK of that release into the cache and hands it to the
     /// system installer, which asks for one tap and installs it over the game (saves stay). Android never lets an app
-    /// install silently, so that tap is the only manual step. Only in a release build on a device: dev builds and the
+    /// install silently, so that tap is the only manual step. Once the install permission is granted the whole thing
+    /// starts by itself when the menu finds a newer build. Only in a release build on a device: dev builds and the
     /// Editor never ask.
     static class Updater
     {
@@ -85,7 +86,8 @@ namespace LegacyThroughTime.Prototype
             return player.GetStatic<AndroidJavaObject>("currentActivity");
         }
 
-        static bool CanInstall()
+        /// False until the player has allowed this app to install packages (asked once, by the button).
+        public static bool CanInstall()
         {
             using var activity = Activity();
             using var packages = activity.Call<AndroidJavaObject>("getPackageManager");

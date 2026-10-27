@@ -67,7 +67,8 @@ namespace LegacyThroughTime.Prototype
 
         /// A card above the stories: a newer build of the game can be downloaded. "Позже" removes it.
         /// `download` starts the update and reports progress through the callback it is given (null = back to normal).
-        public void ShowUpdate(string version, Action<Action<string>> download)
+        /// `auto` starts it right away, so the update comes by itself and the button is only a retry.
+        public void ShowUpdate(string version, Action<Action<string>> download, bool auto = false)
         {
             if (update || !Root) return;
             var offer = "Сборка " + version + ": скачать и установить поверх";
@@ -85,7 +86,8 @@ namespace LegacyThroughTime.Prototype
             var label = Ui.Txt(button.rectTransform, "Text", "Обновить", Art.Action, Metrics.FsAction, Theme.Parchment);
             Ui.Emboss(label);
             Ui.Stretch(label.rectTransform, 46, 2, 10, 0);
-            PressButton.On(button.gameObject, () => { if (!leaving) download(s => { if (line) line.text = s ?? offer; }); }, .97f, button, "btn-pressed");
+            void Start() => download(s => { if (line) line.text = s ?? offer; });
+            PressButton.On(button.gameObject, () => { if (!leaving) Start(); }, .97f, button, "btn-pressed");
 
             var later = Ui.Img(update, "Later", ProceduralArt.White);
             later.color = Color.clear; later.raycastTarget = true;
@@ -100,6 +102,7 @@ namespace LegacyThroughTime.Prototype
                 var group = Ui.Group(card); group.alpha = 0;
                 anim.Play(Tween.To(.4f, e => group.alpha = e, Easing.Linear));
             }
+            if (auto) Start();
         }
 
         void HideUpdate()
