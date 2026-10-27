@@ -4,12 +4,14 @@ using UnityEngine;
 
 namespace LegacyThroughTime.Editor
 {
-    /// Sprites of the Heritage UI kit (`task assets:unity` copies them here from
-    /// docs/brainstorm/templates/assets/heritage/png). Borders for 9-slice come from slices.txt,
-    /// written by the same generator, so nothing is clicked by hand in the Sprite Editor.
+    /// Sprites of the Heritage UI kit: the SVG one (`task assets:unity` copies them here from
+    /// docs/brainstorm/templates/assets/heritage/png) and the Blender one (`task assets:blender`, from .../png3d).
+    /// Borders for 9-slice come from the slices.txt next to the sprites, written by the same generator, so nothing
+    /// is clicked by hand in the Sprite Editor.
     public sealed class HeritageSpriteImporter : AssetPostprocessor
     {
         const string Dir = "Assets/Resources/Heritage/";
+        const string Dir3D = "Assets/Resources/Heritage3D/";
         const string LogoDir = "Assets/Resources/Brand/";      // the loading-screen logo: one plain sprite
         const string BgDir = "Assets/Resources/Art/Backgrounds/";   // painted scene backgrounds: plain sprites, compressed
         const string AudioDir = "Assets/Resources/Audio/";         // sounds of the story: see docs/audio
@@ -18,7 +20,7 @@ namespace LegacyThroughTime.Editor
         public const float PixelsPerUnit = 400f;
 
         /// Bump when the settings below change: Unity then reimports every texture and sound with them.
-        public override uint GetVersion() => 2;
+        public override uint GetVersion() => 3;
 
         void OnPreprocessTexture()
         {
@@ -26,7 +28,7 @@ namespace LegacyThroughTime.Editor
             if (assetPath.StartsWith(LogoDir)) { ImportBrand(sprite: true); return; }
             if (assetPath.StartsWith(BgDir)) { ImportBackground(); return; }
             if (assetPath.StartsWith(IconDir)) { ImportBrand(sprite: false); return; }
-            if (!assetPath.StartsWith(Dir)) return;
+            if (!assetPath.StartsWith(Dir) && !assetPath.StartsWith(Dir3D)) return;
 
             var importer = (TextureImporter)assetImporter;
             importer.textureType = TextureImporterType.Sprite;
@@ -47,7 +49,7 @@ namespace LegacyThroughTime.Editor
             var settings = new TextureImporterSettings();
             importer.ReadTextureSettings(settings);
             settings.spriteMeshType = SpriteMeshType.FullRect;   // 9-slice needs the full rect
-            if (TryReadBorder(Path.GetFileNameWithoutExtension(assetPath), out var border))
+            if (TryReadBorder(Path.GetDirectoryName(assetPath), Path.GetFileNameWithoutExtension(assetPath), out var border))
                 settings.spriteBorder = border;
             importer.SetTextureSettings(settings);
         }
@@ -112,10 +114,10 @@ namespace LegacyThroughTime.Editor
         }
 
         // Format of a slices.txt line: `name left bottom right top sliced|tiled fill_center`
-        static bool TryReadBorder(string name, out Vector4 border)
+        static bool TryReadBorder(string dir, string name, out Vector4 border)
         {
             border = default;
-            var file = Dir + "slices.txt";
+            var file = Path.Combine(dir, "slices.txt");
             if (!File.Exists(file)) return false;
             foreach (var line in File.ReadLines(file))
             {

@@ -12,6 +12,7 @@ vars:
   REPO: monforje/legacy-through-time
   APK_ASSET: game.apk
   HERITAGE_DIR: docs/brainstorm/templates/assets/heritage
+  BLENDER: '{{.BLENDER | default "blender"}}'
   DOTNET: docker run --rm --user "$(id -u):$(id -g)" -e NUGET_PACKAGES=/work/.cache/nuget -v "{{.ROOT_DIR}}:/work" {{.DOTNET_IMAGE}}
 
 tasks:
@@ -104,6 +105,19 @@ tasks:
       - rm -f Assets/Resources/Heritage/title-land.png Assets/Resources/Heritage/title-land.png.meta
       - task: png:optimize
         vars: { DIR: Assets/Resources/Heritage }
+
+  assets:blender:
+    desc: Heritage UI, Blender kit - render the sprites in Blender (blender/render.py, Cycles) -> heritage/png3d + slices.txt, copy into Assets/Resources/Heritage3D (`-- btn card` renders only those). Switch kits with Art.BlenderKit
+    preconditions:
+      - sh: command -v {{.BLENDER}}
+        msg: "Blender is not on PATH (or set BLENDER=/path/to/blender)"
+    cmds:
+      - "set -o pipefail; {{.BLENDER}} -b --factory-startup --python-exit-code 1 -P {{.HERITAGE_DIR}}/blender/render.py -- {{.CLI_ARGS}} 2>&1 | grep -E '^\\[3d\\]|Error|Traceback|  File|Exception'"
+      - mkdir -p Assets/Resources/Heritage3D
+      - rm -f Assets/Resources/Heritage3D/*.png
+      - cp {{.HERITAGE_DIR}}/png3d/*.png {{.HERITAGE_DIR}}/png3d/slices.txt Assets/Resources/Heritage3D/
+      - task: png:optimize
+        vars: { DIR: Assets/Resources/Heritage3D }
 
   assets:brand:
     desc: Brand art - launcher icon layers (adaptive, round, legacy) -> Assets/Art/Brand, loading-screen logo -> Assets/Resources/Brand

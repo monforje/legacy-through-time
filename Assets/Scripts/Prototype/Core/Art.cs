@@ -3,20 +3,41 @@ using UnityEngine;
 
 namespace LegacyThroughTime.Prototype
 {
-    /// Sprites and fonts (Resources/Heritage, Resources/Fonts: `task assets:unity`, `task assets:fonts`).
+    /// Sprites and fonts (Resources/Heritage, Resources/Heritage3D, Resources/Fonts: `task assets:unity`,
+    /// `task assets:blender`, `task assets:fonts`).
     /// A missing asset is logged and replaced, so that one broken file does not take the whole screen down.
     static class Art
     {
+        /// The UI kit: true - the Blender renders (Resources/Heritage3D: enamel, paper and thread under a warm lamp),
+        /// false - the flat SVG kit (Resources/Heritage). Both have the same names, sizes and 9-slice borders; a
+        /// sprite the Blender kit lacks comes from the SVG one. Switching drops the loaded sprites; images already
+        /// on screen keep theirs until they are built again.
+        public static bool BlenderKit
+        {
+            get => blenderKit;
+            set
+            {
+                if (blenderKit == value) return;
+                blenderKit = value;
+                sprites.Clear();
+                tiled = null;
+            }
+        }
+
+        static bool blenderKit = true;
+
         /// How many assets could not be loaded (tests assert zero).
         public static int Missing { get; private set; }
 
         static readonly Dictionary<string, Sprite> sprites = new();
         static readonly Dictionary<string, Font> fonts = new();
+        static HashSet<string> tiled;
 
         public static Sprite Sprite(string name)
         {
             if (sprites.TryGetValue(name, out var s) && s) return s;
-            s = Resources.Load<Sprite>("Heritage/" + name);
+            if (blenderKit) s = Resources.Load<Sprite>("Heritage3D/" + name);
+            if (!s) s = Resources.Load<Sprite>("Heritage/" + name);
             if (!s)
             {
                 Missing++;
@@ -24,6 +45,26 @@ namespace LegacyThroughTime.Prototype
                 s = ProceduralArt.White;
             }
             return sprites[name] = s;
+        }
+
+        /// The edges and the centre of this 9-slice sprite repeat at their own size instead of stretching: the paper
+        /// of the Blender kit, whose grain and twisted threads must not smear when a card or a plate grows.
+        /// From Resources/Heritage3D/slices.txt (`name left bottom right top sliced|tiled fill`).
+        public static bool Tiled(string name)
+        {
+            if (!blenderKit) return false;
+            if (tiled == null)
+            {
+                tiled = new HashSet<string>();
+                var list = Resources.Load<TextAsset>("Heritage3D/slices");
+                if (list)
+                    foreach (var line in list.text.Split('\n'))
+                    {
+                        var p = line.Trim().Split(' ');
+                        if (p.Length >= 6 && p[5] == "tiled") tiled.Add(p[0]);
+                    }
+            }
+            return tiled.Contains(name);
         }
 
         /// Painted background of a location (`# bg: id`, Resources/Art/Backgrounds/<id>.png), loaded in the background so that

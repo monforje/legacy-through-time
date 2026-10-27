@@ -77,9 +77,9 @@ namespace LegacyThroughTime.Prototype
             return img;
         }
 
-        /// A 9-slice (or tiled) image of a Heritage sprite.
+        /// A 9-slice (or tiled) image of a Heritage sprite. The kit can make it tiled (Art.Tiled).
         public static Image Sliced(Transform parent, string name, string sprite, bool tiled = false, bool fillCenter = true) =>
-            Img(parent, name, Art.Sprite(sprite), tiled ? Image.Type.Tiled : Image.Type.Sliced, fillCenter);
+            Img(parent, name, Art.Sprite(sprite), tiled || Art.Tiled(sprite) ? Image.Type.Tiled : Image.Type.Sliced, fillCenter);
 
         /// An image with the sprite's own size (or the given width, keeping the aspect), anchored at a point.
         public static Image Icon(Transform parent, string name, string sprite, Vector2 anchor, Vector2 pivot, Vector2 pos,

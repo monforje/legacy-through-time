@@ -26,7 +26,8 @@ namespace LegacyThroughTime.Prototype
             var body = Ui.Rect(Root, "Body");
             Ui.Stretch(body, 0, 0, 0, -Skin.Headroom);
             var img = body.gameObject.AddComponent<Image>();
-            img.sprite = Art.Sprite(Skin.Sprite); img.type = Skin.Tiled ? Image.Type.Tiled : Image.Type.Sliced; img.raycastTarget = false;
+            img.sprite = Art.Sprite(Skin.Sprite); img.raycastTarget = false;
+            img.type = Skin.Tiled || Art.Tiled(Skin.Sprite) ? Image.Type.Tiled : Image.Type.Sliced;
             Ui.Lift(img, 8, .34f);
 
             FullText = TextRules.NoBreaks(spec.Text);
