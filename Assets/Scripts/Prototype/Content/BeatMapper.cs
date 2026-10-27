@@ -19,6 +19,18 @@ namespace LegacyThroughTime.Prototype
         public static string StatBanner(Beat beat) =>
             beat.Voice == Voice.System ? TextRules.StatToast(beat.Text) : null;
 
+        /// The text of a system line that is a hint (not a stat banner), or null for any other beat. Hints do not stop
+        /// the reader: they hang at the top of the next screen.
+        public static string Hint(Beat beat) =>
+            beat.Voice == Voice.System && StatBanner(beat) == null ? TextRules.SentenceCase(beat.Text) : null;
+
+        /// The explanation of a word marked with an asterisk (`# note: Чура — слуга`), or null.
+        public static string Note(Beat beat)
+        {
+            var note = beat.TagValue("note");
+            return string.IsNullOrEmpty(note) ? null : "* " + note;
+        }
+
         /// The plate of a line; null when the line is a stat banner (those do not stop the reader).
         public static PlateSpec Plate(Beat line)
         {

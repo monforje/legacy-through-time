@@ -23,6 +23,7 @@ namespace LegacyThroughTime.Prototype
         StoryMachine machine;
         PlateSpec lastPlate;
         string tintId;
+        readonly List<string> hints = new();       // hints and notes waiting for the next screen, which shows them at the top
         string update;                         // tag of a newer release, null when there is none (or it was not checked yet)
         int session;                           // bumps on every menu / story switch: a late callback of the old one is ignored
         int lastWidth, lastHeight;
@@ -71,7 +72,7 @@ namespace LegacyThroughTime.Prototype
             var auto = AutoStart != null ? StoryCatalog.Find(AutoStart) : null;
             if (auto != null) Open(auto, true);
             else ShowMenu();
-            if (Updater.Enabled) StartCoroutine(Updater.Check(tag => { update = tag; board?.ShowUpdate(tag, Updater.Download); }));
+            if (Updater.Enabled) StartCoroutine(Updater.Check(tag => { update = tag; board?.ShowUpdate(tag, ShowUpdateProgress); }));
         }
 
         void Update()
@@ -95,6 +96,8 @@ namespace LegacyThroughTime.Prototype
         // ------------------------------------------------------------ menu and settings
         void OpenSettings() => settings.Open(story != null ? ShowMenu : null, Quit);
 
+        void ShowUpdateProgress(Action<string> status) => StartCoroutine(Updater.Install(status));
+
         /// The line on screen is already saved: leaving is just leaving.
         static void Quit()
         {
@@ -116,11 +119,11 @@ namespace LegacyThroughTime.Prototype
         void ShowMenu()
         {
             session++;
-            story = null; machine = null; lastPlate = null;
+            story = null; machine = null; lastPlate = null; hints.Clear();
             host.Clear();
             Scenery("title");
             board = new StoryBoard(host.Pages, StoryCatalog.All, ProgressOf, Open, Quit, animated: true);
-            if (update != null) board.ShowUpdate(update, Updater.Download);
+            if (update != null) board.ShowUpdate(update, ShowUpdateProgress);
         }
 
         static StoryBoard.Progress ProgressOf(StoryEntry s) =>
@@ -139,7 +142,7 @@ namespace LegacyThroughTime.Prototype
         void Open(StoryEntry entry, bool fresh)
         {
             if (board != null) { StartCoroutine(board.Leave()); board = null; }
-            story = entry; Ended = false; lastPlate = null;
+            story = entry; Ended = false; lastPlate = null; hints.Clear();
             StartCoroutine(Load(entry, fresh, ++session));
         }
 
@@ -203,17 +206,30 @@ namespace LegacyThroughTime.Prototype
                     case StoryPhase.Line:
                         var banner = BeatMapper.StatBanner(beat);
                         if (banner != null) { host.Banner(banner); audio.Ui(banner.StartsWith("-") ? "stat_down" : "stat_up"); machine.Advance(); continue; }
+                        var hint = BeatMapper.Hint(beat);
+                        if (hint != null)
+                        {
+                            hints.Add(hint);
+                            audio.Ui(beat.Text.StartsWith("НОВЫЙ КВЕСТ") ? "quest_new" : "system_info");
+                            machine.Advance();
+                            continue;
+                        }
                         lastPlate = BeatMapper.Plate(beat);
                         Save();
-                        if (beat.Voice == Voice.System) audio.Ui(beat.Text.StartsWith("НОВЫЙ КВЕСТ") ? "quest_new" : "system_info");
+                        var note = BeatMapper.Note(beat);
+                        if (note != null) { hints.Add(note); audio.Ui("system_info"); }
                         else audio.Ui("plate_in", .5f);
-                        Show(BeatMapper.LinePage(lastPlate), ScreenHost.Transition.Cross, OnLineDone);
+                        var line = BeatMapper.LinePage(lastPlate);
+                        line.Info = TakeHints();
+                        Show(line, ScreenHost.Transition.Cross, OnLineDone);
                         return;
 
                     case StoryPhase.Choice:
                         // the plate of the last line stays; the options slide in next to it
                         audio.Ui("choice_show");
-                        Show(BeatMapper.ChoicePage(lastPlate, beat, Coins()),
+                        var choice = BeatMapper.ChoicePage(lastPlate, beat, Coins());
+                        choice.Info = TakeHints();
+                        Show(choice,
                              lastPlate != null ? ScreenHost.Transition.Replace : ScreenHost.Transition.Cross, OnChoiceDone);
                         return;
 
@@ -230,6 +246,15 @@ namespace LegacyThroughTime.Prototype
                         return;
                 }
             }
+        }
+
+        /// The hints gathered since the last screen as one text for the top of this one; null when there are none.
+        string TakeHints()
+        {
+            if (hints.Count == 0) return null;
+            var text = string.Join("\n", hints);
+            hints.Clear();
+            return text;
         }
 
         void Show(Page page, ScreenHost.Transition transition, Action next) =>

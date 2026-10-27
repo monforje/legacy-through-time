@@ -64,15 +64,17 @@ namespace LegacyThroughTime.Prototype
         void Resize() => content.sizeDelta = new Vector2(0, body.offsetMax.y * -1 + body.rect.height);
 
         /// A card above the stories: a newer build of the game can be downloaded. "Позже" removes it.
-        public void ShowUpdate(string version, Action download)
+        /// `download` starts the update and reports progress through the callback it is given (null = back to normal).
+        public void ShowUpdate(string version, Action<Action<string>> download)
         {
             if (update || !Root) return;
+            var offer = "Сборка " + version + ": скачать и установить поверх";
             var card = Ui.Sliced(content, "Update", "card");
             update = card.rectTransform;
             Ui.TopRow(update, 0, 0, bodyTop, UpdateHeight - CardGap);
             var title = Ui.Txt(update, "Title", "Вышла новая версия", Art.Head, 20, Theme.Ink);
             Ui.TopRow(title.rectTransform, TextSide, TextSide, 18, 28);
-            var line = Ui.Txt(update, "Version", "Сборка " + version + ": скачайте и установите поверх", Art.Sub, 13, Theme.Scarlet);
+            var line = Ui.Txt(update, "Version", offer, Art.Sub, 13, Theme.Scarlet);
             Ui.TopRow(line.rectTransform, TextSide, TextSide, 46, 20);
 
             var button = Ui.Sliced(update, "Download", "btn");
@@ -81,7 +83,7 @@ namespace LegacyThroughTime.Prototype
             var label = Ui.Txt(button.rectTransform, "Text", "Обновить", Art.Action, Metrics.FsAction, Theme.Parchment);
             Ui.Emboss(label);
             Ui.Stretch(label.rectTransform, 46, 2, 10, 0);
-            PressButton.On(button.gameObject, () => { if (!leaving) download(); }, .97f, button, "btn-pressed");
+            PressButton.On(button.gameObject, () => { if (!leaving) download(s => { if (line) line.text = s ?? offer; }); }, .97f, button, "btn-pressed");
 
             var later = Ui.Img(update, "Later", ProceduralArt.White);
             later.color = Color.clear; later.raycastTarget = true;

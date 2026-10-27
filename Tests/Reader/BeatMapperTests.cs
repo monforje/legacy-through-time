@@ -109,6 +109,35 @@ VAR gems = 20
         }
 
         [Test]
+        public void HintsHangAtTheTopAndNeverBecomePlates()
+        {
+            var lines = Beats().Where(b => b.Phase == StoryPhase.Line).ToList();
+            var hint = Find(lines, b => b.Voice == Voice.System && BeatMapper.StatBanner(b) == null);
+            Assert.That(BeatMapper.Hint(hint), Is.Not.Null.And.Not.EqualTo(hint.Text.ToUpperInvariant()));
+            Assert.That(BeatMapper.Hint(Find(lines, b => b.Voice == Voice.Thought)), Is.Null);
+            Assert.That(BeatMapper.Hint(Find(lines, b => BeatMapper.StatBanner(b) != null)), Is.Null, "a stat banner is not a hint");
+        }
+
+        [Test]
+        public void AnAsteriskWordIsExplainedOnTheSameLine()
+        {
+            var lines = Beats().Where(b => b.Phase == StoryPhase.Line).ToList();
+            var marked = lines.Where(b => b.Text.Contains('*')).ToList();
+            Assert.That(marked, Is.Not.Empty);
+            foreach (var b in marked)
+                Assert.That(BeatMapper.Note(b), Does.StartWith("* ").And.Length.GreaterThan(10), b.Text);
+        }
+
+        [Test]
+        public void TheEpisodeTalksLikeAStoryNotLikeAScreenplay()
+        {
+            var texts = Beats().Where(b => b.Phase != StoryPhase.Choice).Select(b => b.Text ?? "").ToList();
+            foreach (var banned in new[] { "Камера", "камера", "Крупный план", "Общий план", "Затемнение", "Чёрный экран", "Слуга 1", "Слуга 2", "Кул-Шариф", "через дорогу", "Сююмбике молчит", "Сафия замирает", "не отвечает" })
+                Assert.That(texts.Where(t => t.Contains(banned)), Is.Empty, banned);
+            Assert.That(texts.Any(t => t.StartsWith("Сююмбике: …") || t == "…"), Is.True, "silence is a line of three dots");
+        }
+
+        [Test]
         public void ChoicesKeepTheLastPlateAndReportTheirIndex()
         {
             var beats = Beats();

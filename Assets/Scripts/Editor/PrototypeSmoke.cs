@@ -43,7 +43,7 @@ namespace LegacyThroughTime.Editor
                 foreach (var progress in new[] { StoryBoard.Progress.New, StoryBoard.Progress.InProgress, StoryBoard.Progress.Finished })
                 {
                     var board = new StoryBoard(canvas, StoryCatalog.All, _ => progress, (_, _) => { }, () => { }, animated: false);
-                    board.ShowUpdate("2099-01-01-0000", () => { });
+                    board.ShowUpdate("2099-01-01-0000", _ => { });
                     Object.DestroyImmediate(board.Root.gameObject);
                 }
             });
