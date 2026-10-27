@@ -7,24 +7,29 @@ using UnityEngine.InputSystem;
 
 namespace LegacyThroughTime.Prototype
 {
-    /// The app: loading screen -> the menu (a board of stories, StoryCatalog) -> a story on the heritage screens: the
+    /// The app: loading screen -> the menu by the fire (MenuScreen: stories and their chapters, the library, the shop)
+    /// -> a chapter of a story on the heritage screens: the
     /// Narrative engine produces beats, BeatMapper turns each into a screen, the ScreenHost shows it. Every line shown
-    /// is saved (SaveStore), so a story continues where the reader left it. The gear opens the settings toast (sound,
-    /// back to the menu); Android Back closes it, opens it in a story, leaves the app from the menu.
-    /// Starts itself in any scene; the whole UI is built in code.
+    /// is saved (SaveStore), so a story continues where the reader left it; with Google Play Games the progress is kept
+    /// in the reader's saved games too (CloudSave), merged in under the loading screen and sent up from the menu.
+    /// The gear opens the settings toast (sound, Google Play, back to the menu); Android Back closes it, opens it in a
+    /// story, leaves the app from the menu. Starts itself in any scene; the whole UI is built in code.
     public sealed class StoryPlayer : MonoBehaviour
     {
         ScreenHost host;
         BackdropTint tint;
         StoryAudio audio;
         SettingsToast settings;
-        StoryBoard board;
+        MenuScreen menu;
         StoryEntry story;                      // null in the menu
+        ChapterEntry chapter;                  // the chapter being read
         StoryMachine machine;
         PlateSpec lastPlate;
         string tintId;
         readonly List<string> hints = new();       // hints and notes waiting for the next screen, which shows them at the top
         string update;                         // tag of a newer release, null when there is none (or it was not checked yet)
+        string news, newsIcon;                 // a line for the menu's banner ("Прогресс восстановлен"), shown with the menu
+        bool signingIn;                        // the reader asked to sign in to Google Play: its result gets a banner
         int session;                           // bumps on every menu / story switch: a late callback of the old one is ignored
         int lastWidth, lastHeight;
         readonly Dictionary<string, string> texts = new();     // compiled stories already read
@@ -59,10 +64,20 @@ namespace LegacyThroughTime.Prototype
             var loading = host.ShowLoading();
             var started = Time.unscaledTime;
             yield return null;                                   // the logo is drawn first, then the warm-up runs under it
-            Art.Prefetch("title");
+            Art.Prefetch(MenuBackground);
+            Store.Start();                                       // Google Play: pending orders of an earlier session come now
+            Coroutine cloud = null;
+            if (Persist)                                         // Play Games signs in and the saved progress comes in meanwhile
+            {
+                CloudSave.Reading = () => story != null;
+                CloudSave.Merged += OnCloudMerged;
+                cloud = StartCoroutine(CloudSave.Start(CloudWait));
+            }
             _ = Art.Head; _ = Art.Sub; _ = Art.Body; _ = Art.Action;
-            foreach (var s in StoryCatalog.All)                   // the stories are read under the logo too (a failure is retried on open)
-                if (!s.Soon) yield return StoryFile.Read(s.Path, t => texts[s.Path] = t, Debug.LogWarning);
+            foreach (var s in StoryCatalog.All)                   // the chapters are read under the logo too (a failure is retried on open)
+                foreach (var c in s.Chapters)
+                    if (!c.Soon) yield return StoryFile.Read(c.Path, t => texts[c.Path] = t, Debug.LogWarning);
+            if (cloud != null) yield return cloud;
             var rest = LoadingScreen.MinSeconds - (Time.unscaledTime - started);     // the logo is seen for a moment at least
             if (rest > 0) yield return new WaitForSecondsRealtime(rest);
             // The loading screen leaves and the menu comes in under it: it starts when the spinner is gone, so that
@@ -70,9 +85,21 @@ namespace LegacyThroughTime.Prototype
             host.Hide(loading);
             yield return new WaitForSecondsRealtime(LoadingScreen.SpinnerFade);
             var auto = AutoStart != null ? StoryCatalog.Find(AutoStart) : null;
-            if (auto != null) Open(auto, true);
+            if (auto != null) Open(auto, auto.First, true);
             else ShowMenu();
-            if (Updater.Enabled) StartCoroutine(Updater.Check(tag => { update = tag; board?.ShowUpdate(tag, ShowUpdateProgress, auto: Updater.CanInstall()); }));
+            if (Updater.Enabled) StartCoroutine(Updater.Check(tag => { update = tag; menu?.ShowUpdate(tag, ShowUpdateProgress, auto: Updater.CanInstall()); }));
+        }
+
+        void OnDestroy()
+        {
+            CloudSave.Merged -= OnCloudMerged;
+            CloudSave.Reading = () => false;
+        }
+
+        /// Leaving the screen may be the last moment of the app: whatever is new goes up to the cloud.
+        void OnApplicationPause(bool paused)
+        {
+            if (paused && Persist) CloudSave.Sync();
         }
 
         void Update()
@@ -94,7 +121,53 @@ namespace LegacyThroughTime.Prototype
         }
 
         // ------------------------------------------------------------ menu and settings
-        void OpenSettings() => settings.Open(story != null ? ShowMenu : null, Quit);
+        void OpenSettings() => settings.Open(story != null ? ShowMenu : null, Quit, CloudRow());
+
+        /// The Google Play row of the settings: who is signed in, or the button that signs in; none without Play Games.
+        SettingsToast.Cloud CloudRow() => CloudSave.Status switch
+        {
+            CloudSave.State.Off => null,
+            CloudSave.State.Connecting => new SettingsToast.Cloud { Line = "Подключение…" },
+            CloudSave.State.Synced => new SettingsToast.Cloud
+            {
+                Line = string.IsNullOrEmpty(PlayGames.PlayerName) ? "Прогресс сохраняется" : "Прогресс сохраняется · " + PlayGames.PlayerName,
+            },
+            _ => new SettingsToast.Cloud { SignIn = SignInToCloud },
+        };
+
+        void SignInToCloud()
+        {
+            signingIn = true;
+            CloudSave.SignIn(() => { signingIn = false; Tell("Не получилось войти в Google Play", "info"); });
+        }
+
+        /// The cloud copy is in: when it brought something, the menu is drawn again with it.
+        void OnCloudMerged(bool restored)
+        {
+            if (restored && menu != null && story == null)
+            {
+                StartCoroutine(menu.Leave());
+                menu = null;
+                ShowMenu();
+            }
+            if (restored) Tell("Прогресс восстановлен из Google Play", "check");
+            else if (signingIn) Tell("Прогресс сохраняется в Google Play", "check");
+            signingIn = false;
+        }
+
+        /// A banner over the menu; under the loading screen and in a story it waits for the menu.
+        void Tell(string text, string icon)
+        {
+            news = text; newsIcon = icon;
+            if (menu != null) TellNews();
+        }
+
+        void TellNews()
+        {
+            if (news == null) return;
+            host.Banner(news, newsIcon);
+            news = null;
+        }
 
         void ShowUpdateProgress(Action<string> status) => StartCoroutine(Updater.Install(status));
 
@@ -112,23 +185,44 @@ namespace LegacyThroughTime.Prototype
         {
             if (settings.IsOpen) settings.Close();
             else if (story != null) OpenSettings();
-            else Quit();
+            else if (menu == null || !menu.Back()) Quit();
         }
 
-        /// The board of stories. Leaving a story needs no saving here: the line on screen is already saved.
+        const string MenuBackground = "menu_campfire";
+        /// How long the loading screen waits for Play Games and the saved progress; a later answer redraws the menu.
+        const float CloudWait = 6;
+
+        /// The menu by the fire. Leaving a story needs no saving here: the line on screen is already saved. What is new
+        /// goes up to the cloud, and a cloud copy that came during the chapter is merged in before the menu is drawn.
         void ShowMenu()
         {
             session++;
-            story = null; machine = null; lastPlate = null; hints.Clear();
+            story = null; chapter = null; machine = null; lastPlate = null; hints.Clear();
             host.Clear();
-            Scenery("title");
-            board = new StoryBoard(host.Pages, StoryCatalog.All, ProgressOf, Open, Quit, animated: true);
-            if (update != null) board.ShowUpdate(update, ShowUpdateProgress);
+            if (Persist) CloudSave.Sync();
+            Scenery(MenuBackground);
+            menu = new MenuScreen(host.Pages, StoryCatalog.All, ProgressOf, Open, Terms(), animated: true);
+            if (update != null) menu.ShowUpdate(update, ShowUpdateProgress);
+            TellNews();
         }
 
-        static StoryBoard.Progress ProgressOf(StoryEntry s) =>
-            SaveStore.Has(s.Id) ? StoryBoard.Progress.InProgress :
-            SaveStore.Finished(s.Id) ? StoryBoard.Progress.Finished : StoryBoard.Progress.New;
+        internal static MenuScreen.Progress ProgressOf(ChapterEntry c) =>
+            c.Soon ? MenuScreen.Progress.Locked :
+            SaveStore.Has(c.SaveId) ? MenuScreen.Progress.InProgress :
+            SaveStore.Finished(c.SaveId) ? MenuScreen.Progress.Finished : MenuScreen.Progress.New;
+
+        /// The words of the library: every note of every chapter that has been read from disk.
+        List<Glossary.Term> Terms()
+        {
+            var all = new List<Glossary.Term>();
+            var seen = new HashSet<string>();
+            foreach (var s in StoryCatalog.All)
+                foreach (var c in s.Chapters)
+                    if (!c.Soon && texts.TryGetValue(c.Path, out var json))
+                        foreach (var t in Glossary.FromStory(json))
+                            if (seen.Add(t.Name)) all.Add(t);
+            return all;
+        }
 
         /// The background and the loops of a place, without the scene-change chime.
         void Scenery(string backgroundId)
@@ -138,35 +232,38 @@ namespace LegacyThroughTime.Prototype
         }
 
         // ------------------------------------------------------------ flow
-        /// The story from its beginning (`fresh`) or from its save; the title card first either way.
-        void Open(StoryEntry entry, bool fresh)
+        /// A chapter from its beginning (`fresh`) or from its save; the title card first either way.
+        void Open(StoryEntry entry, ChapterEntry part, bool fresh)
         {
-            if (board != null) { StartCoroutine(board.Leave()); board = null; }
-            story = entry; Ended = false; lastPlate = null; hints.Clear();
-            StartCoroutine(Load(entry, fresh, ++session));
+            if (part == null || part.Soon) return;
+            if (menu != null) { StartCoroutine(menu.Leave()); menu = null; }
+            story = entry; chapter = part; Ended = false; lastPlate = null; hints.Clear();
+            StartCoroutine(Load(entry, part, fresh, ++session));
         }
 
-        IEnumerator Load(StoryEntry entry, bool fresh, int id)
+        IEnumerator Load(StoryEntry entry, ChapterEntry part, bool fresh, int id)
         {
-            if (!texts.TryGetValue(entry.Path, out var json))
-                yield return StoryFile.Read(entry.Path, t => json = texts[entry.Path] = t, Fail);
+            if (!texts.TryGetValue(part.Path, out var json))
+                yield return StoryFile.Read(part.Path, t => json = texts[part.Path] = t, Fail);
             if (id != session || json == null) yield break;
 
             machine = StoryMachine.FromJson(json);
-            var save = fresh || !Persist ? null : SaveStore.Read(entry.Id);
+            var save = fresh || !Persist ? null : SaveStore.Read(part.SaveId);
             if (save != null)
             {
                 try { machine.Load(save.machine); }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"The save of {entry.Id} does not fit the story, starting over: {e.Message}");
+                    Debug.LogWarning($"The save of {part.SaveId} does not fit the story, starting over: {e.Message}");
                     save = null; machine = StoryMachine.FromJson(json);
                 }
             }
-            if (fresh && Persist) SaveStore.Delete(entry.Id);
+            if (fresh && Persist) SaveStore.Delete(part.SaveId);
+            FillPurse();
 
             Scenery("title"); audio.Ui("title_in");
-            var title = new TitleSpec { Name = entry.Title, Scene = save != null ? entry.Episode + " · продолжение" : entry.Episode };
+            var scene = $"Глава {part.Number}: {part.Title}";
+            var title = new TitleSpec { Name = entry.Title, Scene = save != null ? scene + " · продолжение" : scene };
             host.Show(new Page { Id = "title", Title = title }, new Bank(), () =>
             {
                 if (save != null) { if (save.background != null) Scenery(save.background); }
@@ -179,12 +276,13 @@ namespace LegacyThroughTime.Prototype
         void Save()
         {
             if (Persist && story != null)
-                SaveStore.Write(new StorySave { story = story.Id, machine = machine.Save(), background = tintId });
+                SaveStore.Write(new StorySave { story = chapter.SaveId, machine = machine.Save(), background = tintId, at = Progress.Now() });
         }
 
         /// Walks the machine up to the next beat that needs a screen; stage directions and stat banners pass by.
         void Present()
         {
+            TakePurse();
             while (true)
             {
                 var beat = machine.Current;
@@ -214,14 +312,12 @@ namespace LegacyThroughTime.Prototype
                             machine.Advance();
                             continue;
                         }
-                        lastPlate = BeatMapper.Plate(beat);
+                        var plate = BeatMapper.Plate(beat);
                         Save();
                         var note = BeatMapper.Note(beat);
-                        if (note != null) { hints.Add(note); audio.Ui("system_info"); }
+                        if (note != null) { hints.Add(note); audio.Ui("system_info"); Library.Unlock(beat.TagValue("note")); }
                         else audio.Ui("plate_in", .5f);
-                        var line = BeatMapper.LinePage(lastPlate);
-                        line.Info = TakeHints();
-                        Show(line, ScreenHost.Transition.Cross, OnLineDone);
+                        ShowLine(plate, TextRules.Split(plate.Text), 0);
                         return;
 
                     case StoryPhase.Choice:
@@ -235,7 +331,7 @@ namespace LegacyThroughTime.Prototype
 
                     case StoryPhase.End:
                         Ended = true;
-                        if (Persist) { SaveStore.Delete(story.Id); SaveStore.MarkFinished(story.Id); }
+                        if (Persist) { SaveStore.Delete(chapter.SaveId); SaveStore.MarkFinished(chapter.SaveId); }
                         audio.Scene("black"); audio.Ui("episode_end");
                         Show(new Page { Id = "end", Title = new TitleSpec { Name = "Конец эпизода", Scene = "Тап — в меню" } },
                              ScreenHost.Transition.Cross, ShowMenu);
@@ -246,6 +342,22 @@ namespace LegacyThroughTime.Prototype
                         return;
                 }
             }
+        }
+
+        /// A line on its plate; a long one in parts, one screen each (the speaker says it in two taps), the hints of
+        /// the line on its first screen. The last part is the plate that stays for a choice that follows.
+        void ShowLine(PlateSpec plate, string[] parts, int k)
+        {
+            lastPlate = new PlateSpec { Style = plate.Style, Label = plate.Label, Text = parts[k] };
+            var line = BeatMapper.LinePage(lastPlate);
+            line.Info = TakeHints();
+            var id = session;
+            Show(line, ScreenHost.Transition.Cross, k == parts.Length - 1 ? OnLineDone : () =>
+            {
+                if (id != session) return;
+                audio.Ui("tap_next", .7f);
+                ShowLine(plate, parts, k + 1);
+            });
         }
 
         /// The hints gathered since the last screen as one text for the top of this one; null when there are none.
@@ -268,6 +380,21 @@ namespace LegacyThroughTime.Prototype
             audio.Ui(machine.CanChoose(index) && machine.Current.Options[index].Cost > 0 ? "choice_paid" : "choice_pick");
             if (!machine.Choose(index)) { Fail("Выбор не принят: " + index); return; }
             Present();
+        }
+
+        /// The purse goes into the story's coins when a chapter opens (bought or got in the menu, spent in any story) ...
+        void FillPurse()
+        {
+            try { machine.SetVariable("gems", Wallet.Coins); }
+            catch (Exception) { }                            // a story without coins
+        }
+
+        /// ... and comes back after every step, so that what the story gives or takes is the reader's.
+        void TakePurse()
+        {
+            if (machine == null) return;
+            try { Wallet.Coins = machine.GetInt("gems"); }
+            catch (Exception) { }
         }
 
         int Coins()

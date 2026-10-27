@@ -40,17 +40,27 @@ namespace LegacyThroughTime.Editor
             Guard(failures, "loading screen", () => new LoadingScreen(canvas, NoAnimator.Instance));
             Guard(failures, "menu", () =>
             {
-                foreach (var progress in new[] { StoryBoard.Progress.New, StoryBoard.Progress.InProgress, StoryBoard.Progress.Finished })
+                var terms = Glossary.FromStory(File.ReadAllText(EpisodePath));
+                if (terms.Count == 0) failures.Add("the library has no words: no `# note:` in the episode?");
+                foreach (var progress in new[] { MenuScreen.Progress.New, MenuScreen.Progress.InProgress, MenuScreen.Progress.Finished })
                 {
-                    var board = new StoryBoard(canvas, StoryCatalog.All, _ => progress, (_, _) => { }, () => { }, animated: false);
-                    board.ShowUpdate("2099-01-01-0000", _ => { });
-                    Object.DestroyImmediate(board.Root.gameObject);
+                    var menu = new MenuScreen(canvas, StoryCatalog.All, c => c.Soon ? MenuScreen.Progress.Locked : progress,
+                                              (_, _, _) => { }, terms, animated: false);
+                    menu.ShowUpdate("2099-01-01-0000", _ => { });
+                    menu.ShowChapters(StoryCatalog.All[0]);
+                    menu.Turn(1);
+                    menu.Select(MenuScreen.Tab.Shop);
+                    menu.ShowTerm(terms[0]);
+                    menu.Dispose();
+                    Object.DestroyImmediate(menu.Root.gameObject);
                 }
             });
             Guard(failures, "settings", () =>
             {
                 var toast = new SettingsToast(canvas, NoAnimator.Instance);
                 toast.Open(() => { }, () => { }); toast.Close();
+                toast.Open(null, () => { }, new SettingsToast.Cloud { Line = "Прогресс сохраняется" }); toast.Close();
+                toast.Open(() => { }, () => { }, new SettingsToast.Cloud { SignIn = () => { } }); toast.Close();
                 Object.DestroyImmediate(SettingsToast.Gear(canvas, () => { }).gameObject);
             });
             WalkStory(canvas, failures);

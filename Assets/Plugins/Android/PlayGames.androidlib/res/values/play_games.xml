@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Play Console -> Play Games Services -> Configuration: the project ID (digits only).
+         While it is 0 the game never touches Play Games and keeps the progress on the phone only.
+         Setup: docs/notes/play-games.md -->
+    <string name="game_services_project_id" translatable="false">0</string>
+</resources>

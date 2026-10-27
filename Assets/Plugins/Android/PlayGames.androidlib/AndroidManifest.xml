@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <!-- the Play Games project of the game (res/values/play_games.xml) -->
+        <meta-data
+            android:name="com.google.android.gms.games.APP_ID"
+            android:value="@string/game_services_project_id" />
+
+        <!-- The SDK's own starter would start Play Games with the app even without a project id; ours does what it
+             does (so the sign-in Play Games makes by itself begins at once), but only with one. -->
+        <provider
+            android:name="com.google.android.gms.games.provider.PlayGamesInitProvider"
+            android:authorities="${applicationId}.playgamesinitprovider"
+            tools:node="remove" />
+        <provider
+            android:name="com.dan.legacythroughtime.playgames.PlayGamesStart"
+            android:authorities="${applicationId}.playgamesstart"
+            android:exported="false"
+            android:initOrder="99" />
+    </application>
+</manifest>

@@ -4,7 +4,8 @@
   "references": [
     "UnityEngine.UI",
     "Unity.InputSystem",
-    "LegacyThroughTime.Narrative"
+    "LegacyThroughTime.Narrative",
+    "Unity.Purchasing"
   ],
   "autoReferenced": false
 }

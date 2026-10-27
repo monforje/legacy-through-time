@@ -999,3 +999,12 @@ VISUAL STYLE: high-detail realistic digital painting with a cinematic, slightly 
 
 NO text, NO letters, NO logo, NO watermark, NO UI elements, NO frame or border, NO modern objects, NO anime style, NO extra fingers, NO distorted faces.
 ```
+
+## Фон меню: `menu_campfire.png` (только меню, не сцена истории)
+
+Сейчас в `Assets/Resources/Art/Backgrounds/menu_campfire.png` стоит референс (`docs/art/menu_campfire.jpeg`): на нём нарисованы карточки, игра кладёт свои поверх. Чистая версия без карточек — по этому промту; положить файлом с тем же именем.
+
+```
+Night camp in the steppe forest of the 16th-century Kazan Khanate: a campfire where people gather for night stories and legends. Vertical 9:16, 1080x1920 or larger. The CENTRE of the frame (from 22% to 68% of the height, the middle 70% of the width) is calm and dark, an open night sky over a dark forest valley with a winding river and distant fires of a town: story cards will be laid over it, nothing important there. TOP: a starry teal-green night sky, a small full moon on the right, pine silhouettes; on the left a tree branch with hanging brass lanterns (warm candle light), embroidered textile banners with red rhombus ornament and red silk ribbons. BOTTOM 30%: a bright crackling campfire in the centre with sparks, logs and stones around it; cozy things around: low wooden stumps as seats, a carved chest, a copper cup and a kettle, felt rugs and cushions with Tatar ornament, a lantern; the edge of the circle of people suggested by blurred shapes in the foreground. Mood: a little dark and mysterious, but warm and cozy; the fire is the bright accent of the frame yet does not pull the eye from the centre. Palette: deep forest green and teal night, coral-vermilion and ochre-gold firelight, warm cream highlights. High-detail painterly digital art, like premium visual-novel key art, soft volumetric light, subtle film grain.
+NO text, NO letters, NO logo, NO watermark, NO UI, NO cards, NO frames, NO characters' faces in focus, NO modern objects, NO anime style.
+```

@@ -36,8 +36,10 @@ namespace LegacyThroughTime.Prototype
         public static Sprite Sprite(string name)
         {
             if (sprites.TryGetValue(name, out var s) && s) return s;
-            if (blenderKit) s = Resources.Load<Sprite>("Heritage3D/" + name);
-            if (!s) s = Resources.Load<Sprite>("Heritage/" + name);
+            // the chosen kit first, then the other one: the menu's components exist only in the Blender kit
+            var (first, second) = blenderKit ? ("Heritage3D/", "Heritage/") : ("Heritage/", "Heritage3D/");
+            s = Resources.Load<Sprite>(first + name);
+            if (!s) s = Resources.Load<Sprite>(second + name);
             if (!s)
             {
                 Missing++;
@@ -132,6 +134,7 @@ namespace LegacyThroughTime.Prototype
         }
 
         public static Font Head => Font("RussoOne-Regular");     // titles
+        public static Font Accent => Font("YesevaOne-Regular");  // names of stories and chapters in the menu: a display serif
         public static Font Sub => Font("Rubik-Bold");            // labels, values
         public static Font Body => Font("Nunito-Medium");        // plate text
         public static Font Action => Font("Nunito-Bold");        // buttons

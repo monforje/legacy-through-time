@@ -1,0 +1,38 @@
+// Play Games Services v2 for PlayGames.cs: sign-in and one saved game. Unity takes this file as it is (it writes its
+// own only for an androidlib without one), so the SDK levels are read from what Unity puts into gradle.properties.
+apply plugin: 'com.android.library'
+
+dependencies {
+    implementation 'com.google.android.gms:play-services-games-v2:22.1.0'
+}
+
+int level(Project project, String name, int fallback) {
+    def value = project.findProperty(name)
+    return value ? Integer.parseInt(value.toString()) : fallback
+}
+
+android {
+    namespace 'com.dan.legacythroughtime.playgames'
+    compileSdk level(project, 'unity.compileSdkVersion', 36)
+
+    defaultConfig {
+        minSdk level(project, 'unity.minSdkVersion', 26)
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError false
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java.srcDirs = ['src']
+            res.srcDirs = ['res']
+        }
+    }
+}

@@ -47,9 +47,14 @@ namespace LegacyThroughTime.Prototype.Tests
         [Test]
         public void EverySpriteTheCodeNamesExistsAsAPng()
         {
-            var dir = Project.Path_("Assets", "Resources", "Heritage");
-            if (!Directory.Exists(dir)) Assert.Ignore("run `task assets:unity` first");
-            var existing = Directory.GetFiles(dir, "*.png").Select(Path.GetFileNameWithoutExtension).ToHashSet();
+            // Art takes a sprite from the kit of Art.BlenderKit and, when that kit has none, from the other one
+            var existing = new System.Collections.Generic.HashSet<string>();
+            foreach (var kit in new[] { "Heritage", "Heritage3D" })
+            {
+                var dir = Project.Path_("Assets", "Resources", kit);
+                if (!Directory.Exists(dir)) Assert.Ignore("run `task assets:unity` and `task assets:blender` first");
+                existing.UnionWith(Directory.GetFiles(dir, "*.png").Select(Path.GetFileNameWithoutExtension));
+            }
 
             // sprites named by the skins ...
             var named = Styles.Select(PlateSkins.For).SelectMany(s => new[] { s.Sprite, s.TagSprite }).ToHashSet();
@@ -64,7 +69,7 @@ namespace LegacyThroughTime.Prototype.Tests
                     named.Add(m.Groups[1].Value);
 
             var missing = named.Where(n => !existing.Contains(n)).ToList();
-            Assert.That(missing, Is.Empty, "sprites used by the code but absent from Assets/Resources/Heritage");
+            Assert.That(missing, Is.Empty, "sprites used by the code but absent from both kits (Resources/Heritage, Resources/Heritage3D)");
         }
 
         [Test]

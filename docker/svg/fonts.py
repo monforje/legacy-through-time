@@ -20,12 +20,13 @@ def fetch(path):
 
 
 (OUT / "RussoOne-Regular.ttf").write_bytes(fetch("russoone/RussoOne-Regular.ttf"))
+(OUT / "YesevaOne-Regular.ttf").write_bytes(fetch("yesevaone/YesevaOne-Regular.ttf"))   # titles of the menu: a display serif
 for src, weights in (("rubik/Rubik[wght].ttf", {"Rubik-Bold": 700}),
                      ("nunito/Nunito[wght].ttf", {"Nunito-Medium": 500, "Nunito-Bold": 700})):
     data = fetch(src)
     for name, wght in weights.items():
         font = instancer.instantiateVariableFont(TTFont(io.BytesIO(data)), {"wght": wght})
         font.save(OUT / f"{name}.ttf")
-(OUT / "OFL.txt").write_text("Russo One, Rubik, Nunito: SIL Open Font License 1.1 - https://openfontlicense.org\n"
-                             "Sources: https://github.com/google/fonts (ofl/russoone, ofl/rubik, ofl/nunito)\n")
+(OUT / "OFL.txt").write_text("Russo One, Yeseva One, Rubik, Nunito: SIL Open Font License 1.1 - https://openfontlicense.org\n"
+                             "Sources: https://github.com/google/fonts (ofl/russoone, ofl/yesevaone, ofl/rubik, ofl/nunito)\n")
 print("fonts ok:", sorted(p.name for p in OUT.iterdir()))

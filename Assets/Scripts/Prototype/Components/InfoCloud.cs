@@ -6,7 +6,10 @@ namespace LegacyThroughTime.Prototype
     /// An explanation of a term at the top of the screen, with a red "!" seal on its corner. Closes on a tap.
     sealed class InfoCloud
     {
-        const float Margin = 40, MinHeight = 120, TileSize = 32, TileCorners = 64, PadX = 30, PadY = 26;
+        // As small as its text allows, so that it covers little of the picture (the faces): one line as wide as it is,
+        // longer ones up to the width of a plate (a wide cloud reads in fewer, longer lines); a smaller, tighter text.
+        const float MinWidth = 160, MaxWidth = Metrics.PlateWidth, MinHeight = 96, TileSize = 32, TileCorners = 64, PadX = 26, PadY = 20;
+        const float LineSpacing = .9f;
 
         public readonly RectTransform Root;
         readonly IAnimator anim;
@@ -21,8 +24,12 @@ namespace LegacyThroughTime.Prototype
             img.sprite = Art.Sprite("info"); img.type = Image.Type.Tiled; img.raycastTarget = true;
             Ui.Lift(img, 8, .34f);
 
-            var width = Metrics.RefWidth - 2 * Margin;
-            var label = Ui.Txt(Root, "Text", TextRules.NoBreaks(text), Art.Body, Metrics.FsBody, Theme.Ink, TextAnchor.MiddleCenter);
+            var label = Ui.Txt(Root, "Text", TextRules.NoBreaks(text), Art.Body, Metrics.FsInfo, Theme.Ink, TextAnchor.MiddleCenter);
+            label.lineSpacing = LineSpacing;
+            // whole tiles of the scalloped edge: the corners and n tiles, the widest that still fits in MaxWidth
+            var natural = Mathf.Clamp(Ui.TextWidth(label) + 2 * PadX + 4, MinWidth, MaxWidth);
+            var width = Mathf.Min(PlateLayout.RoundUpToTile(natural, TileCorners, TileSize),
+                                  TileCorners + TileSize * Mathf.Floor((MaxWidth - TileCorners) / TileSize));
             var height = Mathf.Max(MinHeight, Ui.TextHeight(label, width - 2 * PadX) + 2 * PadY);
             height = PlateLayout.RoundUpToTile(height, TileCorners, TileSize);      // the edges repeat whole tiles
             Ui.Stretch(label.rectTransform, PadX, PadY, PadX, PadY);

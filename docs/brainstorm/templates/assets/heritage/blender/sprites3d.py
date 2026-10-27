@@ -520,22 +520,34 @@ def plate_tail(s, w, h, mirror):
     the horn in its right part; `mirror` (plate-tail-l) in the left one."""
     top = 32
     box = (2, 2 + top, w - 2, 90 + top)
+    y0 = box[1]
     ox = w - 132
-    left, right = ox + 26, ox + 58
-    apex = (ox + 3, 2)
+    xa, xb = ox + 20, ox + 64                        # the base of the tail on the top edge
+    apex = (ox + 3, 3.5)
     pts = chamfer(*box, 10)
-    horn = bezier((left, box[1]), (ox + 24, 26), (ox + 8, 19), apex) + bezier(apex, (ox + 17, 20), (ox + 34, box[1]), (right + 4, box[1]))[1:]
-    outline = [pts[0]] + horn + pts[1:]
+    # A tail that grows out of the plate: both sides leave the top edge along it (no corner at the base), the near
+    # side is a long concave sweep, the far one an S that swells and then narrows to a rounded tip.
+    near = bezier((xa - 9, y0), (xa + 3, y0), (ox + 13, y0 - 9), apex)
+    far = bezier(apex, (ox + 13, y0 - 26), (ox + 30, y0 - 6), (xb - 4, y0 - 1.2))[1:] + bezier(
+        (xb - 4, y0 - 1.2), (xb + 1, y0 - .2), (xb + 6, y0), (xb + 12, y0))[1:]
+    spine = bezier(((xa + xb) / 2 + 2, y0 + 1), ((xa + xb) / 2 - 8, y0 - 6), (ox + 17, y0 - 13), (ox + 10.5, y0 - 21.5))
+    tail = near + far
+    outline = [pts[0]] + tail + pts[1:]
     if mirror:
-        outline = mirror_x(outline, w)
-    k = outline.index(mirror_x([apex], w)[0] if mirror else apex)
+        outline, spine = mirror_x(outline, w), mirror_x(spine, w)
+    tip = mirror_x([apex], w)[0] if mirror else apex
+    k = outline.index(tip)
 
     def piping(r, mat, z):
-        """Open at the apex of the horn and closed there by its round cap: no miter spike."""
+        """Open at the tip of the tail and closed there by its round cap: no miter spike."""
         line = outline[k:] + outline[:k + 1]
         s.tube(fillet(line, r, closed=False), r, mat, z=z, flat=.65, caps='round')
 
     sheet(s, outline, PAPER, binding=1.75, piping=piping)
+    # the embroidery follows the tail: a tambour stitch along its spine, a gold bead at its tip
+    s.tubes(chain(spine, 2, 1.2), .26, thread(s, STITCH_RED), z=.55, closed=True)
+    granules(s, [spine[-1]], r=.9, z=.6)
+    granules(s, [tip], r=1.5, z=.9)
     s.tubes(chain_runs(s, box, 6.2, 2, 13, width=1.35), .28, thread(s, STITCH_RED), z=.55, closed=True)
     s.tubes(straight(s, box, 9.6, 13), .3, thread(s, STITCH_GREEN), z=.5)
     corners4(lambda place: (tulip_corner(s, place, STITCH_RED, STITCH_GREEN),
@@ -573,43 +585,75 @@ def gold_star(s, cx, cy, r, z=.3):
         s.facet(rhombus(cx, cy, r * .22), z + .6, z + 1.5, gem(s), table=.35)
 
 
+def cloud_edge(s, outline, inset=3.4, binding=1.2):
+    """The edge of a cloud: a thin dark leather binding on the outline and, inside it, a gold line that follows
+    every bump (the outline shrunk by `inset`)."""
+    s.tube(fillet(outline, binding), binding, edge(s), z=.7, closed=True, flat=.65, caps=None)
+    s.tube(offset(outline, -inset), .36, gold(s), z=.75, closed=True, flat=.8, caps=None)
+
+
 @sprite('thought', shear=.3)
 def thought(s, w, h):
-    """The "drop" cloud: parchment with a small wave (one period per 40 px tile), stitched with dark thread
-    (4 stitches per tile), gold stars in the corners."""
+    """The "drop" cloud: a domed parchment cushion with a small wave (one period per 40 px tile), bound in dark
+    leather, a row of gold granules inside (on the tile's lattice), gold stars in the corners."""
     cell, radius, inset, amp = 40, 34, 5, 1.5
     lo, hi = inset, 120 - inset
+
+    def wy(x, y):
+        return y + amp * math.sin(math.tau * (x - cell) / 40)
+
     top = wave(cell, 80, lo, amp)
-    bottom = [(x, hi + amp * math.sin(math.tau * (x - cell) / 40)) for x, _ in wave(cell, 80, hi, amp)][::-1]
-    left = [(lo + amp * math.sin(math.tau * (y - cell) / 40), y) for _, y in wave(cell, 80, lo, amp, vertical=True)][::-1]
-    right = [(hi + amp * math.sin(math.tau * (y - cell) / 40), y) for _, y in wave(cell, 80, hi, amp, vertical=True)]
+    bottom = [(x, wy(x, hi)) for x, _ in wave(cell, 80, hi, amp)][::-1]
+    left = [(wy(y, lo), y) for _, y in wave(cell, 80, lo, amp, vertical=True)][::-1]
+    right = [(wy(y, hi), y) for _, y in wave(cell, 80, hi, amp, vertical=True)]
     tl = arc(lo + radius, lo + radius, radius, math.pi, 1.5 * math.pi)
     tr = arc(hi - radius, lo + radius, radius, 1.5 * math.pi, 2 * math.pi)
     br = arc(hi - radius, hi - radius, radius, 0, .5 * math.pi)
     bl = arc(lo + radius, hi - radius, radius, .5 * math.pi, math.pi)
-    s.slab(tl + top + tr + right + br + bottom + bl + left, -.5, .3, parchment(s, PAPER), bevel=.3)
-    for pts in (top, bottom[::-1], left[::-1], right):
-        stitches(s, dashes(resample(pts, .3), 6, 4, total=40), EDGE, 1.5, z=.3)
-    for pts in (tl, tr, br, bl):
-        stitches(s, dashes(pts, 6, 4, total=50), EDGE, 1.5, z=.3)
+    outline = tl + top + tr + right + br + bottom + bl + left
+    s.slab(outline, -.6, .8, parchment(s, PAPER), bevel=2.6)
+    s.tube(fillet(outline, 1.2), 1.2, edge(s), z=.7, closed=True, flat=.65, caps=None)
+    # granules 4.6 px inside the wavy edge: at lattice x (top, bottom) and y (sides); along the corner arcs
+    d, step = 4.6, 2.5
+    pts = []
+    for x in lattice(36, 84, 40, step):
+        pts += [(x, wy(x, lo) + d), (x, wy(x, hi) - d)]
+    for y in lattice(36, 84, 40, step):
+        pts += [(wy(y, lo) + d, y), (wy(y, hi) - d, y)]
+    for cx, cy, a0 in ((lo + radius, lo + radius, math.pi), (hi - radius, lo + radius, 1.5 * math.pi),
+                       (hi - radius, hi - radius, 0), (lo + radius, hi - radius, .5 * math.pi)):
+        r = radius - d
+        n = int(r * math.pi / 2 / step)
+        pts += [(cx + r * math.cos(a0 + .5 * math.pi * (k + .5) / n), cy + r * math.sin(a0 + .5 * math.pi * (k + .5) / n)) for k in range(n)]
+    granules(s, pts, r=.5, z=.75)
     for cx, cy, r in ((106, 14, 12.5), (14, 96, 9), (24, 110, 6)):
-        gold_star(s, cx, cy, r)
+        gold_star(s, cx, cy, r, z=.8)
 
 
 @sprite('thought-cloud', shear=.3)
 def thought_cloud(s, w, h):
-    """The puffy cloud: parchment scallops (2 per 40 px tile) stitched with dark thread, gold stars inside (the
-    small ones 4.2: with the setting a ray of 5 would reach into the edge tile and repeat along the side)."""
+    """The puffy cloud: parchment scallops (2 per 40 px tile), each a domed puff, bound in dark leather, a gold
+    line inside that follows every scallop, gold granules in the hollows between them, gold stars (the small ones
+    4.2: with the setting a ray of 5 would reach into the edge tile and repeat along the side)."""
     b, e = 8, 112
     chain_pts = [(b, 40), (b, 20), (20, b), (40, b), (60, b), (80, b), (100, b), (e, 20), (e, 40), (e, 60), (e, 80),
                  (e, 100), (100, e), (80, e), (60, e), (40, e), (20, e), (b, 100), (b, 80), (b, 60), (b, 40)]
     radii = [12 if i in (1, 6, 11, 16) else 11 for i in range(len(chain_pts) - 1)]
     arcs = [scallop(chain_pts[i], chain_pts[i + 1], radii[i]) for i in range(len(chain_pts) - 1)]
-    s.slab([p for a in arcs for p in a[:-1]], -.5, .3, parchment(s, PAPER), bevel=.3)
-    for a in arcs:
-        stitches(s, dashes(a, 6.5, 1.5, total=32), EDGE, 1.4, z=.3)
+    outline = [p for a in arcs for p in a[:-1]]
+    s.slab(outline, -.6, .8, parchment(s, PAPER), bevel=2.4)
+    cloud_edge(s, outline)
+    s.beads([a[0] for a in arcs], 1.2, edge(s), z=.7, flat=.65)          # the cusps: round joins of the binding
+    hollows = []
+    for x, y in chain_pts[:-1]:
+        nx = 1 if x == b else -1 if x == e else 0
+        ny = 1 if y == b else -1 if y == e else 0
+        if nx and ny:
+            continue                                                    # the corner diagonals have no hollow
+        hollows.append((x + 5.2 * nx, y + 5.2 * ny))
+    granules(s, hollows, r=.75, z=.8)
     for cx, cy, r in ((102, 24, 8.5), (86, 34, 4.2), (18, 96, 8.5), (34, 86, 4.2)):
-        gold_star(s, cx, cy, r)
+        gold_star(s, cx, cy, r, z=.8)
 
 
 @sprite('info', shear=.3)
@@ -623,13 +667,14 @@ def info(s, w, h):
              ((base, 48), small), ((base, 32), small), ((cell, base), big)]
     arcs = [scallop(links[i][0], links[i + 1][0], links[i + 1][1]) for i in range(len(links) - 1)]
     outline = [p for a in arcs for p in a[:-1]]
-    sheet(s, outline, PAPER, depth=0, binding=1.25)
-    s.beads([a[0] for a in arcs], 1.25, edge(s), z=.5, flat=.65)        # the cusps: round joins of the binding
+    s.slab(outline, -.6, .8, parchment(s, PAPER), bevel=2.2)
+    cloud_edge(s, outline, inset=3.2, binding=1.25)
+    s.beads([a[0] for a in arcs], 1.25, edge(s), z=.7, flat=.65)        # the cusps: round joins of the binding
 
     def motif(place):
-        satin(s, place(leaf(14, 20, 15, 30.5, 2.6)), STITCH_GREEN, 0)
-        satin(s, place(leaf(20, 14, 30.5, 15, -2.6)), STITCH_GREEN, math.pi / 2)
-        stone(s, place(rhombus(17, 17, 2.4)), z=.5, height=1.3, setting=.5)
+        satin(s, place(leaf(14, 20, 15, 30.5, 2.6)), STITCH_GREEN, 0, z=.95)
+        satin(s, place(leaf(20, 14, 30.5, 15, -2.6)), STITCH_GREEN, math.pi / 2, z=.95)
+        stone(s, place(rhombus(17, 17, 2.4)), z=.9, height=1.3, setting=.5)
     corners4(motif, size, size, inset=0)
 
 
@@ -674,8 +719,11 @@ def orn(s, w, h):
 
 @sprite('bubble', shear=.5)
 def bubble(s, w, h):
-    """A thought bubble: a parchment disc bound in leather."""
-    sheet(s, circle(12, 12, 10), PAPER, depth=1.2, binding=1.25)
+    """A thought bubble: a domed parchment puff in a thin binding, a ring of gold granules."""
+    s.slab(circle(12, 12, 10), -.8, 1.0, parchment(s, PAPER), bevel=2.6)
+    s.tube(circle(12, 12, 10), .95, edge(s), z=.8, closed=True, flat=.65, caps=None)
+    n = 18
+    granules(s, [(12 + 7.2 * math.cos(math.tau * k / n), 12 + 7.2 * math.sin(math.tau * k / n)) for k in range(n)], r=.42, z=1.0)
 
 
 @sprite('badge')
@@ -738,18 +786,39 @@ def cross(e1, e2):
 
 
 # ================================================================ heads-up: coin, timer, stat icon
+def coin_at(s, cx, cy, r, z=0.0, detail=True):
+    """A coin of the kit: a thick polished gold rim, a ruby enamel field, a gold tulip standing on it. Bold enough
+    to read at 20 px: the eye sees a gold ring round a red disc with a gold flower."""
+    shine = s.mat('gold', GOLD_L, rough=.12)
+    s.slab(circle(cx, cy, r), z - 1.2, z, edge(s), bevel=.5)
+    s.slab(circle(cx, cy, r), z - .3, z + 1.6, shine, bevel=r * .09, holes=[circle(cx, cy, r * .7)])
+    s.slab(circle(cx, cy, r * .72), z - .4, z + .8, s.mat('enamel', '#b3262b', rough=.18, coat=1), bevel=r * .05)
+    if detail:
+        n = max(12, int(math.tau * r * .86 / 2.1))
+        granules(s, [(cx + r * .86 * math.cos(math.tau * k / n), cy + r * .86 * math.sin(math.tau * k / n)) for k in range(n)],
+                 r=r * .035, z=z + 1.6)
+    flower = tulip(cx, cy + r * .42, r * .82)
+    s.slab(flower, z + .5, z + 2.2, shine, bevel=r * .05)
+    s.slab(stroke([(cx, cy + r * .4), (cx, cy + r * .56)], r * .06), z + .5, z + 1.8, shine, bevel=r * .03)
+
+
 @sprite('coin')
 def coin(s, w, h):
-    """The coin: struck gold, a beaded rim, a ring and a tulip in relief."""
-    s.slab(circle(24, 24, 21.5), -1.6, 0, edge(s), bevel=.6)
-    s.slab(circle(24, 24, 21.5), -.4, 1.3, gold(s), bevel=1.5)
-    n = 40
-    granules(s, [(24 + 19 * math.cos(math.tau * k / n), 24 + 19 * math.sin(math.tau * k / n)) for k in range(n)], r=.6, z=1.3)
-    s.slab(circle(24, 24, 15.6), 1.0, 1.6, gold(s), bevel=.3, holes=[circle(24, 24, 14.6)])
-    s.slab(tulip(24, 30, 15), 1.0, 2.4, gold(s), bevel=.6)
-    s.slab(stroke([(24, 30), (24, 35.5)], .9), 1.0, 2.0, gold(s), bevel=.4)
-    for sign in (1, -1):
-        s.slab(leaf(24, 34.5, 24 + 6.5 * sign, 30.5, 1.4 * sign), 1.0, 2.0, gold(s), bevel=.4)
+    """The coin of the balance and of the paid options."""
+    coin_at(s, 24, 24, 21.5)
+
+
+def pile(s, places):
+    """Coins lying on each other: (x, y, z) from the lowest."""
+    for x, y, z in places:
+        coin_at(s, x, y, 10.5, z=z, detail=False)
+
+
+add('coins-s', lambda s, w, h: pile(s, [(22, 28, 0), (42, 30, 0), (32, 22, 2.6)]), size=(64, 48))
+add('coins-m', lambda s, w, h: pile(s, [(18, 32, 0), (18, 28, 2.6), (18, 24, 5.2), (40, 34, 0), (40, 30, 2.6),
+                                        (31, 22, 7.6)]), size=(64, 52))
+add('coins-l', lambda s, w, h: pile(s, [(14, 40, 0), (32, 42, 0), (50, 40, 0), (14, 36, 2.6), (32, 38, 2.6), (50, 36, 2.6),
+                                        (22, 30, 5.2), (42, 30, 5.2), (32, 24, 7.8), (32, 20, 10.4)]), size=(64, 60))
 
 
 @sprite('timer', shear=.5)
@@ -819,3 +888,189 @@ def title_ornament(s, w, h):
     for x in (14, 50):
         s.slab(rhombus(x, 16, 2.6), -.4, .9, gold(s), bevel=.5)
     s.beads([(8.5, 16), (55.5, 16)], 1.2, s.mat('pearl', PEARL), z=.2, flat=.8)
+
+
+# ================================================================ the menu: story cards, carousel, tabs, shop
+@sprite('story-frame', size=(120, 160), slice=Slice(40, 40, 40, 40, fill=False))
+def story_frame(s, w, h):
+    """The frame of a story card in the carousel, laid over its cover picture: a parchment band bound in dark
+    leather, an emerald thread and a scarlet tambour stitch along it, a gold fillet on its inner edge; in the
+    corners gold filigree scrolls round a ruby and emerald leaves, reaching over the picture. Tile 40 x 80."""
+    outer, band = (1.5, 1.5, w - 1.5, h - 1.5), 12
+    inner = (outer[0] + band, outer[1] + band, outer[2] - band, outer[3] - band)
+    s.slab(rrect(*outer, 4), -2.5, 0, edge(s), bevel=.5, holes=[rrect(*inner, 1)])
+    s.slab(rrect(*outer, 4), -.4, .6, parchment(s, PAPER), bevel=.5, holes=[rrect(*inner, 1)])
+    s.tube(fillet(rrect(*outer, 4), 1.3), 1.3, edge(s), z=.5, closed=True, flat=.65, caps=None)
+    s.tube(rrect(*inner, 1), .55, gold(s), z=.5, closed=True, flat=.8, caps=None)
+    s.tubes(straight(s, outer, 4.4, 14), .3, thread(s, STITCH_GREEN), z=.6)
+    s.tubes(chain_runs(s, outer, 7.6, 2, 18, width=1.3), .27, thread(s, STITCH_RED), z=.65, closed=True)
+
+    def corner(place):
+        for a0, cw in ((0, True), (math.pi / 2, False)):
+            sc = spiral(13 + 9 * math.cos(a0), 13 + 9 * math.sin(a0), .5, 4.2, 1.25, a0=a0 + math.pi, cw=cw)
+            s.tubes([place(sc)], .5, gold(s), z=.8)
+        satin(s, place(leaf(17, 17, 30, 23, 2.6)), STITCH_GREEN, .9, z=.8)
+        satin(s, place(leaf(17, 17, 23, 30, -2.6)), STITCH_GREEN, .7, z=.8)
+        stone(s, place(rhombus(11.5, 11.5, 3.6)), z=.8, height=1.7, setting=.8)
+    corners4(corner, w, h, inset=0)
+
+
+@sprite('medallion', size=(40, 40), shear=.5)
+def medallion_sprite(s, w, h):
+    """The sun rhombus on the top and bottom edges of a story card: ivory and scarlet enamel in gold, a ruby."""
+    s.slab(rhombus(20, 20, 18.5), -1.4, 0, edge(s), bevel=.5)
+    s.slab(rhombus(20, 20, 18), -.3, 1.0, gold(s), bevel=.6)
+    s.slab(rhombus(20, 20, 14.6), .3, 1.4, s.mat('enamel', PAPER_L, rough=.3), bevel=.5)
+    s.slab(rhombus(20, 20, 10.6), .9, 1.9, s.mat('enamel', SCARLET, rough=.28), bevel=.5)
+    s.slab(rhombus(20, 20, 6.8), 1.4, 2.3, s.mat('enamel', PAPER_L, rough=.3), bevel=.4)
+    s.facet(rhombus(20, 20, 4.2), 1.8, 3.6, gem(s), table=.4)
+    granules(s, [(20, 3.6), (36.4, 20), (20, 36.4), (3.6, 20)], r=.9, z=1.0)
+
+
+@sprite('title-plaque', size=(200, 64), slice=Slice(16, 50, 50, 18))
+def title_plaque(s, w, h):
+    """The plaque of a story's title on its card: emerald leather in a gilt rim with granules, scarlet silk ribbons
+    flying from its ends (they live in the side borders; the plaque never changes its height). Tile 100 x 30."""
+    box = (20, 12, w - 20, 48)
+    for flip in (False, True):
+        def m(pts):
+            return mirror_x(pts, w) if flip else pts
+        # a broad flat silk ribbon tied behind the end of the plaque, its two tails falling apart, cut in a swallowtail
+        for path, colour in ((bezier((26, 32), (12, 34), (10, 48), (4, 58)), '#b8302d'),
+                             (bezier((26, 26), (12, 22), (8, 12), (3, 4)), '#a3292a')):
+            band = stroke(path, 3.3)
+            s.slab(m(band), -1.4, -.4, thread(s, colour), bevel=.6)
+            end = path[-1]
+            s.slab(m([(end[0] - 3.6, end[1]), (end[0] + 3.6, end[1]), (end[0], end[1] + (-3 if end[1] < 30 else 3))]),
+                   -1.45, -.3, edge(s), bevel=.2)
+    plaque(s, cartouche(*box, 5), leather(s, LEATHER), bevel=1.6)
+    s.tubes(straight(s, box, 3.4, 8), .3, gold(s), z=.95)
+    granules(s, runs(s, box, 5.6, 2, 10, sides='tb'))
+    for x in (box[0] + 6, box[2] - 6):
+        stone(s, rhombus(x, 30, 2.6), z=.9, height=1.3, setting=.6)
+
+
+@sprite('lock', size=(32, 32), mask=True)
+def lock(s, w, h):
+    glyph(s, arc(16, 14, 6.4, math.pi, 2 * math.pi, 30) + [(22.4, 15)], 3)
+    # the keyhole, one outline: round at the top (over the left, the top, the right), the slot below it
+    hole = arc(16, 19.6, 2.2, .5 * math.pi + .6, 2.5 * math.pi - .6, 24) + [(17.3, 25), (14.7, 25)]
+    s.slab(rrect(7, 13.5, 25, 28.5, 2.6), -.9, .9, s.mat('matte', WHITE), bevel=.65, anchor=.9, holes=[hole])
+
+
+@sprite('check', size=(32, 32), mask=True)
+def check(s, w, h):
+    glyph(s, [(7, 16.5), (13.5, 23), (25.5, 9)], 3.8)
+
+
+@sprite('play', size=(32, 32), mask=True)
+def play(s, w, h):
+    glyph_fill(s, [(11, 7.5), (25, 16), (11, 24.5)], 1.2)
+
+
+@sprite('arrow', size=(28, 44), shear=.5)
+def arrow(s, w, h):
+    """The arrow of the carousel (pointing right; the game mirrors it): a gold chevron with a ruby at its point."""
+    line = [(7, 6), (20, 22), (7, 38)]
+    s.slab(stroke(line, 3.2), -1.6, 0, edge(s), bevel=.5)
+    s.slab(stroke(line, 2.7), -.3, 1.5, gold(s), bevel=.9)
+    stone(s, rhombus(18.5, 22, 2.6), z=1.2, height=1.4, setting=.6)
+
+
+@sprite('dot', size=(14, 14), shear=.4)
+def dot(s, w, h):
+    s.slab(rhombus(7, 7, 5), -.4, .8, gold(s), bevel=.4, holes=[rhombus(7, 7, 2.9)])
+
+
+@sprite('dot-on', size=(14, 14), shear=.4)
+def dot_on(s, w, h):
+    stone(s, rhombus(7, 7, 4.3), z=-.2, height=1.8, setting=.8)
+
+
+@sprite('tabbar', size=(120, 72), slice=Slice(20, 30, 30, 20))
+def tabbar(s, w, h):
+    """The bar of the tabs at the bottom of the menu: dark leather under a gilt rim with a row of granules and a
+    thin gold line (tile 60 x 32); it runs past both sides of the screen."""
+    body = [(-4, 6), (w + 4, 6), (w + 4, h + 4), (-4, h + 4)]
+    s.slab(body, -2, .6, leather(s, '#2b221d'), bevel=1.2)
+    s.tubes([[(-4, 6.4), (w + 4, 6.4)]], 1.1, gold(s), z=.5)
+    granules(s, [(x, 10.6) for x in lattice(-2, w + 2, 30, 2)], r=.48, z=.65)
+    s.tubes([[(-4, 13.6), (w + 4, 13.6)]], .3, gold(s), z=.6)
+
+
+@sprite('tab-stories', size=(40, 40), mask=True)
+def tab_stories(s, w, h):
+    """Stories by the fire: a campfire, three flames over crossed logs."""
+    for cx, cy, size in ((20, 26, 17), (13.5, 28, 10), (26.5, 28, 10)):
+        glyph_fill(s, [(cx, cy - size)] + bezier((cx, cy - size), (cx + size * .5, cy - size * .45), (cx + size * .32, cy), (cx, cy))[1:]
+                   + bezier((cx, cy), (cx - size * .32, cy), (cx - size * .5, cy - size * .45), (cx, cy - size))[1:-1])
+    glyph(s, [(7, 35), (33, 29)], 3.2)
+    glyph(s, [(7, 29), (33, 35)], 3.2)
+
+
+@sprite('tab-library', size=(40, 40), mask=True)
+def tab_library(s, w, h):
+    """The library: an open book."""
+    for sign in (1, -1):
+        def m(pts):
+            return [(20 + sign * (x - 20), y) for x, y in pts]
+        page = [(19, 11)] + quad((19, 11), (12, 7.5), (4.5, 9.5))[1:] + [(4.5, 31)] + quad((4.5, 31), (12, 29), (19, 33))[1:-1]
+        glyph_fill(s, m(page))
+    glyph(s, [(20, 11), (20, 34)], 1.6)
+
+
+@sprite('tab-shop', size=(40, 40), mask=True)
+def tab_shop(s, w, h):
+    """The shop: a chest."""
+    glyph_fill(s, [(6, 18), (34, 18), (34, 33), (6, 33)], .4)
+    glyph_fill(s, [(6, 15.5)] + quad((6, 15.5), (20, 4), (34, 15.5))[1:])
+    s.slab(rrect(16.5, 15, 23.5, 23, 1.2), .5, 1.6, s.mat('matte', WHITE), bevel=.4, anchor=1.6)
+
+
+@sprite('chest', size=(64, 60))
+def chest(s, w, h):
+    """The daily gift: a wooden chest with gold bands and corners, a lock plate with a ruby."""
+    wood = s.mat('wood', '#7a4024')
+    s.slab(rrect(6, 24, 58, 52, 2), -6, 0, wood, bevel=.8)
+    s.slab(rrect(5, 8, 59, 27, 6), -2, 2.4, wood, bevel=2.2)
+    for x in (16, 48):
+        s.slab([(x - 2.4, 7.4), (x + 2.4, 7.4), (x + 2.4, 52.6), (x - 2.4, 52.6)], .2, 2.8, gold(s), bevel=.5)
+    for x, y in ((6.5, 25.5), (57.5, 25.5), (6.5, 50.5), (57.5, 50.5)):
+        granules(s, [(x, y)], r=1.5, z=2.6)
+    s.slab(rrect(26, 20, 38, 34, 2.2), 1.6, 3.4, gold(s), bevel=.6)
+    stone(s, rhombus(32, 25.5, 2.6), z=3.0, height=1.4, setting=.5)
+    s.slab(rrect(30.6, 28.5, 33.4, 32.5, .6), 3.2, 3.6, edge(s), bevel=.2)
+
+
+@sprite('lock-frame', size=(64, 64), shear=.5)
+def lock_frame(s, w, h):
+    """The seal of a locked story on its dark card: a gold rhombus ringed with granules round dark leather (the game
+    lays the lock glyph on it)."""
+    s.slab(rhombus(32, 32, 30), -1.6, 0, edge(s), bevel=.6)
+    s.slab(rhombus(32, 32, 29.5), -.4, 1.2, gold(s), bevel=.8, holes=[rhombus(32, 32, 24.5)])
+    s.slab(rhombus(32, 32, 24.8), -.6, .5, leather(s, '#241d19'), bevel=1.4)
+    pts = []
+    for (ax, ay), (bx, by) in zip(rhombus(32, 32, 27), rhombus(32, 32, 27)[1:] + rhombus(32, 32, 27)[:1]):
+        n = 12
+        pts += [(ax + (bx - ax) * k / n, ay + (by - ay) * k / n) for k in range(n)]
+    granules(s, pts, r=.6, z=1.2)
+    for x, y in rhombus(32, 32, 27.5):
+        stone(s, rhombus(x, y, 2.2), z=1.0, height=1.2, setting=.5)
+
+
+@sprite('page', size=(160, 160), slice=Slice(40, 40, 40, 40))
+def page(s, w, h):
+    """The page of the shop and the library: a calm ground of dark emerald leather with a faint tooled lattice of
+    rhombuses (tile 80), a gilt rim with granules round it and gold corner pieces; the content lies on it, not on the
+    painting of the fire."""
+    box = (2, 2, w - 2, h - 2)
+    s.slab(rrect(*box, 8), -2.5, 0, edge(s), bevel=.6)
+    s.slab(rrect(*box, 8), -.6, .8, leather(s, '#16382c'), bevel=1.4)
+    # the lattice: small blind-tooled rhombuses every 20 px, on the tile (anchored at 40, as the borders)
+    marks = [(x, y) for x in lattice(10, w - 10, 40, 20) for y in lattice(10, h - 10, 40, 20)]
+    for x, y in marks:
+        s.slab(rhombus(x, y, 2.2), .3, .95, leather(s, '#0f2a20'), bevel=.4)
+    s.tube(fillet(rrect(*box, 8), 1.1), 1.1, gold(s), z=.8, closed=True, flat=.75, caps=None)
+    s.tubes(straight(s, box, 5.2, 14), .3, gold(s), z=.85)
+    granules(s, runs(s, box, 8, 2, 16), r=.42, z=.85)
+    corners4(lambda place: corner_cap(s, place, 15, z=.8), w, h, inset=0)

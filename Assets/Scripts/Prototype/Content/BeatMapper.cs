@@ -24,18 +24,18 @@ namespace LegacyThroughTime.Prototype
         public static string Hint(Beat beat) =>
             beat.Voice == Voice.System && StatBanner(beat) == null ? TextRules.SentenceCase(beat.Text) : null;
 
-        /// The explanation of a word marked with an asterisk (`# note: Чура — слуга`), or null.
+        /// The explanation of a word marked with an asterisk (`# note: Чура — слуга`), the word in italics; or null.
         public static string Note(Beat beat)
         {
             var note = beat.TagValue("note");
-            return string.IsNullOrEmpty(note) ? null : "* " + note;
+            return string.IsNullOrEmpty(note) ? null : TextRules.TermFirst(note.Trim());
         }
 
         /// The plate of a line; null when the line is a stat banner (those do not stop the reader).
         public static PlateSpec Plate(Beat line)
         {
             if (StatBanner(line) != null) return null;
-            var text = line.Text;
+            var text = TextRules.Emphasis(line.Text);          // the words explained by a note: italics, not asterisks
             switch (line.Voice)
             {
                 case Voice.Dialogue:

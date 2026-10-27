@@ -125,7 +125,25 @@ VAR gems = 20
             var marked = lines.Where(b => b.Text.Contains('*')).ToList();
             Assert.That(marked, Is.Not.Empty);
             foreach (var b in marked)
-                Assert.That(BeatMapper.Note(b), Does.StartWith("* ").And.Length.GreaterThan(10), b.Text);
+            {
+                // the word is set in italics on the plate and in the note, no asterisk is left on the screen
+                Assert.That(BeatMapper.Note(b), Does.StartWith("<i>").And.Contain("</i> — ").And.Length.GreaterThan(10), b.Text);
+                Assert.That(BeatMapper.Plate(b).Text, Does.Contain("<i>").And.Not.Contain("*"), b.Text);
+            }
+        }
+
+        [Test]
+        public void ALongLineIsSaidInTwoScreensCutAtASentence()
+        {
+            var lines = Beats().Where(b => b.Phase == StoryPhase.Line && BeatMapper.Plate(b) != null).ToList();
+            var longest = lines.OrderByDescending(b => b.Text.Length).First();
+            Assert.That(longest.Text.Length, Is.GreaterThan(TextRules.PlateMaxChars));
+            var parts = TextRules.Split(longest.Text);
+            Assert.That(parts.Length, Is.GreaterThanOrEqualTo(2));
+            Assert.That(parts, Has.All.Length.LessThanOrEqualTo(TextRules.PlateMaxChars));
+            Assert.That(string.Join(" ", parts), Is.EqualTo(longest.Text.Trim()), "nothing lost");
+            Assert.That(parts[0], Does.EndWith(".").Or.EndWith("!").Or.EndWith("?").Or.EndWith("…").Or.EndWith(","));
+            Assert.That(TextRules.Split("Короткая реплика."), Has.Length.EqualTo(1));
         }
 
         [Test]
@@ -196,7 +214,9 @@ VAR gems = 20
                         {
                             last = plate;
                             Assert.That(plate.Text, Is.Not.Empty);
-                            Assert.That(plate.Text, Does.Not.Contain("<").And.Not.Contain(">"), "rich-text markup would be rendered by the UI");
+                            // the only markup is the italics of a word a note explains; any other would be shown as text
+                            var bare = plate.Text.Replace("<i>", "").Replace("</i>", "");
+                            Assert.That(bare, Does.Not.Contain("<").And.Not.Contain(">"), "rich-text markup would be rendered by the UI");
                             Assert.That(PlateSkins.For(plate.Style), Is.Not.Null);
                             screens.Add(plate.Style + "|" + plate.Label + "|" + plate.Text);
                         }

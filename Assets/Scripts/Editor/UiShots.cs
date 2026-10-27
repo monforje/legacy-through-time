@@ -111,20 +111,28 @@ namespace LegacyThroughTime.Editor
         static void Plan()
         {
             shots.Clear();
-            foreach (var progress in new[] { StoryBoard.Progress.InProgress, StoryBoard.Progress.New, StoryBoard.Progress.Finished })
-                Add("menu-" + progress.ToString().ToLowerInvariant(), c =>
-                {
-                    Backdrop(c, "title");
-                    var board = new StoryBoard(c, StoryCatalog.All, _ => progress, (_, _) => { }, () => { }, animated: false);
-                    if (progress == StoryBoard.Progress.InProgress) board.ShowUpdate("2099-01-01-0000", _ => { });
-                    SettingsToast.Gear(c, () => { });
-                });
+            var terms = Glossary.FromStory(File.ReadAllText(EpisodePath));
+            Add("menu-stories", c => Menu(c, terms));
+            Add("menu-locked", c => Menu(c, terms).Turn(1));
+            Add("menu-update", c => Menu(c, terms).ShowUpdate("2099-01-01-0000", _ => { }));
+            Add("menu-chapters", c => Menu(c, terms).ShowChapters(StoryCatalog.All[0]));
+            Add("menu-library", c => Menu(c, terms).Select(MenuScreen.Tab.Library));
+            Add("menu-term", c => Menu(c, terms).ShowTerm(terms[1]));
+            Add("menu-shop", c => Menu(c, terms).Select(MenuScreen.Tab.Shop));
             Add("menu-settings", c =>
             {
-                Backdrop(c, "title");
-                new StoryBoard(c, StoryCatalog.All, _ => StoryBoard.Progress.InProgress, (_, _) => { }, () => { }, animated: false);
-                SettingsToast.Gear(c, () => { });
-                new SettingsToast(c, NoAnimator.Instance).Open(null, () => { });
+                Menu(c, terms);
+                new SettingsToast(c, NoAnimator.Instance).Open(null, () => { }, new SettingsToast.Cloud { Line = "Прогресс сохраняется · Даниил" });
+            });
+            Add("menu-settings-signin", c =>
+            {
+                Menu(c, terms);
+                new SettingsToast(c, NoAnimator.Instance).Open(null, () => { }, new SettingsToast.Cloud { SignIn = () => { } });
+            });
+            Add("menu-restored", c =>
+            {
+                Menu(c, terms);
+                new StatBanner(c, "Прогресс восстановлен из Google Play", NoAnimator.Instance, "check");
             });
 
             foreach (var page in DemoFlow.Pages())
@@ -139,6 +147,22 @@ namespace LegacyThroughTime.Editor
         }
 
         static void Add(string name, Action<RectTransform> build) => shots.Add(new Shot { Name = name, Build = build });
+
+        /// The menu by the fire with the first chapter being read, two words of the library open (only for the shot).
+        static MenuScreen Menu(RectTransform c, List<Glossary.Term> terms)
+        {
+            Backdrop(c, "menu_campfire");
+            // the words open in the editor's own play are put back after the shot
+            var before = PlayerPrefs.HasKey("library:open") ? PlayerPrefs.GetString("library:open") : null;
+            PlayerPrefs.SetString("library:open", terms[0].Name + "\n" + terms[1].Name);
+            cleanup.Add(() => { if (before != null) PlayerPrefs.SetString("library:open", before); else PlayerPrefs.DeleteKey("library:open"); });
+            var menu = new MenuScreen(c, StoryCatalog.All,
+                                      ch => ch.Soon ? MenuScreen.Progress.Locked : ch.Number == 1 ? MenuScreen.Progress.InProgress : MenuScreen.Progress.New,
+                                      (_, _, _) => { }, terms, animated: false);
+            cleanup.Add(menu.Dispose);
+            SettingsToast.Gear(c, () => { });
+            return menu;
+        }
 
         static void Page(RectTransform c, string background, Page page)
         {
@@ -167,7 +191,8 @@ namespace LegacyThroughTime.Editor
             var choices = 0;
             var bg = "khan_chamber";
             PlateSpec last = null;
-            Page tallest = null; var tallestLength = 0; var tallestBg = bg;
+            PlateSpec tallest = null; var tallestBg = bg;
+            var italic = false;
             for (var step = 0; step < 3000 && !machine.IsFinished; step++)
             {
                 var beat = machine.Current;
@@ -181,7 +206,15 @@ namespace LegacyThroughTime.Editor
                         var page = BeatMapper.LinePage(plate);
                         var where = bg;
                         if (styles.Add(plate.Style)) Add($"story-{plate.Style.ToString().ToLowerInvariant()}", c => Page(c, where, page));
-                        if (plate.Text.Length > tallestLength) { tallestLength = plate.Text.Length; tallest = page; tallestBg = bg; }
+                        if (tallest == null || plate.Text.Length > tallest.Text.Length) { tallest = plate; tallestBg = bg; }
+                        // the first word a note explains: in italics on its plate, the note in the cloud at the top
+                        if (!italic && BeatMapper.Note(beat) is { } note && plate.Text.Contains("<i>"))
+                        {
+                            italic = true;
+                            var noted = BeatMapper.LinePage(plate);
+                            noted.Info = note;
+                            Add("story-note", c => Page(c, where, noted));
+                        }
                     }
                     machine.Advance();
                 }
@@ -197,7 +230,16 @@ namespace LegacyThroughTime.Editor
                 }
                 else machine.Advance();
             }
-            if (tallest != null) Add("story-tallest", c => Page(c, tallestBg, tallest));
+            // the longest line, said in parts (StoryPlayer shows one screen a part, TextRules.Split)
+            if (tallest != null)
+            {
+                var parts = TextRules.Split(tallest.Text);
+                for (var k = 0; k < parts.Length; k++)
+                {
+                    var part = BeatMapper.LinePage(new PlateSpec { Style = tallest.Style, Label = tallest.Label, Text = parts[k] });
+                    Add($"story-tallest-{k + 1}", c => Page(c, tallestBg, part));
+                }
+            }
         }
     }
 }

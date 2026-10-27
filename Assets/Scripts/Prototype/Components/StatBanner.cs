@@ -5,6 +5,7 @@ using UnityEngine.UI;
 namespace LegacyThroughTime.Prototype
 {
     /// "+1 Память степи": a green ribbon that drops in from the top, and leaves by itself after a few seconds or on a tap.
+    /// The menu tells news of the game on it too ("Прогресс восстановлен"), with an icon of their own.
     sealed class StatBanner
     {
         const float ShowTime = .45f, StayTime = 3.5f, Height = 56;
@@ -15,7 +16,7 @@ namespace LegacyThroughTime.Prototype
         readonly float top;
         bool dismissed;
 
-        public StatBanner(Transform parent, string text, IAnimator anim)
+        public StatBanner(Transform parent, string text, IAnimator anim, string icon = "stat-steppe")
         {
             this.anim = anim;
             Root = Ui.Rect(parent, "Stat");
@@ -27,7 +28,7 @@ namespace LegacyThroughTime.Prototype
 
             var label = Ui.Txt(Root, "Text", TextRules.NoBreaks(text), Art.Action, Metrics.FsAction, Theme.Parchment, TextAnchor.MiddleCenter);
             Ui.Emboss(label); Ui.Stretch(label.rectTransform, 60, 11, 52, 8);
-            Ui.Icon(Root, "Icon", "stat-steppe", A.MidLeft, A.MidLeft, new Vector2(18, 1.5f), 32);
+            Ui.Icon(Root, "Icon", icon, A.MidLeft, A.MidLeft, new Vector2(18, 1.5f), 32);
 
             group = Ui.Group(Root);
             PressButton.On(Root.gameObject, Dismiss, 1);

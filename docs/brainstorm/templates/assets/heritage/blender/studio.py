@@ -128,6 +128,17 @@ class Nodes:
         tex.inputs['Scale'].default_value = scale
         return tex.outputs[out]
 
+    def wave(self, scale, distortion):
+        """Bands across y (wood grain), wobbling: not periodic (nothing tiled is made of wood)."""
+        tex = self.n.new('ShaderNodeTexWave')
+        tex.wave_type = 'BANDS'
+        tex.bands_direction = 'Y'
+        tex.inputs['Scale'].default_value = scale
+        tex.inputs['Distortion'].default_value = distortion
+        tex.inputs['Detail'].default_value = 3
+        self.link(self.pos, tex.inputs['Vector'])
+        return tex.outputs['Fac']
+
     def colour(self, bsdf, color, variations, ao=None, dark=None):
         """Base colour: the albedo of `color` times 1 + sum(amount * (value - .5)), darkened toward `dark` (or
         black) where ambient occlusion within ao[0] px finds a crevice, by up to ao[1]."""
@@ -296,6 +307,12 @@ class Studio:
             g.colour(bsdf, color, [(pile, .08)], ao=(1.4, .4))
             set_('Roughness', .85); set_('Sheen Weight', 1); set_('Sheen Roughness', .3); set_('Specular IOR Level', .2)
             g.bump(bsdf, [(pile, 1.0)], strength=.25, distance=.2)
+        elif kind == 'wood':           # the chest: wood grain in bands, darker in the cracks
+            grain = g.wave(.18, 6)
+            fine = g.noise(1.2, 2, 29)
+            g.colour(bsdf, color, [(grain, .22), (fine, .08)], ao=(1.4, .5))
+            set_('Roughness', .62); set_('Specular IOR Level', .3); set_('Coat Weight', .2)
+            g.bump(bsdf, [(grain, .6), (fine, .4)], strength=.3, distance=.3)
         elif kind == 'gem':            # rubies and emeralds: facets mirror the lamp
             set_('Roughness', .04); set_('Coat Weight', 1); set_('Coat Roughness', .02); set_('Specular IOR Level', 1)
         elif kind == 'pearl':

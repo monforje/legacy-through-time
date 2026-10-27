@@ -20,6 +20,7 @@ namespace LegacyThroughTime.Prototype
 
         // Type scale (px)
         public const int FsTitle = 28, FsValue = 22, FsBody = 19, FsAction = 17, FsLabel = 15;
+        public const int FsInfo = 17;              // the hint cloud at the top: a little smaller than a plate's text
 
         // Blocks
         public const float PanelTextWidth = PlateWidth - 32;  // inside a bottom panel

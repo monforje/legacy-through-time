@@ -75,10 +75,10 @@ namespace LegacyThroughTime.Prototype
         public void Hide(LoadingScreen loading) => owner.StartCoroutine(loading.Hide());
 
         /// A stat banner over whatever is on the screen; a new one replaces the old.
-        public void Banner(string text)
+        public void Banner(string text, string icon = "stat-steppe")
         {
             banner?.Dismiss();
-            banner = new StatBanner(overlay, text, overlayAnimator);
+            banner = new StatBanner(overlay, text, overlayAnimator, icon);
         }
     }
 }

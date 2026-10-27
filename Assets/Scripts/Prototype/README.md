@@ -15,6 +15,7 @@ Content/      чистый C# без Unity (тестируется в Docker: ta
   BeatMapper   бит истории -> экран (по соглашениям ink: Имя: текст, # thought, # system ...)
   Backdrops    тон фона по `# bg: id`        DemoFlow  экраны демо       Metrics  числа раскладки
   StoryCatalog карточки меню: id, название, эпизод, описание, обложка-превью, путь к истории
+  Progress     прогресс читателя целиком (главы, пройденное, монеты, слова, покупки) и слияние копий телефона и облака
 Core/         то, что нужно всем компонентам
   Theme Viewport Art ProceduralArt   цвета, размер холста (Expand: не меньше 360x780) и вырезы, спрайты и шрифты, текстуры из кода
   Settings      звук вкл/выкл (PlayerPrefs, громкость слушателя)
@@ -29,6 +30,7 @@ Components/   по одному классу на элемент интерфе�
 App/          сцена и жизненный цикл
   Stage ScreenHost StoryFile BackdropTint   каркас сцены, смена экранов и баннеры, чтение истории, цвет фона
   SaveStore     сохранение на каждой показанной реплике (persistentDataPath/saves/<id>.json, атомарная запись)
+  PlayGames CloudSave  вход Google Play Игр без кнопки и прогресс в их сохранениях (docs/notes/play-games.md)
   StoryPlayer SessionPrototype              два способа играть: история / демо
 ```
 

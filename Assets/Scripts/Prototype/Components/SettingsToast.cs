@@ -4,10 +4,19 @@ using UnityEngine.UI;
 
 namespace LegacyThroughTime.Prototype
 {
-    /// The gear in the top-right corner and the toast it drops under it: the sound switch, (in a story) "В меню" and
-    /// "Выйти из игры". A tap outside the card closes it; nothing under the shade gets the tap.
+    /// The gear in the top-right corner and the toast it drops under it: the sound switch, Google Play (where the
+    /// progress is kept), (in a story) "В меню" and "Выйти из игры". A tap outside the card closes it; nothing under
+    /// the shade gets the tap.
     sealed class SettingsToast
     {
+        /// The Google Play row: a line under its name (the reader's Play Games name, "Подключение…"), or, with
+        /// `SignIn`, a button that signs in.
+        public sealed class Cloud
+        {
+            public string Line;
+            public Action SignIn;
+        }
+
         const float Width = 300, Pad = 20, RowHeight = 48, Gap = 10, PadTop = 22, PadBottom = 26, TitleHeight = 28;
 
         readonly RectTransform layer;
@@ -35,8 +44,8 @@ namespace LegacyThroughTime.Prototype
             return gear;
         }
 
-        /// `toMenu`: the "В меню" row; null in the menu itself.
-        public void Open(Action toMenu, Action quit)
+        /// `toMenu`: the "В меню" row; null in the menu itself. `cloud`: the Google Play row; null without Play Games.
+        public void Open(Action toMenu, Action quit, Cloud cloud = null)
         {
             if (IsOpen) return;
             root = Ui.Rect(layer, "Settings");
@@ -53,7 +62,7 @@ namespace LegacyThroughTime.Prototype
             column.anchorMin = A.BottomCenter; column.anchorMax = A.TopCenter; column.pivot = A.Center;
             column.offsetMin = new Vector2(-Metrics.RefWidth / 2, 0); column.offsetMax = new Vector2(Metrics.RefWidth / 2, 0);
 
-            var rows = toMenu != null ? 3 : 2;
+            var rows = 2 + (toMenu != null ? 1 : 0) + (cloud != null ? 1 : 0);
             var height = PadTop + TitleHeight + rows * (Gap + RowHeight) + PadBottom;
             var card = Ui.Sliced(column, "Card", "card");
             card.raycastTarget = true;                         // a tap on the card itself does not close it
@@ -65,6 +74,8 @@ namespace LegacyThroughTime.Prototype
 
             var y = PadTop + TitleHeight + Gap;
             BuildSoundRow(panel, y); y += RowHeight + Gap;
+            if (cloud?.SignIn != null) { BuildButtonRow(panel, y, "Cloud", "play", "Войти в Play Игры", "btn", cloud.SignIn); y += RowHeight + Gap; }
+            else if (cloud != null) { BuildCloudRow(panel, y, cloud.Line); y += RowHeight + Gap; }
             if (toMenu != null) { BuildButtonRow(panel, y, "Menu", "home", "В меню", "btn", toMenu); y += RowHeight + Gap; }
             BuildButtonRow(panel, y, "Quit", "exit", "Выйти из игры", "btn-chosen", quit);
 
@@ -102,6 +113,19 @@ namespace LegacyThroughTime.Prototype
             soundSwitch = Ui.Icon(row.rectTransform, "Switch", "switch-on", A.MidRight, A.MidRight, new Vector2(-2, -1), 60);
             Sync();
             PressButton.On(row.gameObject, () => { Settings.Sound = !Settings.Sound; Sync(); }, .98f);
+        }
+
+        /// "Google Play Игры" with a line under it: who is signed in, or that it is still connecting.
+        static void BuildCloudRow(RectTransform panel, float top, string line)
+        {
+            var row = Ui.Rect(panel, "Cloud");
+            Ui.TopRow(row, Pad, Pad, top, RowHeight);
+            Ui.Icon(row, "Icon", "check", A.MidLeft, A.MidLeft, new Vector2(6, 0), 24, Theme.Emerald);
+            var name = Ui.Txt(row, "Text", "Google Play Игры", Art.Action, Metrics.FsAction, Theme.Ink);
+            Ui.Box(name.rectTransform, A.MidLeft, A.MidLeft, new Vector2(42, 10), new Vector2(Width - 2 * Pad - 42, 24));
+            var sub = Ui.Txt(row, "Line", line ?? "", Art.Sub, 13, Theme.Ink.WithAlpha(.7f));
+            sub.horizontalOverflow = HorizontalWrapMode.Wrap;
+            Ui.Box(sub.rectTransform, A.MidLeft, A.MidLeft, new Vector2(42, -12), new Vector2(Width - 2 * Pad - 42, 18));
         }
 
         void Sync()

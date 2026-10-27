@@ -10,6 +10,53 @@ namespace LegacyThroughTime.Prototype
         static readonly Regex StatLine = new(@"^\s*([А-ЯЁ][А-ЯЁ ]*?)\s+([+\-−–]\d+)\s*\.?\s*$", RegexOptions.Compiled);
         static readonly Regex Caps = new(@"[А-ЯЁ]{2,}(?:-[А-ЯЁ]+)*", RegexOptions.Compiled);
         static readonly string[] ProperNames = { "Сафии", "Юсуфа", "Сююмбике", "Казани", "Джан-Али", "Сафия", "Юсуф" };
+        static readonly Regex Marked = new(@"(\p{L}[\p{L}\-]*)\*", RegexOptions.Compiled);
+        static readonly Regex Term = new(@"^([^—\n<]+?)\s+—\s+", RegexOptions.Compiled);
+
+        /// A plate shows at most this many characters; a longer line is said in two (or more) screens.
+        public const int PlateMaxChars = 150;
+
+        /// A word marked with an asterisk ("калфак*", explained at the top of the screen) is set in italics instead.
+        public static string Emphasis(string text) => Marked.Replace(text, "<i>$1</i>");
+
+        /// "Калфак — женский головной убор…": the explained word of a note in italics.
+        public static string TermFirst(string note) => Term.Replace(note, "<i>$1</i> — ", 1);
+
+        /// A text longer than `max` characters -> parts of about equal length, cut after the end of a sentence nearest
+        /// to the middle (or, without one, after a comma, or at a space), so that a long speech is said in two taps.
+        public static string[] Split(string text, int max = PlateMaxChars)
+        {
+            text = text.Trim();
+            if (text.Length <= max) return new[] { text };
+            var cut = Cut(text);
+            if (cut <= 0 || cut >= text.Length) return new[] { text };
+            var head = Split(text.Substring(0, cut), max);
+            var tail = Split(text.Substring(cut), max);
+            var parts = new string[head.Length + tail.Length];
+            head.CopyTo(parts, 0); tail.CopyTo(parts, head.Length);
+            return parts;
+        }
+
+        /// Where to cut: the best place nearest to the middle, sentence ends first.
+        static int Cut(string text)
+        {
+            var middle = text.Length / 2;
+            foreach (var marks in new[] { ".!?…", ",;:", " " })
+            {
+                var best = -1;
+                for (var i = 1; i < text.Length - 1; i++)
+                {
+                    if (text[i] != ' ') continue;
+                    var before = text[i - 1];
+                    if (marks != " " && marks.IndexOf(before) < 0) continue;
+                    if (text.LastIndexOf('<', i) > text.LastIndexOf('>', i)) continue;      // never inside a tag
+                    if (best < 0 || Math.Abs(i - middle) < Math.Abs(best - middle)) best = i;
+                }
+                // a sentence end is worth it only if it leaves both parts a fair share
+                if (best > 0 && Math.Min(best, text.Length - best) >= text.Length / 4) return best + 1;
+            }
+            return -1;
+        }
 
         /// Russian typography: prepositions and conjunctions up to two letters and dashes do not detach from the next word.
         public static string NoBreaks(string text) =>

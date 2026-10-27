@@ -2,19 +2,33 @@ using System.Collections.Generic;
 
 namespace LegacyThroughTime.Prototype
 {
-    /// One card of the story board in the main menu.
-    sealed class StoryEntry
+    /// One chapter (episode) of a story. A chapter without a path is announced but not written yet.
+    sealed class ChapterEntry
     {
-        public string Id;          // also the name of the save slot
+        public int Number;
         public string Title;
-        public string Episode;     // under the title, and the scene line of the title card
-        public string Blurb;
-        public string Cover;       // background id shown as the preview (Resources/Art/Backgrounds/<id>.png)
-        public string Path;        // compiled story in StreamingAssets (`task ink`)
-        public bool Soon;          // a placeholder card: shown, not playable
+        public string Path;        // compiled chapter in StreamingAssets (`task ink`); null: "скоро"
+        public string SaveId;      // the save slot of the chapter
+        public bool Soon => Path == null;
     }
 
-    /// The stories of the main menu, in the order of the board. Plain data: tested by `task test:reader`.
+    /// One story of the menu: a card in the carousel; its chapters open when it is tapped.
+    sealed class StoryEntry
+    {
+        public string Id;
+        public string Title;
+        public string Episode;     // the scene line of the title card
+        public string Blurb;
+        public string Cover;       // background id shown on the card (Resources/Art/Backgrounds/<id>.png)
+        public bool Soon;          // a story announced, not playable: a dark card with a lock
+        public IReadOnlyList<ChapterEntry> Chapters = new ChapterEntry[0];
+
+        /// The first chapter: the one a story opens with.
+        public ChapterEntry First => Chapters.Count > 0 ? Chapters[0] : null;
+        public string Path => First?.Path;
+    }
+
+    /// The stories of the menu, in the order of the carousel. Plain data: tested by `task test:reader`.
     static class StoryCatalog
     {
         public static readonly IReadOnlyList<StoryEntry> All = new[]
@@ -23,12 +37,25 @@ namespace LegacyThroughTime.Prototype
             {
                 Id = "golden-cage", Title = "Золотая клетка", Episode = "Эпизод 1",
                 Blurb = "Ногайская Орда, 1533 год. Юную Сююмбике везут в Казань — к хану, которого она никогда не видела.",
-                Cover = "title", Path = "stories/golden-cage/episode-01.json",
+                Cover = "title",
+                Chapters = new[]
+                {
+                    // the save slot keeps the id of the story: the saves made before there were chapters still open
+                    new ChapterEntry { Number = 1, Title = "Перед дорогой", Path = "stories/golden-cage/episode-01.json", SaveId = "golden-cage" },
+                    new ChapterEntry { Number = 2, Title = "Скоро", SaveId = "golden-cage-2" },
+                    new ChapterEntry { Number = 3, Title = "Скоро", SaveId = "golden-cage-3" },
+                    new ChapterEntry { Number = 4, Title = "Скоро", SaveId = "golden-cage-4" },
+                },
             },
             new StoryEntry
             {
-                Id = "soon", Title = "Новые истории", Episode = "Скоро",
-                Blurb = "Следующие главы наследия уже пишутся.", Soon = true,
+                Id = "zilant", Title = "Зилант", Episode = "Скоро",
+                Blurb = "Легенда о крылатом змее, хранителе холма, на котором встала Казань.", Cover = "kazan_panorama", Soon = true,
+            },
+            new StoryEntry
+            {
+                Id = "shurale", Title = "Шурале", Episode = "Скоро",
+                Blurb = "Лесной дух щекочет путников до смерти. Но однажды он встретил дровосека.", Cover = "road_evening", Soon = true,
             },
         };
 
