@@ -90,6 +90,18 @@ def contrast(toks: dict[str, str]) -> list[str]:
     return errors
 
 
+def motion(css_text: str) -> list[str]:
+    """Длительности только из токенов --dur-*, и есть блок для prefers-reduced-motion."""
+    errors = []
+    outside = css_text.replace(root_block(css_text), "")
+    for n, line in enumerate(outside.splitlines(), 1):
+        if re.search(r"\b(transition|animation)\b", line) and re.search(r"(?<![\w-])\d*\.?\d+m?s\b", line):
+            errors.append(f"kit.css:{n}: длительность вне токенов: {line.strip()[:80]}")
+    if "prefers-reduced-motion" not in css_text:
+        errors.append("kit.css: нет блока @media (prefers-reduced-motion: reduce)")
+    return errors
+
+
 def unlabeled_buttons(pages: dict[str, str]) -> list[str]:
     errors = []
     for name, text in pages.items():
@@ -117,7 +129,7 @@ def main() -> int:
     pages = {p.name: p.read_text(encoding="utf-8") for p in PAGES}
     toks = tokens(css_text)
     errors = (colors_outside_tokens(css_text, pages) + forbidden_hues(toks) + contrast(toks)
-              + unlabeled_buttons(pages) + dead_links(pages))
+              + motion(css_text) + unlabeled_buttons(pages) + dead_links(pages))
     print("\n".join(errors) if errors else "ok")
     return 1 if errors else 0
 

@@ -4,6 +4,18 @@
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 if (self !== top) document.documentElement.classList.add('embed');   // в индексе рамки без полей
 
+// Тост с появлением и уходом; повторный вызов продлевает показ.
+const toastTimers = new WeakMap();
+function showToast(el, text, ms = 2500) {
+  if (text) el.textContent = text;
+  clearTimeout(toastTimers.get(el));
+  el.classList.remove('out'); el.hidden = false;
+  toastTimers.set(el, setTimeout(() => {
+    el.classList.add('out');
+    el.addEventListener('animationend', () => { el.hidden = true; el.classList.remove('out'); }, { once: true });
+  }, ms));
+}
+
 function initTabs(root) {
   const tabs = $$('.tab', root);
   tabs.forEach(t => t.addEventListener('click', () => {
@@ -41,7 +53,9 @@ function initChips(root) {
 
 function initSegmented(root) {
   const buttons = $$('button', root);
+  root.style.setProperty('--n', buttons.length);
   const show = id => {
+    root.style.setProperty('--i', buttons.findIndex(b => b.dataset.target === id));
     buttons.forEach(b => b.setAttribute('aria-selected', String(b.dataset.target === id)));
     $$('[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== id; });
   };
@@ -93,16 +107,13 @@ function initWheel(root, prizes) {
   const counters = $$('[data-attempts]', root);
   const seg = 360 / prizes.length;
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let turns = 0, attempts = Number(root.dataset.attempts ?? 1), hideTimer;
+  let turns = 0, attempts = Number(root.dataset.attempts ?? 1);
   const draw = () => {
     counters.forEach(c => { c.textContent = String(attempts); });
     spin.disabled = attempts === 0;
   };
   const done = id => {
-    toast.textContent = 'Выпало: ' + prizes.find(p => p.id === id).label;
-    toast.hidden = false; draw();
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(() => { toast.hidden = true; }, 2500);
+    showToast(toast, 'Выпало: ' + prizes.find(p => p.id === id).label); draw();
   };
   draw();
   spin.addEventListener('click', () => {
@@ -112,7 +123,7 @@ function initWheel(root, prizes) {
     turns += 4; attempts -= 1;
     const angle = turns * 360 - index * seg;
     spin.disabled = true;
-    disc.style.transition = still ? 'none' : 'transform 3.6s cubic-bezier(.12,.7,.15,1)';
+    disc.style.transition = still ? 'none' : 'transform var(--dur-spin) var(--ease-wheel)';
     disc.style.transform = `rotate(${angle}deg)`;
     if (still) done(id); else disc.addEventListener('transitionend', () => done(id), { once: true });
   });
@@ -123,12 +134,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.q
 function initToastLinks() {
   $$('[data-toast]').forEach(b => {
     const toast = document.getElementById(b.dataset.toast);
-    let timer;
-    b.addEventListener('click', () => {
-      toast.hidden = false;
-      clearTimeout(timer);
-      timer = setTimeout(() => { toast.hidden = true; }, 4000);
-    });
+    b.addEventListener('click', () => showToast(toast, null, 4000));
   });
 }
 
