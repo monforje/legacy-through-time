@@ -438,7 +438,7 @@ img.nav3d { opacity: 1; }
 .pill-plus .ico.g { width: 22px; height: 22px; }
 
 /* колесо фортуны */
-.prizes { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-3) var(--space-1); }
+.prizes { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2) var(--space-1); padding-top: var(--space-3); }   /* запас сверху: бейджи первого ряда не обрезаются */
 .prize { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); font: 800 var(--fs-small) var(--font); font-variant-numeric: tabular-nums; }
 .t-coin { --tint: var(--coin); } .t-energy { --tint: var(--energy); } .t-gem { --tint: var(--gem); } .t-gift { --tint: var(--accent); }
 .token { position: relative; display: grid; place-items: center; width: 52px; height: 44px; }   /* без подложки, иконка крупно */
@@ -447,7 +447,7 @@ img.nav3d { opacity: 1; }
 .tile img { width: 42px; height: 42px; }
 .token b { position: absolute; right: -8px; bottom: -6px; min-width: 20px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); font: 800 var(--fs-micro)/18px var(--font); text-align: center; }
 .token b { top: -6px; right: -2px; bottom: auto; }
-.wheel { position: relative; width: 252px; height: 252px; margin: var(--space-3) auto; flex: none; }
+.wheel { position: relative; width: 252px; height: 252px; margin: var(--space-2) auto; flex: none; }
 .wheel::before { content: ""; position: absolute; inset: -14px; border-radius: 50%; box-shadow: 0 0 0 1px var(--line), var(--shadow); }
 .wheel-disc { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 6px var(--surface-2), 0 0 0 7px var(--line);
   background: repeating-conic-gradient(from -18deg, var(--line) 0 .6deg, transparent .6deg 36deg), repeating-conic-gradient(from -18deg, var(--surface) 0 36deg, var(--surface-2) 36deg 72deg); }
@@ -455,7 +455,7 @@ img.nav3d { opacity: 1; }
 .wheel-disc .seg .tile { position: absolute; top: 18px; left: -23px; }
 .wheel-active { position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
   background: conic-gradient(from -18deg, color-mix(in srgb, var(--text) 32%, transparent) 0 36deg, transparent 36deg), conic-gradient(from -18deg, color-mix(in srgb, var(--text) 45%, transparent) 0 .7deg, transparent .7deg 35.3deg, color-mix(in srgb, var(--text) 45%, transparent) 35.3deg 36deg, transparent 36deg);
-  -webkit-mask-image: radial-gradient(circle, transparent 12%, var(--scrim) 78%); mask-image: radial-gradient(circle, transparent 12%, var(--scrim) 78%); }   /* свет падает на выпадающий сектор: ярче у края, затухает к центру */
+  clip-path: circle(49.5% at 50% 50%); -webkit-mask-image: radial-gradient(circle closest-side, transparent 12%, var(--scrim) 100%); mask-image: radial-gradient(circle closest-side, transparent 12%, var(--scrim) 100%); }   /* свет падает на выпадающий сектор: ярче у края, затухает к центру, строго внутри круга */
 .wheel-mark { position: absolute; left: 50%; top: 44px; width: 1px; height: 1px; }
 .wheel-hub { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 5px var(--accent), 0 0 0 7px var(--surface-2); display: grid; place-items: center; }
 .wheel-hub img { width: 36px; height: 36px; }
