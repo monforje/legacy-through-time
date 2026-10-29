@@ -18,9 +18,9 @@ SIZE = 512
 
 # цвета токенов kit.css
 PAL = {
-    'energy': '#c79bff', 'gem': '#5cc8f2', 'coin': '#f2c14e', 'accent': '#8b93ff',
-    'surface': '#2a2e4a', 'text': '#eceef8', 'ink': '#10122a', 'line': '#646b9c', 'art': '#5a4f9e',
-    'paper': '#dfe3f7', 'muted': '#7a83c9', 'deep': '#3a3f63',
+    'energy': '#d6aaff', 'gem': '#66d6ff', 'coin': '#ffd25f', 'accent': '#a8b0ff',
+    'surface': '#393d7e', 'text': '#f6f7ff', 'ink': '#14163a', 'line': '#8087d4', 'art': '#6c60c5',
+    'paper': '#e4e7ff', 'muted': '#8f97e0', 'deep': '#4a4f9c',
 }
 
 
@@ -248,7 +248,7 @@ def build_gem():
 
 def build_coin():
     gold = mat('gold', PAL['coin'], rough=0.42, coat=0.2)
-    dark = mat('gold-dark', '#d9a62e', rough=0.5)
+    dark = mat('gold-dark', '#e8b232', rough=0.5)
     rim = cylinder('rim', 1.0, 0.22, 64)
     finish(rim, gold, bevel=0.07, segments=4)
     face = cylinder('face', 0.76, 0.1, 64)

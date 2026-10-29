@@ -5,38 +5,38 @@
 
 :root {
   /* поверхности и текст */
-  --bg: #15172a;
-  --surface: #1f2238;
-  --surface-2: #2a2e4a;
-  --line: #646b9c;
-  --text: #eceef8;
-  --text-muted: #a9aeca;
-  --scrim: #0a0b16;
+  --bg: #22244f;
+  --surface: #2e3167;
+  --surface-2: #393d7e;
+  --line: #8087d4;
+  --text: #f6f7ff;
+  --text-muted: #c3c8f4;
+  --scrim: #0f1030;
 
   /* акцент: один */
-  --accent: #8b93ff;
-  --accent-ink: #10122a;
+  --accent: #a8b0ff;
+  --accent-ink: #14163a;
 
   /* смысловые */
-  --ok: #4cc38a;
-  --danger: #e5646e;
+  --ok: #58d6a0;
+  --danger: #ff7f8a;
 
   /* валюты */
-  --coin: #f2c14e;
-  --gem: #5cc8f2;
-  --energy: #c79bff;
+  --coin: #ffd25f;
+  --gem: #66d6ff;
+  --energy: #d6aaff;
 
   /* цвета иллюстраций: обложки, колесо */
-  --art-1: #4a58b8;
-  --art-2: #2a7088;
-  --art-3: #8f4f7c;
-  --art-4: #8a5f22;
-  --art-5: #5a4f9e;
-  --art-6: #3a67a6;
-  --art-7: #7c52b0;
-  --art-8: #9a5a3a;
-  --art-9: #2a746f;
-  --art-10: #6a5eba;
+  --art-1: #5562d9;
+  --art-2: #247696;
+  --art-3: #a64e92;
+  --art-4: #93651f;
+  --art-5: #705ece;
+  --art-6: #3f6eb9;
+  --art-7: #8d53c4;
+  --art-8: #a85a2f;
+  --art-9: #277a75;
+  --art-10: #6c60c5;
 
   /* форма */
   --radius-s: 10px;
