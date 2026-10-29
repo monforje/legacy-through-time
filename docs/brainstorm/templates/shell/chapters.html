@@ -9,14 +9,14 @@
 </head>
 <body>
 <div class="device"><div class="safe">
-  <div class="topbar">
-    <a class="btn btn-icon" href="home.html" aria-label="Назад"><svg class="ico"><use href="icons.svg#i-chevron-l"/></svg></a>
-    <h1 class="head" style="flex:1;text-align:center">Последний маяк</h1>
-    <a class="btn btn-icon" href="chat.html" aria-label="Чат с героем"><svg class="ico"><use href="icons.svg#i-chat"/></svg></a>
+  <div class="topbar strip">
+    <a class="btn btn-icon" href="home.html" data-back aria-label="Назад"><svg class="ico"><use href="icons.svg#i-chevron-l"/></svg></a>
+    <h1 class="head" data-story-title style="flex:1;text-align:center">Последний маяк</h1>
+    <a class="btn btn-icon" href="chat.html?hero=leya" data-story-chat aria-label="Чат с героем"><svg class="ico"><use href="icons.svg#i-chat"/></svg></a>
   </div>
 
   <div class="scroll">
-    <div class="cover" style="background:var(--art-5);aspect-ratio:16/9;flex:none"><span class="badge-flag" style="position:absolute;top:var(--space-3);right:var(--space-3)">Мистика · Море</span></div>
+    <div class="cover" data-story-cover style="background:var(--art-5);aspect-ratio:16/9;flex:none"><span class="badge-flag" style="position:absolute;top:var(--space-3);right:var(--space-3)">Мистика · Море</span></div>
     <div class="stack" style="gap:var(--space-2)"><div class="small">Пройдено 3 из 8 глав</div><div class="bar" role="progressbar" aria-valuenow="3" aria-valuemin="0" aria-valuemax="8"><i style="--p:37.5%"></i></div></div>
 
     <div class="group" style="gap:var(--space-1)">

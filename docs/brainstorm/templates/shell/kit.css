@@ -103,7 +103,7 @@ html.embed .device { border-radius: 0; box-shadow: none; }
 html.embed .demo { display: none; }
 .device.auto { height: auto; }
 .device.auto .safe { position: static; gap: var(--space-3); padding-bottom: var(--space-4); }
-.scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: var(--space-3); }
+.scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: var(--space-3); margin-inline: calc(var(--space-2) * -1); padding-inline: var(--space-2); }   /* запас по краям, чтобы скруглённая подсветка строк не обрезалась */
 .scroll::-webkit-scrollbar { display: none; }
 .ico { width: 22px; height: 22px; flex: none; }
 .ico-s { width: 16px; height: 16px; flex: none; }
@@ -138,15 +138,15 @@ a.btn { text-decoration: none; }
 /* плашки валют */
 .pill {
   display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--touch); max-width: 100%;
-  padding: 0 var(--space-1) 0 var(--space-3); border-radius: 999px; background: var(--surface);
+  padding: 0 0 0 var(--space-3); border-radius: 999px; background: var(--surface);
   font: 800 var(--fs-body) var(--font); font-variant-numeric: tabular-nums;
 }
-.pill > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pill > span { flex: 1; min-width: 0; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pill-coin .ico { color: var(--coin); }
 .pill-gem .ico { color: var(--gem); }
 .pill-energy .ico { color: var(--energy); }
 .pill-plus { position: relative; width: var(--touch); height: var(--touch); background: none; display: grid; place-items: center; border: 0; color: var(--text); padding: 0; cursor: pointer; }
-.pill-plus::before { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: var(--surface-2); }
+.pill-plus::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--surface-2); }   /* окружность в одном центре с краем плашки, радиус меньше на 4px */
 .pill-plus .ico { position: relative; width: 18px; height: 18px; }
 .topbar { display: flex; align-items: center; gap: var(--space-2); }
 .topbar .spacer { flex: 1; }
@@ -194,7 +194,7 @@ a.btn { text-decoration: none; }
 .stepper { display: inline-flex; align-items: center; gap: var(--space-1); }
 .stepper button { width: var(--touch); height: var(--touch); border: 0; background: none; color: var(--accent); display: grid; place-items: center; cursor: pointer; padding: 0; }
 .stepper output { min-width: 80px; text-align: center; font-weight: 800; }
-.row { display: flex; align-items: center; gap: var(--space-3); min-height: 52px; padding: var(--space-1) var(--space-3); border: 0; background: none; color: var(--text); font: 700 var(--fs-body) var(--font); text-align: left; width: 100%; }
+.row { border-radius: var(--radius-s); display: flex; align-items: center; gap: var(--space-3); min-height: 52px; padding: var(--space-1) var(--space-3); border: 0; background: none; color: var(--text); font: 700 var(--fs-body) var(--font); text-align: left; width: 100%; }
 .row .label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .row .ico { color: var(--accent); }
 .chev { transition: transform var(--dur) var(--ease-out); }
@@ -316,9 +316,10 @@ dialog.popup { background: var(--bg); }   /* тот же цвет, что был
 .thumb { width: 48px; height: 48px; flex: none; border-radius: var(--radius-s); background: var(--art-5); }
 .list-row .chev-end { color: var(--text-muted); }
 .avatar.lg { width: 48px; height: 48px; font-size: var(--fs-head); }
-.list { display: flex; flex-direction: column; }
-.list-row { display: flex; align-items: center; gap: var(--space-3); min-height: 72px; padding: var(--space-2) 0; color: var(--text); text-decoration: none; border-bottom: 1px solid var(--surface-2); }
-.list-row:last-child { border-bottom: 0; }
+.list { display: flex; flex-direction: column; margin-inline: calc(var(--space-2) * -1); }   /* строки с внутренним полем 8px, текст остаётся на линии экрана */
+.list-row { position: relative; display: flex; align-items: center; gap: var(--space-3); min-height: 72px; padding: var(--space-2); color: var(--text); text-decoration: none; border-radius: var(--radius-m); }
+.list-row::after { content: ""; position: absolute; left: var(--space-2); right: var(--space-2); bottom: 0; height: 1px; background: var(--surface-2); }   /* разделитель отдельной линией, чтобы подсветка была скруглённой */
+.list-row:last-child::after { display: none; }
 .list-row .who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .list-row .head { font-size: var(--fs-body); }
 .list-row .clamp1 { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -408,3 +409,14 @@ dialog.popup[open] { animation: pop-in var(--dur-slow) var(--ease-out); }
 .play-bump { animation: bump var(--dur-slow) var(--ease-expo); }
 .play-spin { animation: spin var(--dur-slow) var(--ease-out); }
 .play-fade { animation: fade-in var(--dur-slow) var(--ease-out); }
+
+/* чат: энергия сверху и пометка о вымысле */
+.topbar.strip .pill.compact { flex: none; }
+.pill.compact > span { flex: none; }
+.pill.compact { min-height: 32px; padding: 0 var(--space-3); gap: var(--space-1); font-size: var(--fs-small); }
+.pill.compact .ico { width: 16px; height: 16px; }
+.sys-note { align-self: center; max-width: 92%; text-align: center; font-size: var(--fs-small); line-height: 1.4; color: var(--text-muted); padding: 0 var(--space-3); }
+
+/* наведение и нажатие всегда скруглённые */
+.segmented button { border-radius: 999px; }
+@media (hover: hover) { .segmented button:hover:not([aria-selected="true"]) { color: var(--text); } }

@@ -22,6 +22,40 @@ function countTo(el, to, ms = token('--dur-slow')) {
   requestAnimationFrame(step);
 }
 
+// Маршруты: герои и истории передаются в адресе (?hero=, ?story=), «назад» возвращает туда, откуда пришли.
+const HEROES = {
+  leya: { name: 'Лея', letter: 'Л', art: 5 },
+  suyumbike: { name: 'Сююмбике', letter: 'С', art: 8 },
+  mark: { name: 'Марк', letter: 'М', art: 2 },
+};
+const STORIES = {
+  lighthouse: { title: 'Последний маяк', art: 5, hero: 'leya' },
+  cage: { title: 'Золотая клетка', art: 8, hero: 'suyumbike' },
+  city: { title: 'Город под водой', art: 2, hero: 'mark' },
+};
+
+function cameFromHere() {
+  try { return !!document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1; } catch { return false; }
+}
+// Если пришли с другой страницы макета, возвращаемся по истории; иначе идём по href (запасной маршрут).
+function goBack(fallback) { if (cameFromHere()) history.back(); else location.href = fallback; }
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-back]');
+  if (a && cameFromHere()) { e.preventDefault(); history.back(); }
+});
+
+function initRoute() {
+  const q = new URLSearchParams(location.search);
+  const story = STORIES[q.get('story')] ?? STORIES.lighthouse;
+  const hero = HEROES[q.get('hero')] ?? HEROES.leya;
+  $$('[data-story-title]').forEach(el => { el.textContent = story.title; });
+  $$('[data-story-cover]').forEach(el => { el.style.background = `var(--art-${story.art})`; });
+  $$('[data-story-chat]').forEach(el => { el.href = 'chat.html?hero=' + story.hero; });
+  $$('[data-hero-name]').forEach(el => { el.textContent = hero.name; });
+  $$('[data-hero-avatar]').forEach(el => { el.textContent = hero.letter; el.style.background = `var(--art-${hero.art})`; });
+  $$('[data-hero-label]').forEach(el => { el.setAttribute('aria-label', el.dataset.heroLabel.replace('{name}', hero.name)); });
+}
+
 // Тост с появлением и уходом; повторный вызов продлевает показ.
 const toastTimers = new WeakMap();
 function showToast(el, text, ms = 2500) {
@@ -152,7 +186,7 @@ function initWheel(root, prizes) {
   });
 }
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.querySelector('dialog.popup[open]')) location.href = 'home.html'; });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.querySelector('dialog.popup[open]')) goBack('home.html'); });
 
 function initToastLinks() {
   $$('[data-toast]').forEach(b => {
@@ -205,6 +239,13 @@ function initChat() {
     const sync = () => { send.disabled = input.disabled || !input.value.trim(); };
     const submit = () => {
       const text = input.value.trim(); if (!text || send.disabled) return;
+      const energy = document.querySelector('[data-energy]');
+      if (energy) {
+        const left = readNum(energy) - 1;
+        countTo(energy, left);
+        energy.parentElement.classList.remove('bump'); void energy.parentElement.offsetWidth; energy.parentElement.classList.add('bump');
+        if (left <= 0) setTimeout(() => { chat.dataset.state = 'limit'; $$('[data-state-btn]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.stateBtn === 'limit'))); }, still() ? 0 : token('--dur-net') * 1.6);
+      }
       const me = add('me', ''); me.textContent = text;
       input.value = ''; sync();
       msgs.querySelectorAll('.typing-bubble').forEach(t => t.remove());
@@ -275,6 +316,8 @@ function initChatStates(root) {
   const chat = root.querySelector('.chat');
   $$('[data-state-btn]', root).forEach(b => b.addEventListener('click', () => {
     chat.dataset.state = b.dataset.stateBtn;
+    const energy = document.querySelector('[data-energy]');
+    if (energy) energy.textContent = b.dataset.stateBtn === 'limit' ? '0' : '7';
     $$('[data-state-btn]', root).forEach(o => o.setAttribute('aria-pressed', String(o === b)));
   }));
 }
@@ -308,5 +351,5 @@ document.addEventListener('DOMContentLoaded', () => {
   $$('[data-sheet]').forEach(b => initPanel(b, document.getElementById(b.dataset.sheet)));
   $$('[data-wheel]').forEach(w => initWheel(w, JSON.parse(w.dataset.wheel)));
   $$('[data-chat-demo]').forEach(initChatStates);
-  initToastLinks(); initClaim(); initPurchase(); initChat(); initSearch(); initShuffle(); initStagger(); initScreenStates();
+  initToastLinks(); initClaim(); initPurchase(); initChat(); initSearch(); initShuffle(); initStagger(); initScreenStates(); initRoute();
 });

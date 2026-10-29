@@ -19,25 +19,27 @@
 
   <div class="device"><div class="safe">
     <div class="topbar strip">
-      <a class="btn btn-icon" href="chats.html" aria-label="К списку чатов"><svg class="ico"><use href="icons.svg#i-chevron-l"/></svg></a>
-      <div class="avatar" style="background:var(--art-5)" aria-hidden="true">Л</div>
-      <div class="head" style="flex:1;min-width:0">Лея</div>
+      <a class="btn btn-icon" href="chats.html" data-back aria-label="Назад"><svg class="ico"><use href="icons.svg#i-chevron-l"/></svg></a>
+      <div class="avatar" data-hero-avatar aria-hidden="true">Л</div>
+      <div class="head" data-hero-name style="flex:1;min-width:0">Лея</div>
+      <span class="pill pill-energy compact" role="img" aria-label="Энергия на сообщения"><svg class="ico"><use href="icons.svg#i-energy"/></svg><span data-energy>7</span></span>
       <button class="btn btn-icon" aria-label="Пожаловаться на ответ"><svg class="ico"><use href="icons.svg#i-flag"/></svg></button>
     </div>
 
     <div class="chat" data-state="normal">
       <div class="msgs">
+        <p class="sys-note" data-only="normal empty long limit">Диалог вымышленный: героя играет ИИ по мотивам истории. Факты смотрите в эпизодах.</p>
         <div class="bubble them" data-only="empty">Привет. Я рада, что ты пришёл. О чём поговорим?</div>
         <div class="bubble them" data-only="normal limit">Ты видел, как я промолчала перед отцом? Я до сих пор думаю, права ли я была.</div>
         <div class="bubble me" data-only="normal limit">Ты поступила смело.</div>
         <div class="bubble them" data-only="normal limit">Смело или глупо. Иногда это одно и то же.</div>
-        <div class="bubble them typing-bubble" data-only="normal" role="status"><span class="typing" aria-label="Лея печатает"><i></i><i></i><i></i></span></div>
+        <div class="bubble them typing-bubble" data-only="normal" role="status"><span class="typing" data-hero-label="{name} печатает" aria-label="Лея печатает"><i></i><i></i><i></i></span></div>
         <div class="bubble them" data-only="long">Знаешь, когда я стояла в зале и все смотрели на меня, мне казалось, что стены становятся ближе с каждым вдохом, а голос отца звучит откуда-то издалека, будто из другой жизни, и я никак не могла понять, что мне нужно сделать: ответить, уйти или просто молчать, пока всё не закончится само собой.</div>
         <div class="bubble me" data-only="long">Это было страшно?</div>
         <div class="card" data-only="limit" style="align-items:center;text-align:center">
-          <div class="head">Лея устала и ушла отдыхать</div>
-          <p class="small">Бесплатные сообщения на сегодня закончились. Продолжите сейчас или возвращайтесь завтра.</p>
-          <button class="btn btn-price btn-block">Продолжить за 20 <svg class="ico"><use href="icons.svg#i-gem"/></svg></button>
+          <div class="head">Энергия закончилась</div>
+          <p class="small">Каждое сообщение тратит 1 энергию. Она восстанавливается со временем, или пополните её сейчас.</p>
+          <a class="btn btn-primary btn-block" href="shop.html">Пополнить энергию</a>
         </div>
       </div>
 
