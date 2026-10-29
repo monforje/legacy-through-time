@@ -76,7 +76,7 @@
   --dur-instant: 1ms;      /* при prefers-reduced-motion */
   --ease-out: cubic-bezier(.2, .8, .2, 1);
   --ease-in-out: cubic-bezier(.4, 0, .2, 1);
-  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --ease-expo: cubic-bezier(.16, 1, .3, 1);
   --ease-wheel: cubic-bezier(.12, .7, .15, 1);
 
   /* рамка экрана */
@@ -188,7 +188,7 @@ a.btn { text-decoration: none; }
 /* поля */
 .switch { position: relative; width: 56px; height: var(--touch); flex: none; border: 0; background: none; cursor: pointer; padding: 0; }
 .switch::before { transition: background-color var(--dur) var(--ease-out); content: ""; position: absolute; left: 2px; right: 2px; top: 7px; bottom: 7px; border-radius: 999px; background: var(--line); }
-.switch::after { content: ""; position: absolute; top: 10px; left: 5px; width: 24px; height: 24px; border-radius: 50%; background: var(--text); transition: transform var(--dur) var(--ease-spring), background-color var(--dur) var(--ease-out); }
+.switch::after { content: ""; position: absolute; top: 10px; left: 5px; width: 24px; height: 24px; border-radius: 50%; background: var(--text); transition: transform var(--dur) var(--ease-expo), background-color var(--dur) var(--ease-out); }
 .switch[aria-checked="true"]::before { background: var(--accent); }
 .switch[aria-checked="true"]::after { transform: translateX(22px); background: var(--accent-ink); }
 .stepper { display: inline-flex; align-items: center; gap: var(--space-1); }
@@ -364,7 +364,7 @@ dialog.popup[open] { animation: pop-in var(--dur-slow) var(--ease-out); }
 .toast.out { animation: toast-out var(--dur-fast) var(--ease-in-out) forwards; }
 .bubble { animation: rise var(--dur) var(--ease-out); }
 [data-stagger] > * { animation: rise var(--dur-slow) var(--ease-out) both; animation-delay: calc(var(--n, 0) * var(--dur-stagger)); }
-.bump { animation: bump var(--dur-slow) var(--ease-spring); }
+.bump { animation: bump var(--dur-slow) var(--ease-expo); }
 .spun .ico { animation: spin var(--dur-slow) var(--ease-out); }
 .search .clear { position: relative; width: 28px; height: 28px; flex: none; border: 0; background: none; color: var(--text-muted); display: grid; place-items: center; padding: 0; cursor: pointer; }
 .search .clear::after { content: ""; position: absolute; inset: -8px; }   /* зона нажатия 44 */
@@ -405,6 +405,6 @@ dialog.popup[open] { animation: pop-in var(--dur-slow) var(--ease-out); }
 /* проигрывание анимаций по кнопке в каталоге */
 .play-pop { animation: pop-in var(--dur-slow) var(--ease-out); }
 .play-rise { animation: rise var(--dur-slow) var(--ease-out); }
-.play-bump { animation: bump var(--dur-slow) var(--ease-spring); }
+.play-bump { animation: bump var(--dur-slow) var(--ease-expo); }
 .play-spin { animation: spin var(--dur-slow) var(--ease-out); }
 .play-fade { animation: fade-in var(--dur-slow) var(--ease-out); }

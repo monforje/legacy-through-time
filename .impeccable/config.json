@@ -92,6 +92,132 @@
         ],
         "createdAt": "2026-10-29T17:49:39.816Z",
         "reason": "false positive: the toast floats over the screen as a transient overlay and the word rows are list rows inside one group, not cards in cards; assistant decision, not user confirmed"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/chapters.html"
+        ],
+        "createdAt": "2026-10-29T18:49:48.966Z",
+        "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/chat.html"
+        ],
+        "createdAt": "2026-10-29T18:49:48.974Z",
+        "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/chats.html"
+        ],
+        "createdAt": "2026-10-29T18:49:48.981Z",
+        "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/home.html"
+        ],
+        "createdAt": "2026-10-29T18:49:48.990Z",
+        "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/home-panel.html"
+        ],
+        "createdAt": "2026-10-29T18:49:48.998Z",
+        "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/index.html"
+        ],
+        "createdAt": "2026-10-29T18:49:49.006Z",
+        "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/kit.html"
+        ],
+        "createdAt": "2026-10-29T18:49:49.014Z",
+        "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/library.html"
+        ],
+        "createdAt": "2026-10-29T18:49:49.023Z",
+        "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/rewards.html"
+        ],
+        "createdAt": "2026-10-29T18:49:49.032Z",
+        "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/settings.html"
+        ],
+        "createdAt": "2026-10-29T18:49:49.040Z",
+        "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/shop.html"
+        ],
+        "createdAt": "2026-10-29T18:49:49.049Z",
+        "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/states.html"
+        ],
+        "createdAt": "2026-10-29T18:49:49.059Z",
+        "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/wheel.html"
+        ],
+        "createdAt": "2026-10-29T18:49:49.067Z",
+        "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/words.html"
+        ],
+        "createdAt": "2026-10-29T18:49:49.075Z",
+        "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
       }
     ]
   }
