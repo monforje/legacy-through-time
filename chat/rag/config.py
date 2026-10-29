@@ -27,7 +27,8 @@ class Settings:
     chat_model: str
     embed_model: str
     corpus_dir: Path
-    heroine_dir: Path
+    stories_dir: Path
+    rules_path: Path
     data_dir: Path
     art_dirs: tuple[Path, ...]
     fonts_dir: Path
@@ -48,7 +49,8 @@ def load() -> Settings:
         chat_model=os.environ.get("AI_CHAT_MODEL", "z-ai/glm-5.3-flash"),
         embed_model=os.environ.get("AI_EMBED_MODEL", "baai/bge-m3"),
         corpus_dir=CHAT_DIR / "corpus",
-        heroine_dir=REPO_DIR / "content/stories/golden-cage/chat",
+        stories_dir=REPO_DIR / "content/stories",
+        rules_path=REPO_DIR / "content/chat/rules.md",
         data_dir=CHAT_DIR / "data",
         art_dirs=(REPO_DIR / "docs/art/legacy-scenes", REPO_DIR / "docs/art"),
         fonts_dir=REPO_DIR / "Assets/Resources/Fonts",

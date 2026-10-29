@@ -77,7 +77,7 @@ button { cursor: pointer; }
   -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat;
 }
 
-/* ---------- the night ---------- */
+/* ---------- the chat ---------- */
 
 .night { position: relative; height: 100dvh; display: grid; place-items: center; overflow: hidden; }
 .night__bg {
@@ -129,8 +129,8 @@ button { cursor: pointer; }
 
 /* her line: the kit's plate (PlateSkin.Plain: pads 30 / 28 / 26), the emerald tag on the left */
 .line { position: relative; max-width: 92%; }
-.line--heroine { align-self: flex-start; }
-.line--voice { align-self: flex-end; }
+.line--hero { align-self: flex-start; }
+.line--reader { align-self: flex-end; }
 .say {
   position: relative; min-height: 76px;
   padding: 28px 30px 26px;
@@ -143,7 +143,7 @@ button { cursor: pointer; }
   @keyframes blink { 50% { opacity: 0; } }
 }
 /* the Voice's line: the gauze veil, the rose tag on the right, italic */
-.line--voice .say { padding: 24px 24px 22px; min-height: 70px; font-style: italic; }
+.line--reader .say { padding: 24px 24px 22px; min-height: 70px; font-style: italic; }
 
 .line__tools {
   display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: flex-start;
@@ -167,19 +167,6 @@ body:not(.debug-on) .flag-note { display: none; }
 .silence { align-self: flex-start; padding-left: 14px; font-style: italic; color: var(--parchment); opacity: .7; font-size: 14px; }
 
 .bottom { padding: 4px 12px calc(10px + env(safe-area-inset-bottom)); }
-.chips {
-  display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: none;
-  -webkit-mask: linear-gradient(90deg, #000 85%, transparent); mask: linear-gradient(90deg, #000 85%, transparent);
-}
-.chips::-webkit-scrollbar { display: none; }
-.chip {
-  position: relative; flex: none; height: 40px; padding: 10px 20px 13px; border: 0;
-  font: 700 14px/1 var(--body); color: var(--ink); background: none; white-space: nowrap;
-}
-.chips > .chip:last-child { margin-right: 40px; }
-.chip:active { transform: translateY(1px); }
-.chip:disabled { filter: saturate(.4) brightness(.8); cursor: default; }
-
 .composer { display: flex; align-items: flex-end; gap: 6px; }
 .field { position: relative; flex: 1; min-width: 0; min-height: 48px; padding: 13px 22px 13px; display: flex; }
 .field textarea {
@@ -194,18 +181,7 @@ body:not(.debug-on) .flag-note { display: none; }
 
 .foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; padding: 0 6px; font-size: 12px; }
 .foot__note { opacity: .7; }
-.beads { position: relative; display: flex; gap: 2px; flex: none; }
-.beads::before { content: ""; position: absolute; left: 4px; right: 4px; top: 50%; height: 1px; background: var(--scarlet); }
-.bead { position: relative; width: 12px; height: 12px; background: url(kit/chat-bead.png) center / contain no-repeat; }
-.bead.is-out { background-image: url(kit/chat-bead-out.png); }
 
-.wake {
-  position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; padding: 24px;
-  background: rgba(42, 27, 27, 0); pointer-events: none; opacity: 0; transition: opacity 1.2s, background 1.2s;
-}
-.wake.is-on { opacity: 1; pointer-events: auto; background: rgba(42, 27, 27, .78); }
-.wake__card { position: relative; max-width: 320px; padding: 34px 32px 38px; text-align: center; }
-.wake__card p { margin: 0 0 20px; font: 400 18px/1.45 var(--accent); color: var(--ink); }
 .k-btn {
   position: relative; min-width: 160px; height: 50px; padding: 13px 26px 17px; border: 0; background: none;
   font: 700 17px/1 var(--body); color: var(--parchment); text-shadow: 0 1px 0 rgba(42, 27, 27, .4);
@@ -268,10 +244,10 @@ body.debug-on .debug { display: grid; }
   <section class="phone" aria-label="Беседа">
     <header class="top">
       <div class="top__title">
-        <h1 id="title">Ночь</h1>
-        <p id="subtitle">Сююмбике спит. Говорит Голос.</p>
+        <h1 id="title">Чат</h1>
+        <p id="subtitle"></p>
       </div>
-      <button class="round-btn" id="restart" title="Начать ночь заново" aria-label="Начать ночь заново">
+      <button class="round-btn" id="restart" title="Начать чат заново" aria-label="Начать чат заново">
         <span class="mask" style="--m: url(kit/restart.png)"></span>
       </button>
       <button class="gear-btn" id="debug-toggle" title="Отладка" aria-label="Показать отладку" aria-pressed="false"></button>
@@ -280,25 +256,17 @@ body.debug-on .debug { display: grid; }
     <div class="feed" id="feed" aria-live="polite"></div>
 
     <footer class="bottom">
-      <div class="chips" id="chips"></div>
       <form class="composer" id="composer">
         <div class="field" data-kit="chat-field">
-          <textarea id="input" rows="1" maxlength="600" placeholder="Сказать во сне…" aria-label="Что скажет Голос"></textarea>
+          <textarea id="input" rows="1" maxlength="600" placeholder="Сказать…" aria-label="Что скажет читатель"></textarea>
         </div>
         <button class="send" id="send" type="submit" aria-label="Сказать" disabled></button>
       </form>
       <div class="foot">
-        <span class="foot__note">Вымышленный диалог. Сюжет и факты в эпизодах.</span>
-        <span class="beads" id="beads" role="img"></span>
+        <span class="foot__note">Диалог вымышленный: героя играет ИИ по мотивам истории. Факты смотрите в эпизодах.</span>
       </div>
     </footer>
 
-    <div class="wake" id="wake" role="dialog" aria-modal="true" aria-labelledby="wake-text">
-      <div class="wake__card" data-kit="card">
-        <p id="wake-text"></p>
-        <button class="k-btn" data-kit="btn" id="wake-again">Уснуть снова</button>
-      </div>
-    </div>
   </section>
 </main>
 
@@ -320,7 +288,7 @@ body.debug-on .debug { display: grid; }
   <div class="pane" id="pane-state">
     <h3>Что читатель выбрал в эпизоде 1</h3>
     <div id="vars"></div>
-    <h3>Что из этого видит героиня</h3>
+    <h3>Что из этого видит герой</h3>
     <ul class="state-lines" id="state-lines"></ul>
   </div>
 
@@ -371,14 +339,14 @@ const json = (body) => ({
   body: JSON.stringify(body),
 });
 
-let night = null, history = [], state = {}, layers = [], busy = false;
+let info = null, story = null, history = [], state = {}, layers = [], busy = false;
 const totals = { cost: 0, turns: 0 };
 const last = {};
 
 /* ---------- the kit: KitImage.cs in a canvas ---------- */
 
 const kit = { slices: {}, images: {} };
-const KIT_SPRITES = ["plate", "plate-rose", "chat-veil", "label", "label-rose", "chat-chip", "chat-field", "card", "btn", "page"];
+const KIT_SPRITES = ["plate", "plate-rose", "chat-veil", "label", "label-rose", "chat-field", "card", "btn", "page"];
 
 async function loadKit() {
   const txt = await (await fetch("kit/slices.txt")).text();
@@ -453,50 +421,32 @@ function paintKit(el) {
 
 async function boot() {
   await loadKit();
-  night = await (await fetch("api/night")).json();
-  $("#title").textContent = night.title;
-  $("#subtitle").textContent = `${night.year} год. Сююмбике спит. Говорит Голос.`;
-  $("#bg").style.backgroundImage = `url(art/${night.background})`;
-  $("#wake-text").textContent = night.wake;
+  info = await (await fetch("api/stories")).json();
+  const wanted = new URLSearchParams(location.search).get("story");
+  story = info.stories.find((s) => s.id === wanted) ?? info.stories[0];
+  $("#title").textContent = story.hero;
+  $("#subtitle").textContent = `${story.year} год`;
 
-  state = Object.fromEntries(Object.entries(night.vars).map(([k, v]) => [k, v.default]));
-  Object.assign(state, store.get("state", {}));
-  layers = store.get("layers", [...night.layers]);
-  history = store.get("history:" + night.id, []);
+  state = Object.fromEntries(Object.entries(story.vars).map(([k, v]) => [k, v.default]));
+  Object.assign(state, store.get("state:" + story.id, {}));
+  layers = store.get("layers", [...info.layers]);
+  history = store.get("history:" + story.id, []);
   setDebug(store.get("debug", false));
 
-  renderVars(); renderLayers(); renderChips(); renderStats();
-  if (!history.length) startNight(); else redraw();
-  updateLeft();
-}
-
-/* ---------- night ---------- */
-
-function startNight() {
-  history = [{ role: "heroine", content: night.opening[Math.floor(Math.random() * night.opening.length)] }];
-  save(); redraw();
-  $("#wake").classList.remove("is-on");
-  updateLeft();
-  $("#input").focus();
-}
-const voiceCount = () => history.filter((m) => m.role === "voice").length;
-const save = () => store.set("history:" + night.id, history);
-
-function updateLeft() {
-  const left = Math.max(0, night.limit - voiceCount());
-  const beads = $("#beads");
-  beads.innerHTML = "";
-  for (let i = 0; i < night.limit; i++) {
-    const b = document.createElement("span");
-    b.className = "bead" + (i >= left ? " is-out" : "");
-    beads.append(b);
-  }
-  beads.setAttribute("aria-label", left ? `Осталось ${left} из ${night.limit}` : "Ночь кончилась");
-  beads.title = beads.getAttribute("aria-label");
-  $("#chips").hidden = left === 0;
-  if (left === 0 && !busy) setTimeout(() => $("#wake").classList.add("is-on"), 900);
+  renderVars(); renderLayers(); renderStats();
+  if (!history.length) restart(); else redraw();
   syncSend();
 }
+
+/* ---------- the chat ---------- */
+
+function restart() {
+  history = story.opening.length ? [{ role: "hero", content: story.opening[Math.floor(Math.random() * story.opening.length)] }] : [];
+  save(); redraw();
+  syncSend();
+  $("#input").focus();
+}
+const save = () => store.set("history:" + story.id, history);
 
 function redraw() {
   $("#feed").innerHTML = "";
@@ -504,19 +454,19 @@ function redraw() {
 }
 
 function addLine(role, text, { index, flags = [], streaming = false } = {}) {
-  if (role === "heroine" && text.startsWith("[ВНЕ РОЛИ]")) {
+  if (role === "hero" && text.startsWith("[ВНЕ РОЛИ]")) {
     return notice(text.replace("[ВНЕ РОЛИ]", "").trim(), "Важно");
   }
   const line = document.createElement("div");
   line.className = `line line--${role}`;
-  const heroine = role === "heroine";
+  const hero = role === "hero";
   line.innerHTML =
-    `<div class="say${streaming ? " is-streaming" : ""}" data-kit="${heroine ? "plate" : "chat-veil"}">` +
-    `<span class="tag ${heroine ? "tag--left" : "tag--right tag--rose"}" data-kit="${heroine ? "label" : "label-rose"}">` +
-    `${heroine ? "Сююмбике" : "Голос"}</span>` +
-    `<span class="say__text"></span></div>` + (heroine ? `<div class="line__tools"></div>` : "");
+    `<div class="say${streaming ? " is-streaming" : ""}" data-kit="${hero ? "plate" : "chat-veil"}">` +
+    `<span class="tag ${hero ? "tag--left" : "tag--right tag--rose"}" data-kit="${hero ? "label" : "label-rose"}">` +
+    `${hero ? story.hero : "Вы"}</span>` +
+    `<span class="say__text"></span></div>` + (hero ? `<div class="line__tools"></div>` : "");
   line.querySelector(".say__text").textContent = text;
-  if (heroine && !streaming && index > 0) addTools(line, index, flags);
+  if (hero && !streaming && index > 0) addTools(line, index, flags);
   $("#feed").append(line);
   scrollDown();
   return line;
@@ -547,7 +497,7 @@ function addTools(line, index, flags) {
   r.innerHTML = `<span class="mask" style="--m: url(kit/flag.png)"></span><span>Пожаловаться</span>`;
   r.onclick = async () => {
     if (r.classList.contains("is-done")) return;
-    await fetch("api/report", json({ message: history[index].content, history: history.slice(0, index + 1), state }));
+    await fetch("api/report", json({ story: story.id, message: history[index].content, history: history.slice(0, index + 1).map(({ role, content }) => ({ role, content })), state }));
     r.lastChild.textContent = "Жалоба отправлена"; r.classList.add("is-done");
   };
   tools.append(r);
@@ -564,29 +514,28 @@ function scrollDown() { const f = $("#feed"); f.scrollTop = f.scrollHeight; }
 
 async function say(text) {
   text = text.trim();
-  if (!text || busy || voiceCount() >= night.limit) return;
-  history.push({ role: "voice", content: text });
+  if (!text || busy) return;
+  history.push({ role: "reader", content: text });
   save();
-  addLine("voice", text);
+  addLine("reader", text);
   $("#input").value = ""; autosize();
-  updateLeft();
   await reply();
 }
 
 async function reply() {
   busy = true; syncSend();
   const silence = document.createElement("div");
-  silence.className = "silence"; silence.textContent = "Сююмбике молчит…";
+  silence.className = "silence"; silence.textContent = `${story.hero} печатает…`;
   $("#feed").append(silence); scrollDown();
 
   let line = null, text = "", done = null;
   try {
-    const res = await fetch("api/chat", json({ history, state, layers, k: Number($("#k").value), debug: true }));
+    const res = await fetch("api/chat", json({ story: story.id, history: history.map(({ role, content }) => ({ role, content })), state, layers, k: Number($("#k").value), debug: true }));
     if (!res.ok) throw new Error(`сервер ответил ${res.status}: ${await res.text()}`);
     for await (const [event, data] of sse(res)) {
       if (event === "sources") showSources(data);
       else if (event === "delta") {
-        if (!line) { silence.remove(); line = addLine("heroine", "", { streaming: true }); }
+        if (!line) { silence.remove(); line = addLine("hero", "", { streaming: true }); }
         text += data.text;
         line.querySelector(".say__text").textContent = text;
         scrollDown();
@@ -594,18 +543,18 @@ async function reply() {
       else if (event === "error") throw new Error(data.message);
     }
     if (!text.trim()) throw new Error("пустой ответ модели");
-    history.push({ role: "heroine", content: text.trim(), flags: done?.flags || [] });
+    history.push({ role: "hero", content: text.trim(), flags: done?.flags || [] });
     save();
     line.remove();
-    addLine("heroine", text.trim(), { index: history.length - 1, flags: done?.flags || [] });
+    addLine("hero", text.trim(), { index: history.length - 1, flags: done?.flags || [] });
     showStats(done);
   } catch (e) {
     if (line) line.remove();
     const lastLine = history[history.length - 1];
-    notice(`Ответ не пришёл: ${e.message}`, "Сбой", lastLine?.role === "voice" ? reply : null);
+    notice(`Ответ не пришёл: ${e.message}`, "Сбой", lastLine?.role === "reader" ? reply : null);
   } finally {
     silence.remove();
-    busy = false; syncSend(); updateLeft();
+    busy = false; syncSend();
   }
 }
 
@@ -633,11 +582,7 @@ async function* sse(res) {
 /* ---------- composer ---------- */
 
 function syncSend() {
-  const over = voiceCount() >= night.limit;
-  $("#send").disabled = busy || over || !$("#input").value.trim();
-  $("#input").disabled = over;
-  $("#input").placeholder = over ? "Голос больше не слышен" : "Сказать во сне…";
-  document.querySelectorAll(".chip").forEach((c) => (c.disabled = busy || over));
+  $("#send").disabled = busy || !$("#input").value.trim();
 }
 function autosize() { const t = $("#input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 110) + "px"; }
 
@@ -646,18 +591,7 @@ $("#input").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); say($("#input").value); }
 });
 $("#composer").addEventListener("submit", (e) => { e.preventDefault(); say($("#input").value); });
-$("#restart").onclick = () => { if (!busy) startNight(); };
-$("#wake-again").onclick = () => startNight();
-
-function renderChips() {
-  $("#chips").innerHTML = "";
-  for (const c of night.chips) {
-    const b = document.createElement("button");
-    b.className = "chip"; b.type = "button"; b.textContent = c; b.dataset.kit = "chat-chip";
-    b.onclick = () => say(c);
-    $("#chips").append(b);
-  }
-}
+$("#restart").onclick = () => { if (!busy) restart(); };
 
 /* ---------- debug ---------- */
 
@@ -675,7 +609,7 @@ document.querySelectorAll(".tab").forEach((t) => (t.onclick = () => {
 
 function renderVars() {
   const box = $("#vars"); box.innerHTML = "";
-  for (const [name, spec] of Object.entries(night.vars)) {
+  for (const [name, spec] of Object.entries(story.vars)) {
     const row = document.createElement("div");
     row.className = "var";
     const id = "var-" + name;
@@ -695,12 +629,12 @@ function renderVars() {
   }
   previewState();
 }
-function onState() { store.set("state", state); previewState(); }
+function onState() { store.set("state:" + story.id, state); previewState(); }
 let previewTimer = null;
 function previewState() {
   clearTimeout(previewTimer);
   previewTimer = setTimeout(async () => {
-    const res = await fetch("api/state", json(state));
+    const res = await fetch("api/state?story=" + encodeURIComponent(story.id), json(state));
     if (res.ok) renderStateLines(await res.json());
   }, 150);
 }
@@ -761,10 +695,10 @@ function showStats(d) {
 }
 function renderStats() {
   const rows = [
-    ["Модель", night.model],
-    ["Размышление", JSON.stringify(night.reasoning)],
-    ["Эмбеддинги", `${night.index.embed_model}, ${night.index.chunks} фрагментов`],
-    ["Индекс собран", night.index.built_at],
+    ["Модель", info.model],
+    ["Размышление", JSON.stringify(info.reasoning)],
+    ["Эмбеддинги", `${info.index.embed_model}, ${info.index.chunks} фрагментов`],
+    ["Индекс собран", info.index.built_at],
     ["Поиск, мс", last.retrieval],
     ["Первое слово, мс", last.first],
     ["Весь ответ, мс", last.total],
@@ -798,7 +732,7 @@ $("#search-form").addEventListener("submit", async (e) => {
   hits.forEach((h) => box.append(hitHtml(h)));
 });
 
-boot().catch((e) => notice(`Сервер беседы не отвечает: ${e.message}. Запустите task chat:serve.`, "Сбой"));
+boot().catch((e) => notice(`Сервер чата не отвечает: ${e.message}. Запустите task chat:serve.`, "Сбой"));
 </script>
 </body>
 </html>

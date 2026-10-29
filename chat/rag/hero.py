@@ -1,7 +1,6 @@
-"""The heroine's night: prompt layers, ink state in words, checks on her replies."""
+"""The hero of a story: prompt layers, ink state in words, checks on the replies."""
 
 import re
-from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
@@ -26,58 +25,43 @@ _CRISIS_IN = re.compile(
 )
 
 
-@dataclass
-class Night:
-    id: str
-    title: str
-    year: int
-    place: str
-    background: str
-    limit: int
-    opening: list[str]
-    opening_again: list[str]
-    chips: list[str]
-    wake: str
-    lore: str
-    vars: dict
-    rules: list[dict]
+class Hero:
+    """The hero of one story: the card, the packs of the chapters (lore and ink variables in words) and the
+    prompt built from them. The rules of the role are shared by every story."""
 
-
-class Heroine:
-    def __init__(self, heroine_dir: Path, night_id: str = "ep01"):
-        self.dir = heroine_dir
-        self.rules_md = (heroine_dir / "rules.md").read_text(encoding="utf-8").strip()
-        self.card = yaml.safe_load((heroine_dir / "card.yaml").read_text(encoding="utf-8"))
-        self.night = self._load_night(night_id)
-        for rule in self.night.rules:
+    def __init__(self, story_dir: Path, rules_md: str):
+        self.dir = story_dir
+        self.id = story_dir.parent.name
+        self.rules_md = rules_md.strip()
+        self.card = yaml.safe_load((story_dir / "card.yaml").read_text(encoding="utf-8"))
+        self.name = self.card["name"]
+        self.year = int(self.card["year"])
+        self.place = self.card["place"].strip()
+        self.opening = self.card.get("opening") or []
+        self.lore, self.vars, self.rules = self._load_chapters()
+        for rule in self.rules:
             evaluate(rule["when"], {})  # fail at start on a broken condition, not mid-chat
 
-    def _load_night(self, night_id: str) -> Night:
-        raw = yaml.safe_load((self.dir / f"{night_id}.night.yaml").read_text(encoding="utf-8"))
-        state = yaml.safe_load((self.dir / raw["state"]).read_text(encoding="utf-8"))
-        return Night(
-            id=raw["id"],
-            title=raw["title"],
-            year=int(raw["year"]),
-            place=raw["place"].strip(),
-            background=raw["background"],
-            limit=int(raw["limit"]),
-            opening=raw["opening"],
-            opening_again=raw.get("opening_again") or raw["opening"],
-            chips=raw["chips"],
-            wake=raw["wake"].strip(),
-            lore=(self.dir / raw["lore"]).read_text(encoding="utf-8").strip(),
-            vars=state["vars"],
-            rules=state["rules"],
-        )
+    def _load_chapters(self) -> tuple[str, dict, list[dict]]:
+        """The packs of the chapters, `epNN.lore.md` and `epNN.state.yaml`, in the order of the chapters.
+        All of them are used for now; picking those the reader has read waits for the second chapter."""
+        lore, variables, rules = [], {}, []
+        for path in sorted(self.dir.glob("*.state.yaml")):
+            state = yaml.safe_load(path.read_text(encoding="utf-8"))
+            variables.update(state["vars"])
+            rules.extend(state["rules"])
+            pack = self.dir / path.name.replace(".state.yaml", ".lore.md")
+            if pack.exists():
+                lore.append(pack.read_text(encoding="utf-8").strip())
+        return "\n\n".join(lore), variables, rules
 
     # ---- state ----
 
     def clean_state(self, state: dict) -> dict:
-        """The game sends the ink variables of the chapter's end: only the night's own names, of their
+        """The game sends the ink variables of the chapters read: only the hero's own names, of their
         own type, numbers within min..max. Anything else is dropped, not trusted."""
         clean = {}
-        for name, spec in self.night.vars.items():
+        for name, spec in self.vars.items():
             value = state.get(name)
             default = spec["default"]
             if isinstance(default, bool):
@@ -88,18 +72,18 @@ class Heroine:
         return clean
 
     def state_lines(self, state: dict) -> list[str]:
-        full = {name: spec["default"] for name, spec in self.night.vars.items()}
+        full = {name: spec["default"] for name, spec in self.vars.items()}
         full.update(self.clean_state(state))
-        return [r["text"].strip() for r in self.night.rules if evaluate(r["when"], full)]
+        return [r["text"].strip() for r in self.rules if evaluate(r["when"], full)]
 
     # ---- prompt ----
 
     def static_prompt(self) -> str:
-        """Rules, card, night and canon: the same for every turn of a night (cache-friendly)."""
+        """Rules, card, time and canon: the same for every turn of a talk (cache-friendly)."""
         c = self.card
         card = "\n".join(
             [
-                f"## Кто ты\n\n{c['who'].strip()}",
+                f"## Кто ты\n\nТебя зовут {c['name']}. {c['who'].strip()}",
                 "\n## Твой голос\n",
                 *[f"- {v}" for v in c["voice"]],
                 f"\nХарактер: {c['traits']}.",
@@ -111,13 +95,12 @@ class Heroine:
                 *[f"- «{s}»" for s in c["voice_samples"]],
             ]
         )
-        n = self.night
         return "\n\n".join(
             [
                 self.rules_md,
                 card,
-                f"## Эта ночь\n\n{n.year} год. {n.place}",
-                f"## Что уже случилось\n\n{n.lore}",
+                f"## Когда ты\n\n{self.year} год. {self.place}",
+                f"## Что уже случилось\n\n{self.lore}",
             ]
         )
 
@@ -126,8 +109,8 @@ class Heroine:
         dynamic = ["## Твоё состояние\n\n" + ("\n".join(f"- {s}" for s in lines) or "- Ничего особенного.")]
         if memory.strip():
             dynamic.append(
-                "## Прошлые сны\n\nГолос приходил к тебе и раньше. Вот что ты помнишь о тех снах. "
-                "Можешь сама вспомнить об этом, если к месту.\n\n" + memory.strip()
+                "## Прошлые разговоры\n\nТы уже говорил с этим собеседником. Вот что ты помнишь о тех "
+                "разговорах. Можешь вспомнить об этом сам, если к месту.\n\n" + memory.strip()
             )
         if hits:
             facts = "\n\n".join(
@@ -137,46 +120,46 @@ class Heroine:
                 for h in hits
             )
             dynamic.append(
-                "## Сведения\n\nНайдено по словам Голоса. Бери отсюда только то, что ты могла знать "
-                f"в {self.night.year} году, и только если это к месту. Не пересказывай как справку.\n\n"
+                "## Сведения\n\nНайдено по словам собеседника. Бери отсюда только то, что ты мог знать "
+                f"в {self.year} году, и только если это к месту. Не пересказывай как справку.\n\n"
                 + facts
             )
         system = self.static_prompt() + "\n\n" + "\n\n".join(dynamic)
         turns = [
-            {"role": "assistant" if m["role"] == "heroine" else "user", "content": m["content"]}
+            {"role": "assistant" if m["role"] == "hero" else "user", "content": m["content"]}
             for m in history[-HISTORY_WINDOW:]
             if m.get("content")
         ]
         return [{"role": "system", "content": system}, *turns]
 
     def summary_messages(self, history: list[dict], memory: str = "") -> list[dict]:
-        """Asks for what she keeps of a dream: the old memory and this dream in at most five sentences."""
+        """Asks for what the hero keeps of the talks: the old memory and this talk in at most five sentences."""
         said = "\n".join(
-            f"{'Сююмбике' if m['role'] == 'heroine' else 'Голос'}: {m['content']}"
+            f"{self.name if m['role'] == 'hero' else 'Собеседник'}: {m['content']}"
             for m in history
             if m.get("content")
         )
         system = (
-            "Ты ведёшь память героини интерактивной истории. Сююмбике, ногайская княжна, в "
-            f"{self.night.year} году во сне говорит с Голосом, которого не знает. Напиши от её лица, "
-            "в прошедшем времени, что она помнит о снах с Голосом: о чём говорили, что Голос советовал "
-            "или рассказывал, что её испугало или тронуло. Не больше пяти коротких предложений, без "
-            "списков и заголовков. Старое, что не повторилось, сжимай сильнее нового. Если Голос "
-            "рассказывал о будущем, пиши, что он говорил страшное, во что она не верит. Бери только "
-            "то, что есть в разговоре и в старой памяти, ничего не досочиняй. Сафия её служанка, "
-            "Юсуф её отец, Джан-Али хан, за которого её выдают."
+            f"Ты ведёшь память героя интерактивной истории: {self.name}. {self.card['who'].strip()} "
+            f"В {self.year} году {self.name} переписывается с собеседником, которого не знает. Напиши от "
+            f"лица {self.name}, от первого лица, в прошедшем времени, что помнится о разговорах с "
+            "собеседником: о чём говорили, что он советовал или рассказывал, что напугало или тронуло. "
+            "Не больше пяти коротких предложений, без списков и заголовков. Старое, что не повторилось, "
+            "сжимай сильнее нового. Если собеседник рассказывал о будущем, пиши, что он говорил страшное, "
+            f"во что {self.name} не верит. Бери только то, что есть в разговоре и в старой памяти, ничего "
+            f"не досочиняй. {self.card.get('cast', '')}".strip()
         )
         old = (
-            f"Что она помнила раньше:\n{memory.strip()}\n\n"
+            f"Что помнилось раньше:\n{memory.strip()}\n\n"
             if memory.strip()
-            else "Раньше Голос с ней не говорил: это их первый разговор, о прошлых снах не пиши.\n\n"
+            else "Раньше собеседник не писал: это первый разговор, о прошлых не пиши.\n\n"
         )
-        return [{"role": "system", "content": system}, {"role": "user", "content": f"{old}Этот сон:\n{said}"}]
+        return [{"role": "system", "content": system}, {"role": "user", "content": f"{old}Этот разговор:\n{said}"}]
 
     def query(self, history: list[dict]) -> str:
-        """What to search for: the Voice's last two lines (the last one carries the topic),
-        plus the names behind the words she uses for people ("хан" -> "Джан-Али")."""
-        said = "\n".join([m["content"] for m in history if m["role"] == "voice"][-2:])
+        """What to search for: the reader's last two lines (the last one carries the topic),
+        plus the names behind the words the hero uses for people ("хан" -> "Джан-Али")."""
+        said = "\n".join([m["content"] for m in history if m["role"] == "reader"][-2:])
         stems = set(tokenize(said))
         names = [
             name
@@ -195,9 +178,9 @@ class Heroine:
         flags: list[dict] = []
         if text.startswith("[ВНЕ РОЛИ]"):
             return [{"kind": "crisis", "detail": "вышла из роли по правилу «Кризис»"}]
-        later = sorted({y for y in map(int, _YEAR.findall(text)) if y > self.night.year})
+        later = sorted({y for y in map(int, _YEAR.findall(text)) if y > self.year})
         if later:
-            flags.append({"kind": "future", "detail": f"годы после {self.night.year}: {later}"})
+            flags.append({"kind": "future", "detail": f"годы после {self.year}: {later}"})
         if m := _FUTURE.search(text):
             flags.append({"kind": "future", "detail": f"похоже на будущее: «{m.group(0)}»"})
         low = text.lower()
@@ -238,3 +221,10 @@ def evaluate(condition: str, state: dict) -> bool:
             }[op]
         result = result and (not ok if negate else ok)
     return result
+
+
+def load_heroes(stories_dir: Path, rules_md: str) -> dict[str, "Hero"]:
+    """Every story that has a chat: `<stories>/<story>/chat/card.yaml`. The id of the story is its folder."""
+    return {
+        card.parent.parent.name: Hero(card.parent, rules_md) for card in sorted(stories_dir.glob("*/chat/card.yaml"))
+    }

@@ -5,7 +5,7 @@ import pytest
 
 from rag.config import REPO_DIR
 from rag.corpus import chunk_document
-from rag.heroine import Heroine, evaluate
+from rag.hero import Hero, evaluate, load_heroes
 from rag.index import Index, tokenize
 
 
@@ -92,9 +92,31 @@ def test_stems_match_word_forms():
     assert tokenize("ханбике ёлка")[1] == tokenize("елка")[0]
 
 
-def test_heroine_night_loads_and_state_reads():
-    h = Heroine(REPO_DIR / "content/stories/golden-cage/chat")
-    assert h.night.year == 1533
+STORIES = REPO_DIR / "content/stories"
+RULES = (REPO_DIR / "content/chat/rules.md").read_text(encoding="utf-8")
+
+
+def golden_cage() -> Hero:
+    return Hero(STORIES / "golden-cage/chat", RULES)
+
+
+def test_every_story_with_a_chat_is_loaded_by_its_folder():
+    heroes = load_heroes(STORIES, RULES)
+    assert "golden-cage" in heroes
+    assert heroes["golden-cage"].id == "golden-cage" and heroes["golden-cage"].name == "Сююмбике"
+
+
+def test_the_rules_are_for_any_hero_and_know_no_dream_or_voice():
+    prompt = golden_cage().static_prompt()
+    assert "Сююмбике" in prompt, "the card is in the prompt"
+    for gone in ("Голос", "вещем сне", "Эта ночь", "Прошлые сны"):
+        assert gone not in RULES, gone
+    assert "Когда ты" in prompt and "1533 год" in prompt
+
+
+def test_hero_loads_and_state_reads():
+    h = golden_cage()
+    assert h.year == 1533 and h.opening
     lines = h.state_lines({"has_knife": True, "jan_choice": 1})
     assert any("нож" in s for s in lines)
     assert any("препиралась" in s for s in lines)
@@ -102,7 +124,7 @@ def test_heroine_night_loads_and_state_reads():
 
 
 def test_reply_checks():
-    h = Heroine(REPO_DIR / "content/stories/golden-cage/chat")
+    h = golden_cage()
     kinds = lambda t: {f["kind"] for f in h.check_reply(t)}
     assert kinds("Степь шепчет. Я не знаю, Голос.") == set()
     assert "future" in kinds("В 1552 году Казань сгорит.")
@@ -113,7 +135,7 @@ def test_reply_checks():
 
 
 def test_state_from_the_game_is_cleaned():
-    h = Heroine(REPO_DIR / "content/stories/golden-cage/chat")
+    h = golden_cage()
     clean = h.clean_state(
         {"safiya_trust": 9, "has_knife": True, "respect_yusuf": -7, "jan_choice": "1", "x": 1}
     )
@@ -121,14 +143,32 @@ def test_state_from_the_game_is_cleaned():
     assert h.clean_state({"has_knife": 1, "safiya_trust": True}) == {}
 
 
-def test_memory_of_past_dreams_goes_into_the_prompt():
-    h = Heroine(REPO_DIR / "content/stories/golden-cage/chat")
-    history = [{"role": "heroine", "content": "Это ты."}, {"role": "voice", "content": "Да."}]
-    assert "Прошлые сны" not in h.messages(history, {}, [])[0]["content"]
-    system = h.messages(history, {}, [], memory="Голос сказал, что Казань сгорит.")[0]["content"]
-    assert "Прошлые сны" in system and "Казань сгорит" in system
+def test_memory_of_past_talks_goes_into_the_prompt():
+    h = golden_cage()
+    history = [{"role": "hero", "content": "Это ты."}, {"role": "reader", "content": "Да."}]
+    assert "Прошлые разговоры" not in h.messages(history, {}, [])[0]["content"]
+    system = h.messages(history, {}, [], memory="Он сказал, что Казань сгорит.")[0]["content"]
+    assert "Прошлые разговоры" in system and "Казань сгорит" in system
     ask = h.summary_messages(history, "Раньше он молчал.")
-    assert "Раньше он молчал." in ask[1]["content"] and "Голос: Да." in ask[1]["content"]
+    assert "Раньше он молчал." in ask[1]["content"] and "Собеседник: Да." in ask[1]["content"]
+    assert "Сафия её служанка" in ask[0]["content"], "who is who comes from the card"
+
+
+def test_roles_go_to_the_model_as_assistant_and_user():
+    h = golden_cage()
+    history = [{"role": "hero", "content": "Привет."}, {"role": "reader", "content": "Ты кто?"}]
+    assert [m["role"] for m in h.messages(history, {}, [])] == ["system", "assistant", "user"]
+
+
+def test_the_search_asks_with_the_readers_last_lines_and_the_names_behind_the_words():
+    h = golden_cage()
+    history = [
+        {"role": "hero", "content": "Привет."},
+        {"role": "reader", "content": "Что ты думаешь про хана?"},
+    ]
+    q = h.query(history)
+    assert "про хана" in q and "Джан-Али" in q
+    assert "Привет" not in q, "the hero's own lines are not searched for"
 
 
 def test_a_summary_written_twice_is_kept_once():
@@ -137,3 +177,72 @@ def test_a_summary_written_twice_is_kept_once():
     assert _once("Он сказал. Я не верю.Он сказал. Я не верю.") == "Он сказал. Я не верю."
     assert _once("Сны лгут.\n\nСны лгут.") == "Сны лгут."
     assert _once("Он сказал: да. Да.") == "Он сказал: да. Да."
+
+
+def test_the_wire_takes_hero_and_reader_and_a_story():
+    from pydantic import ValidationError
+
+    from rag.server import ChatIn, Message
+
+    assert ChatIn(story="golden-cage", history=[Message(role="reader", content="Привет")]).story == "golden-cage"
+    for bad in ("heroine", "voice", "system"):
+        with pytest.raises(ValidationError):
+            Message(role=bad, content="x")
+    with pytest.raises(ValidationError):
+        ChatIn(story="../etc", history=[])
+    with pytest.raises(ValidationError):
+        ChatIn(history=[])
+
+
+@pytest.fixture
+def api(tmp_path):
+    """The server without the model: the heroes of the repo, an empty index, logs in a temp folder."""
+    from types import SimpleNamespace
+
+    from fastapi.testclient import TestClient
+
+    from rag import server
+
+    server.ctx.clear()
+    server.ctx.update(
+        settings=SimpleNamespace(data_dir=tmp_path, chat_model="test"),
+        index=SimpleNamespace(meta={"embed_model": "none", "chunks": 0, "built_at": "-"}),
+        heroes=load_heroes(STORIES, RULES),
+    )
+    yield TestClient(server.app), tmp_path
+    server.ctx.clear()
+
+
+def test_the_server_lists_the_stories_with_a_hero(api):
+    client, _ = api
+    body = client.get("/api/stories").json()
+    story = next(s for s in body["stories"] if s["id"] == "golden-cage")
+    assert story["hero"] == "Сююмбике" and story["year"] == 1533 and "has_knife" in story["vars"]
+    assert "night" not in str(body).lower().replace("night_", "")
+
+
+def test_state_in_words_is_asked_per_story(api):
+    client, _ = api
+    lines = client.post("/api/state", params={"story": "golden-cage"}, json={"has_knife": True}).json()
+    assert any("нож" in s for s in lines)
+    assert client.post("/api/state", params={"story": "nowhere"}, json={}).status_code == 404
+
+
+def test_chat_wants_a_known_story_and_the_readers_line_last(api):
+    client, _ = api
+    hero_last = {"story": "golden-cage", "history": [{"role": "hero", "content": "Привет."}]}
+    assert client.post("/api/chat", json=hero_last).status_code == 400
+    unknown = {"story": "nowhere", "history": [{"role": "reader", "content": "Привет."}]}
+    assert client.post("/api/chat", json=unknown).status_code == 404
+    old_client = {"history": [{"role": "voice", "content": "Привет."}]}
+    assert client.post("/api/chat", json=old_client).status_code == 422
+
+
+def test_a_report_is_logged_with_its_story(api):
+    import json
+
+    client, folder = api
+    body = {"story": "golden-cage", "message": "Плохой ответ.", "reason": "reader"}
+    assert client.post("/api/report", json=body).json() == {"ok": True}
+    logged = json.loads((folder / "reports.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert logged["story"] == "golden-cage" and logged["message"] == "Плохой ответ."

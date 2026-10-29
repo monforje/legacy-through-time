@@ -3,8 +3,8 @@
 fetch-wiki      download the Wikipedia articles listed in corpus/wiki.yaml into corpus/wiki/
 ingest          chunk corpus/, embed what changed, write data/index/
 chunks          print the chunks without embedding (to check years and layers)
-search "..."    hybrid search, as the heroine of the night would see it
-ask "..."       one line from the Voice, the heroine's reply in the terminal
+search "..."    hybrid search, as the hero of a story would see it
+ask "..."       one line from the reader, the hero's reply in the terminal
 """
 
 import argparse
@@ -17,12 +17,19 @@ import yaml
 
 from . import config
 from .corpus import load_corpus
-from .heroine import Heroine
+from .hero import Hero, load_heroes
 from .index import Index
 from .llm import LLM, ChatResult
-from .server import HEROINE_LAYERS, reply_options
+from .server import HERO_LAYERS, reply_options
 
 WIKI_API = "https://ru.wikipedia.org/w/api.php"
+
+
+def hero_of(settings, story: str) -> Hero:
+    heroes = load_heroes(settings.stories_dir, settings.rules_path.read_text(encoding="utf-8"))
+    if story not in heroes:
+        raise SystemExit(f"no chat for the story {story!r}; there are: {', '.join(heroes) or 'none'}")
+    return heroes[story]
 
 
 def main() -> None:
@@ -33,11 +40,13 @@ def main() -> None:
     sub.add_parser("chunks")
     s = sub.add_parser("search")
     s.add_argument("query")
-    s.add_argument("--year", type=int, help="drop chunks about later events (default: the night's year)")
+    s.add_argument("--year", type=int, help="drop chunks about later events (default: the year of the hero)")
+    s.add_argument("--story", default="golden-cage")
     s.add_argument("--all-layers", action="store_true")
     s.add_argument("-k", type=int, default=6)
     a = sub.add_parser("ask")
     a.add_argument("line")
+    a.add_argument("--story", default="golden-cage")
     args = p.parse_args()
 
     settings = config.load()
@@ -52,7 +61,7 @@ def main() -> None:
         case "search":
             asyncio.run(search(settings, args))
         case "ask":
-            asyncio.run(ask(settings, args.line))
+            asyncio.run(ask(settings, args.line, args.story))
 
 
 def fetch_wiki(corpus_dir: Path) -> None:
@@ -139,7 +148,7 @@ async def ingest(settings) -> None:
 
 async def search(settings, args) -> None:
     index = Index.load(settings.data_dir)
-    heroine = Heroine(settings.heroine_dir)
+    hero = hero_of(settings, args.story)
     llm = LLM(settings)
     try:
         vec = (await llm.embed([args.query]))[0]
@@ -149,8 +158,8 @@ async def search(settings, args) -> None:
         vec,
         args.query,
         k=args.k,
-        max_year=args.year or heroine.night.year,
-        layers=None if args.all_layers else HEROINE_LAYERS,
+        max_year=args.year or hero.year,
+        layers=None if args.all_layers else HERO_LAYERS,
     )
     for h in hits:
         c = h.chunk
@@ -160,24 +169,24 @@ async def search(settings, args) -> None:
         print("   " + c.text[:220].replace("\n", " ") + "…")
 
 
-async def ask(settings, line: str) -> None:
+async def ask(settings, line: str, story: str) -> None:
     index = Index.load(settings.data_dir)
-    heroine = Heroine(settings.heroine_dir)
+    hero = hero_of(settings, story)
     llm = LLM(settings)
-    history = [{"role": "heroine", "content": heroine.night.opening[0]}, {"role": "voice", "content": line}]
+    history = [{"role": "hero", "content": hero.opening[0]}, {"role": "reader", "content": line}]
     try:
-        q = heroine.query(history)
-        hits = index.search((await llm.embed([q]))[0], q, max_year=heroine.night.year, layers=HEROINE_LAYERS)
+        q = hero.query(history)
+        hits = index.search((await llm.embed([q]))[0], q, max_year=hero.year, layers=HERO_LAYERS)
         for h in hits:
             print(f"  · [{h.chunk.layer}] {h.chunk.id} {h.chunk.heading}")
         result = ChatResult()
         text = ""
-        async for delta in llm.stream_chat(heroine.messages(history, {}, hits), result, **reply_options()):
+        async for delta in llm.stream_chat(hero.messages(history, {}, hits), result, **reply_options()):
             text += delta
             print(delta, end="", flush=True)
         print(
             f"\n  usage: {result.usage.get('prompt_tokens')}→{result.usage.get('completion_tokens')} "
-            f"cost {result.usage.get('cost')}  flags: {heroine.check_reply(text.strip())}"
+            f"cost {result.usage.get('cost')}  flags: {hero.check_reply(text.strip())}"
         )
     finally:
         await llm.close()

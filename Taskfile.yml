@@ -247,7 +247,7 @@ tasks:
     cmds: ["uv run python -m rag ingest"]
 
   chat:search:
-    desc: 'Search the corpus as the heroine of the night sees it: task chat:search -- "вопрос"'
+    desc: 'Search the corpus as the hero of a story sees it: task chat:search -- "вопрос"'
     dir: chat
     cmds: ["uv run python -m rag search {{.CLI_ARGS}}"]
 
@@ -257,7 +257,7 @@ tasks:
     cmds:
       - >-
         uv run uvicorn rag.server:app --port 8765 --reload
-        --reload-dir rag --reload-dir ../content/stories/golden-cage/chat
+        --reload-dir rag --reload-dir ../content/stories --reload-dir ../content/chat
         --reload-include '*.yaml' --reload-include '*.md'
 
   chat:deploy:
@@ -269,12 +269,12 @@ tasks:
       - >-
         rsync -aR --exclude __pycache__ --exclude '*.meta'
         chat/Dockerfile chat/compose.yaml chat/pyproject.toml chat/uv.lock chat/rag chat/web
-        content/stories/golden-cage/chat Assets/Resources/Fonts
+        content/stories/golden-cage/chat content/chat Assets/Resources/Fonts
         docs/brainstorm/templates/assets/heritage/png3d docs/art/legacy-scenes/heroine_room_night.jpeg
         chat/data/index
         {{.HOST}}:{{.REMOTE}}/
       - ssh {{.HOST}} 'cd {{.REMOTE}}/chat && mkdir -p data && CHAT_UID=$(stat -c %u data) docker compose up -d --build && docker image prune -f >/dev/null'
-      - "ssh {{.HOST}} 'for i in $(seq 1 30); do curl -sf localhost:8765/api/night >/dev/null && echo up && exit 0; sleep 1; done; docker logs --tail 30 chat-chat-1; exit 1'"
+      - "ssh {{.HOST}} 'for i in $(seq 1 30); do curl -sf localhost:8765/api/stories >/dev/null && echo up && exit 0; sleep 1; done; docker logs --tail 30 chat-chat-1; exit 1'"
 
   chat:test:
     desc: Tests and lint of the heroine chat

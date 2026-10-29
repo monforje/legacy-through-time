@@ -1,4 +1,4 @@
-"""Test server for the heroine chat: the page, the stream, the debug data.
+"""Server of the hero chat: the stream, the memory, the reports; and the test page with the debug data.
 
 uv run uvicorn rag.server:app --port 8765
 """
@@ -16,11 +16,12 @@ from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from . import config
-from .heroine import Heroine
+from .hero import Hero, load_heroes
 from .index import Index
 from .llm import LLM, ChatResult
 
-HEROINE_LAYERS = ("fact", "setting")
+HERO_LAYERS = ("fact", "setting")
+STORY = "^[a-z0-9-]{1,64}$"
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 
 
@@ -36,11 +37,12 @@ def reply_options() -> dict:
 
 
 class Message(BaseModel):
-    role: str = Field(pattern="^(heroine|voice)$")
+    role: str = Field(pattern="^(hero|reader)$")
     content: str = Field(max_length=2000)
 
 
 class ChatIn(BaseModel):
+    story: str = Field(pattern=STORY)
     history: list[Message] = Field(max_length=60)
     state: dict = {}
     memory: str = Field(default="", max_length=2000)
@@ -57,11 +59,13 @@ class SearchIn(BaseModel):
 
 
 class SummaryIn(BaseModel):
+    story: str = Field(pattern=STORY)
     history: list[Message] = Field(max_length=60)
     memory: str = Field(default="", max_length=2000)
 
 
 class ReportIn(BaseModel):
+    story: str = Field(default="", pattern="^([a-z0-9-]{1,64})?$")
     message: str = Field(max_length=2000)
     reason: str = Field(default="", max_length=500)
     history: list[Message] = Field(default=[], max_length=60)
@@ -107,7 +111,7 @@ async def lifespan(_: FastAPI):
     ctx.update(
         settings=settings,
         index=Index.load(settings.data_dir),
-        heroine=Heroine(settings.heroine_dir),
+        heroes=load_heroes(settings.stories_dir, settings.rules_path.read_text(encoding="utf-8")),
         llm=LLM(settings),
     )
     yield
@@ -154,22 +158,29 @@ async def kit(name: str):
     return FileResponse(path, headers={"Cache-Control": "no-cache"})
 
 
-@app.get("/api/night")
-async def night():
-    n = ctx["heroine"].night
+def hero_of(story: str) -> Hero:
+    hero = ctx["heroes"].get(story)
+    if hero is None:
+        raise HTTPException(404, f"no chat for the story {story!r}")
+    return hero
+
+
+@app.get("/api/stories")
+async def stories():
+    """The heroes that can be talked to, for the test page: the card, the variables of the story, the settings."""
     s = ctx["settings"]
     return {
-        "id": n.id,
-        "title": n.title,
-        "year": n.year,
-        "background": n.background,
-        "limit": n.limit,
-        "opening": n.opening,
-        "opening_again": n.opening_again,
-        "chips": n.chips,
-        "wake": n.wake,
-        "vars": n.vars,
-        "layers": HEROINE_LAYERS,
+        "stories": [
+            {
+                "id": h.id,
+                "hero": h.name,
+                "year": h.year,
+                "opening": h.opening,
+                "vars": h.vars,
+            }
+            for h in ctx["heroes"].values()
+        ],
+        "layers": HERO_LAYERS,
         "index": ctx["index"].meta,
         "model": s.chat_model,
         "reasoning": reply_options()["reasoning"],
@@ -177,9 +188,9 @@ async def night():
 
 
 @app.post("/api/state")
-async def state_lines(state: dict):
-    """What the heroine reads from these ink values; no model call."""
-    return ctx["heroine"].state_lines(state)
+async def state_lines(story: str, state: dict):
+    """What the hero reads from these ink values; no model call."""
+    return hero_of(story).state_lines(state)
 
 
 @app.post("/api/search", dependencies=[Depends(game_token)])
@@ -197,30 +208,30 @@ async def search(body: SearchIn):
 
 @app.post("/api/chat", dependencies=guarded)
 async def chat(body: ChatIn):
-    heroine: Heroine = ctx["heroine"]
-    llm: LLM = ctx["llm"]
+    hero = hero_of(body.story)
     history = [m.model_dump() for m in body.history]
-    if not history or history[-1]["role"] != "voice":
-        raise HTTPException(400, "the last message must be the Voice's")
-    state = heroine.clean_state(body.state)
+    if not history or history[-1]["role"] != "reader":
+        raise HTTPException(400, "the last message must be the reader's")
+    llm: LLM = ctx["llm"]
+    state = hero.clean_state(body.state)
 
     async def stream():
         started = time.monotonic()
         try:
-            input_flags = heroine.check_input(history[-1]["content"])
+            input_flags = hero.check_input(history[-1]["content"])
             hits = []
             if body.k:
-                q = heroine.query(history)
+                q = hero.query(history)
                 vec = (await llm.embed([q]))[0]
-                layers = tuple(body.layers) if body.layers else HEROINE_LAYERS
-                hits = ctx["index"].search(vec, q, k=body.k, max_year=heroine.night.year, layers=layers)
-            messages = heroine.messages(history, state, hits, body.memory)
+                layers = tuple(body.layers) if body.layers else HERO_LAYERS
+                hits = ctx["index"].search(vec, q, k=body.k, max_year=hero.year, layers=layers)
+            messages = hero.messages(history, state, hits, body.memory)
             yield _sse(
                 "sources",
                 {
-                    "query": heroine.query(history),
+                    "query": hero.query(history),
                     "hits": [h.to_dict() for h in hits],
-                    "state_lines": heroine.state_lines(state),
+                    "state_lines": hero.state_lines(state),
                     "input_flags": input_flags,
                     "system": messages[0]["content"] if body.debug else None,
                     "retrieval_ms": round((time.monotonic() - started) * 1000),
@@ -236,7 +247,7 @@ async def chat(body: ChatIn):
                 yield _sse("delta", {"text": delta})
 
             text = text.strip()
-            flags = heroine.check_reply(text)
+            flags = hero.check_reply(text)
             done = {
                 "flags": flags,
                 "usage": result.usage,
@@ -247,6 +258,7 @@ async def chat(body: ChatIn):
             _log(
                 "chats.jsonl",
                 {
+                    "story": body.story,
                     "history": history,
                     "state": state,
                     "memory": body.memory,
@@ -268,21 +280,22 @@ async def chat(body: ChatIn):
 
 @app.post("/api/summary", dependencies=guarded)
 async def summary(body: SummaryIn):
-    """What the heroine keeps of a dream: the game sends it with the next dream (memory)."""
+    """What the hero keeps of the talk: the game sends it back with the next messages (memory)."""
+    hero = hero_of(body.story)
     history = [m.model_dump() for m in body.history]
-    if not any(m["role"] == "voice" for m in history):
+    if not any(m["role"] == "reader" for m in history):
         return {"memory": body.memory}
     result = ChatResult()
     text = ""
     async for delta in ctx["llm"].stream_chat(
-        ctx["heroine"].summary_messages(history, body.memory),
+        hero.summary_messages(history, body.memory),
         result,
         **{**reply_options(), "temperature": 0.3},
     ):
         text += delta
     text = _once(text.strip())[:1500]
     _log(
-        "summaries.jsonl", {"history": history, "memory": body.memory, "summary": text, "usage": result.usage}
+        "summaries.jsonl", {"story": body.story, "history": history, "memory": body.memory, "summary": text, "usage": result.usage}
     )
     return {"memory": text or body.memory}
 
