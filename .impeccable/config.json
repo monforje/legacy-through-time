@@ -74,6 +74,15 @@
         ],
         "createdAt": "2026-10-29T16:39:36.039Z",
         "reason": "false positive: token swatches in the catalog are labels on colour samples; assistant decision, not user confirmed"
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/wheel.html"
+        ],
+        "createdAt": "2026-10-29T16:45:43.880Z",
+        "reason": "false positive: the hub sits inside the wheel disc and the prize tiles are small chips, none is a card inside a card; assistant decision, not user confirmed"
       }
     ]
   }
