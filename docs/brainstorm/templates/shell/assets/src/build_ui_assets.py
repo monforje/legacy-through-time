@@ -10,7 +10,7 @@ import os
 
 import bmesh
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else '/home/dan/projects/legacy-through-time/docs/brainstorm/templates/shell/assets/src'
 OUT = os.path.abspath(os.path.join(HERE, '..'))
@@ -538,61 +538,70 @@ GLYPHS = {
     'shuffle': [line((-0.74, 0.42), (-0.2, 0.42), (0.26, -0.42), (0.66, -0.42)), line((0.42, -0.66), (0.68, -0.42), (0.42, -0.18)),
                 line((-0.74, -0.42), (-0.2, -0.42), (0.26, 0.42), (0.66, 0.42)), line((0.42, 0.18), (0.68, 0.42), (0.42, 0.66))],
     'bell': [loop(arc_pts(0, 0.12, 0.5, 180, 0) + [(0.62, -0.42), (-0.62, -0.42)], joints=False), dot(0, -0.72, 0.16)],
-    'sound': [loop([(-0.74, 0.24), (-0.42, 0.24), (0.0, 0.62), (0.0, -0.62), (-0.42, -0.24), (-0.74, -0.24)]), arc(0.06, 0, 0.36, -42, 42), arc(0.06, 0, 0.66, -42, 42)],
+    'sound': [loop([(-0.74, 0.24), (-0.42, 0.24), (0.0, 0.62), (0.0, -0.62), (-0.42, -0.24), (-0.74, -0.24)]), arc(0.0, 0, 0.3, -40, 40), arc(0.0, 0, 0.74, -40, 40)],
     'globe': [circ(0, 0, 0.74), line((-0.74, 0), (0.74, 0), joints=False), loop([(0.34 * math.cos(math.radians(a)), 0.74 * math.sin(math.radians(a))) for a in range(0, 360, 15)], False)],
     'user': [circ(0, 0.34, 0.32), line(*arc_pts(0, -0.78, 0.78, 28, 152), joints=False)],
     'support': [arc(0, 0.0, 0.62, 0, 180), line((-0.62, 0), (-0.62, -0.28), joints=False), line((0.62, 0), (0.62, -0.28), joints=False), dot(-0.62, -0.38, 0.2), dot(0.62, -0.38, 0.2)],
     'shield': [loop([(0, 0.82), (0.66, 0.56), (0.62, -0.1), (0, -0.82), (-0.62, -0.1), (-0.66, 0.56)])],
-    'doc': [loop([(-0.5, -0.78), (0.5, -0.78), (0.5, 0.36), (0.1, 0.78), (-0.5, 0.78)]), line((0.1, 0.78), (0.1, 0.36), (0.5, 0.36)), line((-0.24, -0.1), (0.24, -0.1), joints=False), line((-0.24, -0.4), (0.12, -0.4), joints=False)],
+    'doc': [loop([(-0.5, -0.78), (0.5, -0.78), (0.5, 0.36), (0.1, 0.78), (-0.5, 0.78)]), line((0.1, 0.78), (0.1, 0.36), (0.5, 0.36)), line((-0.14, 0.0), (0.14, 0.0), joints=False), line((-0.14, -0.4), (0.1, -0.4), joints=False)],
     'tools': [line((-0.56, -0.56), (0.2, 0.2), joints=False), line(*arc_pts(0.4, 0.4, 0.34, 40, 320), joints=False)],
-    'receipt': [loop([(-0.5, 0.82), (0.5, 0.82), (0.5, -0.82), (0.25, -0.58), (0, -0.82), (-0.25, -0.58), (-0.5, -0.82)]), line((-0.22, 0.32), (0.22, 0.32), joints=False), line((-0.22, -0.06), (0.22, -0.06), joints=False)],
+    'receipt': [loop([(-0.5, 0.82), (0.5, 0.82), (0.5, -0.82), (0.25, -0.58), (0, -0.82), (-0.25, -0.58), (-0.5, -0.82)]), line((-0.1, 0.36), (0.1, 0.36), joints=False), line((-0.1, -0.02), (0.1, -0.02), joints=False)],
     'ads': [loop([(-0.8, -0.58), (0.8, -0.58), (0.8, 0.58), (-0.8, 0.58)]), loop([(-0.14, 0.3), (-0.14, -0.3), (0.32, 0)])],
 }
 
 
+def add_tube(bm, p0, p1, r):
+    """Цилиндр между двумя точками плоскости XY (в одном bmesh, чтобы потом сплавить)."""
+    a, b = Vector((p0[0], p0[1], 0)), Vector((p1[0], p1[1], 0))
+    d = b - a
+    length = d.length
+    if length < 1e-6:
+        return
+    up = 'X' if abs(d.normalized().y) > 0.99 else 'Y'
+    m = Matrix.Translation((a + b) / 2) @ d.to_track_quat('Z', up).to_matrix().to_4x4()
+    bmesh.ops.create_cone(bm, cap_ends=True, segments=16, radius1=r, radius2=r, depth=length, matrix=m)
+
+
+def add_ball(bm, p, r):
+    bmesh.ops.create_uvsphere(bm, u_segments=16, v_segments=10, radius=r, matrix=Matrix.Translation((p[0], p[1], 0)))
+
+
 def glyph_builder(spec, color, r=0.13):
+    """Все штрихи глифа собираются в одно тело и сплавляются воксельным ремешем:
+    на пересечениях и стыках получается цельная мягкая поверхность без швов и узлов."""
     material = mat('glyph', color, rough=0.5, coat=0.08)
-    before = set(bpy.data.objects)
+    bm = bmesh.new()
+    solids = []
     for item in spec:
         kind = item[0]
         if kind in ('line', 'loop'):
-            pts, joints = item[1], item[2]
-            cu = bpy.data.curves.new('g', 'CURVE')
-            cu.dimensions = '3D'
-            cu.bevel_depth = r
-            cu.bevel_resolution = 6
-            cu.use_fill_caps = True
-            cu.resolution_u = 4
-            sp = cu.splines.new('POLY')
-            sp.points.add(len(pts) - 1)
-            for i, (x, y) in enumerate(pts):
-                sp.points[i].co = (x, y, 0, 1)
-            sp.use_cyclic_u = kind == 'loop'
-            ob = bpy.data.objects.new('g', cu)
-            bpy.context.scene.collection.objects.link(ob)
-            ob.data.materials.append(material)
-            if kind == 'line':
-                ends = [pts[0], pts[-1]] if not joints else pts
-                for (x, y) in ends:
-                    s = sphere('cap', r)
-                    place(s, loc=(x, y, 0))
-                    finish(s, material)
-            elif joints:
-                for (x, y) in pts:
-                    s = sphere('cap', r)
-                    place(s, loc=(x, y, 0))
-                    finish(s, material)
+            pts = item[1]
+            pairs = list(zip(pts, pts[1:] + ([pts[0]] if kind == 'loop' else [])))
+            for p0, p1 in pairs:
+                add_tube(bm, p0, p1, r)
+            for q in pts:
+                add_ball(bm, q, r)
         elif kind == 'dot':
             _, x, y, rr = item
             if rr > 0:
-                s = sphere('dot', rr)
-                place(s, loc=(x, y, 0))
-                finish(s, material)
+                add_ball(bm, (x, y), rr)
         elif kind == 'solid':
-            _, pts, depth = item
-            ob = poly_extrude('solid', pts, depth)
-            finish(ob, material, bevel=0.1, segments=4)
-    stand([o for o in bpy.data.objects if o not in before and o.parent is None], 0)
+            solids.append(item)
+    ob = new_mesh('glyph', bm)
+    ob.data.materials.append(material)
+    remesh = ob.modifiers.new('remesh', 'REMESH')
+    remesh.mode = 'VOXEL'
+    remesh.voxel_size = 0.028
+    remesh.use_smooth_shade = True
+    smooth = ob.modifiers.new('smooth', 'SMOOTH')
+    smooth.factor = 1.0
+    smooth.iterations = 8
+    made = [ob]
+    for _, pts, depth in solids:
+        s = poly_extrude('solid', pts, depth)
+        finish(s, material, bevel=0.1, segments=4)
+        made.append(s)
+    stand(made, 0)
 
 
 def build_glyphs(names=None, variants=(('', PAL['paper']), ('-ink', PAL['ink']))):
