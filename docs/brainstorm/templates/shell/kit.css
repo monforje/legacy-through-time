@@ -184,14 +184,12 @@ a.btn { text-decoration: none; }
 [hidden] { display: none !important; }
 .stack { display: flex; flex-direction: column; gap: var(--space-3); }
 .band { background: var(--surface-2); border-radius: var(--radius-m); padding: var(--space-4); text-align: center; font-weight: 800; font-size: var(--fs-head); }
-.card-best.starter { flex-direction: row; align-items: center; gap: var(--space-4); }
-.card-best.starter .art { flex: 1; display: grid; place-items: center; color: var(--gem); }
+.card-best.starter, .card-best.big { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: var(--space-3) var(--space-4); }
+.card-title { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: var(--space-1); text-align: center; }
+.card-best .art { display: grid; place-items: center; color: var(--gem); }
 .card-best.starter .art .ico { width: 56px; height: 56px; }
-.card-best.starter .buy { flex: 1; display: flex; flex-direction: column; gap: var(--space-2); }
-.card-best.big { flex-direction: row; align-items: center; gap: var(--space-4); }
-.card-best.big .art { flex: 1; display: grid; place-items: center; }
 .card-best.big .art .ico { width: 64px; height: 64px; }
-.card-best.big .buy { flex: 1; display: flex; flex-direction: column; gap: var(--space-2); }
+.card-best .buy { display: flex; flex-direction: column; gap: var(--space-2); }
 .tab { text-decoration: none; }
 .carousel { display: flex; gap: var(--space-3); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; flex: none; position: relative; padding-inline: 8%; scroll-padding-inline: 8%; }
 .hero { flex: none; width: 100%; height: 300px; scroll-snap-align: center; border-radius: var(--radius-l); position: relative; overflow: hidden; background: var(--art-5); display: flex; flex-direction: column; justify-content: flex-end; gap: var(--space-2); padding: var(--space-4); }
