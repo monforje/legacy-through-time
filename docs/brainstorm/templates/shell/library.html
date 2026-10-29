@@ -9,8 +9,12 @@
 </head>
 <body>
 <div class="device"><div class="safe">
-  <h1 class="title" style="padding:var(--space-2) 0">Слова</h1>
-  <label class="search"><svg class="ico"><use href="icons.svg#i-search"/></svg><input placeholder="Найти слово…" aria-label="Поиск слов"></label>
+  <div class="topbar">
+    <a class="btn btn-icon" href="words.html" aria-label="К списку историй"><svg class="ico"><use href="icons.svg#i-chevron-l"/></svg></a>
+    <h1 class="head" style="flex:1;text-align:center">Последний маяк</h1>
+    <span style="width:var(--touch)" aria-hidden="true"></span>
+  </div>
+  <label class="search" style="margin-top:var(--space-2)"><svg class="ico"><use href="icons.svg#i-search"/></svg><input placeholder="Найти слово…" aria-label="Поиск слов"></label>
 
   <div class="scroll" style="margin-top:var(--space-3)">
     <div class="group">
