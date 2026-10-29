@@ -152,7 +152,7 @@ a.btn { text-decoration: none; }
 .card-reward { padding: var(--space-3); }
 .card-reward .foot > *, .card-reward .actions > * { flex: none; }
 .card-reward .foot .timer { width: 84px; height: 36px; justify-content: center; padding: 0; }
-.card-reward .foot .btn { position: relative; height: 36px; min-height: 36px; width: 128px; padding: 0 var(--space-2); font-size: var(--fs-small); white-space: nowrap; }
+.card-reward .foot .btn { position: relative; height: 36px; min-height: 36px; width: 140px; padding: 0 var(--space-2); font-size: var(--fs-small); white-space: nowrap; }
 .card-reward .foot .btn.btn-icon { width: 36px; min-width: 36px; padding: 0; }
 .card-reward .foot .btn::after { content: ""; position: absolute; inset: -4px 0; }
 .card-reward .foot .btn-icon::after { display: none; }   /* замок неактивный, зона нажатия не нужна */   /* видимая высота 36, зона нажатия 44 */
