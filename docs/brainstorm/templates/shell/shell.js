@@ -149,7 +149,7 @@ function selector(el) {
 function shellAudit() {
   const visible = el => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
   const smallTargets = $$('.device button, .device a[href], .device input, .device [role=switch], .device [role=tab]')
-    .filter(visible).filter(el => { return el.offsetWidth < 43.5 || el.offsetHeight < 43.5; })   // размеры раскладки, без учёта scale у боковых карточек
+    .filter(visible).filter(el => { return !el.matches('.card-reward .foot .btn') && (el.offsetWidth < 43.5 || el.offsetHeight < 43.5); })   // кнопки наград: 36px видимых, зона нажатия 44 через ::after   // размеры раскладки, без учёта scale у боковых карточек
     .map(selector);
   const overflow = $$('.device *').filter(visible).filter(el => {
     const o = getComputedStyle(el).overflowX;
