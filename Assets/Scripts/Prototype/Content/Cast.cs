@@ -34,7 +34,7 @@ namespace LegacyThroughTime.Prototype
         public static float Height(string id) => id switch
         {
             "suyumbike_child" => .7f,
-            "boy_dream" => .55f,
+            "boy_dream" => .5f,
             "woman_a" => .96f,
             "safiya" => .98f,
             "yusuf" => 1.03f,
