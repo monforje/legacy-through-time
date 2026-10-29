@@ -247,7 +247,7 @@ dialog.wheel-dialog { background: var(--bg); }   /* тот же цвет, что
 .dim { position: absolute; inset: 0; background: color-mix(in srgb, var(--scrim) 60%, transparent); }
 .sheet { position: absolute; left: var(--space-4); right: var(--space-4); bottom: 96px; background: var(--surface-2); border-radius: var(--radius-m); padding: var(--space-2); box-shadow: var(--shadow); display: flex; flex-direction: column; }
 .sheet[hidden] { display: none; }
-.toast { position: absolute; left: var(--space-4); right: var(--space-4); bottom: 96px; background: var(--text); color: var(--bg); font-weight: 800; padding: var(--space-3) var(--space-4); border-radius: var(--radius-m); text-align: center; }
+.toast { position: absolute; left: var(--space-4); right: var(--space-4); bottom: 96px; background: var(--surface-2); color: var(--text); font-size: var(--fs-small); font-weight: 700; line-height: 1.4; padding: var(--space-3) var(--space-4); border-radius: var(--radius-m); text-align: center; text-wrap: balance; box-shadow: var(--shadow); }   /* тёмный, из палитры: светлая плашка на тёмном экране слепит */
 .toast[hidden] { display: none; }
 .toast.high { bottom: 148px; }   /* над ссылкой, которая его вызывает */
 
