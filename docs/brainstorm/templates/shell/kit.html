@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI-кит оболочки</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="kit.css">
+<style>
+  body { display: block; }
+  .page { max-width: 1160px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: var(--space-5); align-items: flex-start; }
+  .page > header { flex-basis: 100%; }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: var(--space-2); }
+  .sw { border-radius: var(--radius-s); padding: var(--space-3); min-height: 64px; font-size: var(--fs-small); font-weight: 700; display: flex; align-items: flex-end; box-shadow: inset 0 0 0 1px var(--line); }
+  .kit-note { max-width: 360px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><use href="icons.svg#i-coin"/></svg>
+<div class="page">
+  <header>
+    <h1 class="title" style="text-align:left">UI-кит оболочки</h1>
+    <p class="muted">Нейтральный и временный. Цвета и размеры живут в токенах <code>kit.css</code>; «Наследие» остаётся внутри «Золотой клетки». <a href="index.html" style="color:var(--accent)">Все экраны</a></p>
+  </header>
+
+  <div class="device auto"><div class="safe">
+    <h2 class="head">Токены</h2>
+    <div class="swatches">
+      <div class="sw" style="background:var(--bg)">bg</div>
+      <div class="sw" style="background:var(--surface)">surface</div>
+      <div class="sw" style="background:var(--surface-2)">surface-2</div>
+      <div class="sw" style="background:var(--accent);color:var(--accent-ink)">accent</div>
+      <div class="sw" style="background:var(--coin);color:var(--accent-ink)">coin</div>
+      <div class="sw" style="background:var(--gem);color:var(--accent-ink)">gem</div>
+      <div class="sw" style="background:var(--energy);color:var(--accent-ink)">energy</div>
+      <div class="sw" style="background:var(--ok);color:var(--accent-ink)">ok</div>
+      <div class="sw" style="background:var(--danger);color:var(--accent-ink)">danger</div>
+    </div>
+    <p class="small">Типографика: заголовок экрана 24, заголовок карточки 18, текст 15, подпись 13, цифра 20. Отступы 4 · 8 · 12 · 16 · 24 · 32. Радиусы 10 · 16 · 24. Касание не меньше 44.</p>
+    <div class="title" style="text-align:left">Заголовок экрана</div>
+    <div class="head">Заголовок карточки</div>
+    <div>Основной текст, пятнадцать пикселей.</div>
+    <div class="small">Подпись и пояснение, тринадцать пикселей.</div>
+    <h2 class="head">Иконки</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);color:var(--accent)">
+      <svg class="ico"><use href="icons.svg#i-coin"/></svg><svg class="ico"><use href="icons.svg#i-gem"/></svg><svg class="ico"><use href="icons.svg#i-energy"/></svg><svg class="ico"><use href="icons.svg#i-gear"/></svg><svg class="ico"><use href="icons.svg#i-gift"/></svg><svg class="ico"><use href="icons.svg#i-ads"/></svg><svg class="ico"><use href="icons.svg#i-wheel"/></svg><svg class="ico"><use href="icons.svg#i-cart"/></svg><svg class="ico"><use href="icons.svg#i-calendar"/></svg><svg class="ico"><use href="icons.svg#i-timer"/></svg><svg class="ico"><use href="icons.svg#i-lock"/></svg><svg class="ico"><use href="icons.svg#i-search"/></svg><svg class="ico"><use href="icons.svg#i-chat"/></svg><svg class="ico"><use href="icons.svg#i-book"/></svg><svg class="ico"><use href="icons.svg#i-star"/></svg><svg class="ico"><use href="icons.svg#i-bag"/></svg><svg class="ico"><use href="icons.svg#i-back"/></svg><svg class="ico"><use href="icons.svg#i-chevron-l"/></svg><svg class="ico"><use href="icons.svg#i-chevron-r"/></svg><svg class="ico"><use href="icons.svg#i-close"/></svg><svg class="ico"><use href="icons.svg#i-send"/></svg><svg class="ico"><use href="icons.svg#i-flag"/></svg><svg class="ico"><use href="icons.svg#i-shuffle"/></svg><svg class="ico"><use href="icons.svg#i-user"/></svg><svg class="ico"><use href="icons.svg#i-bell"/></svg><svg class="ico"><use href="icons.svg#i-globe"/></svg><svg class="ico"><use href="icons.svg#i-support"/></svg><svg class="ico"><use href="icons.svg#i-plus"/></svg><svg class="ico"><use href="icons.svg#i-sound"/></svg><svg class="ico"><use href="icons.svg#i-shield"/></svg><svg class="ico"><use href="icons.svg#i-doc"/></svg><svg class="ico"><use href="icons.svg#i-tools"/></svg><svg class="ico"><use href="icons.svg#i-check"/></svg><svg class="ico"><use href="icons.svg#i-receipt"/></svg>
+    </div>
+  </div></div>
+
+  <div class="device auto"><div class="safe">
+    <h2 class="head">Кнопки</h2>
+    <button class="btn btn-primary btn-block">Открыть</button>
+    <button class="btn btn-secondary btn-block">Вторичная</button>
+    <button class="btn btn-block">На поверхности</button>
+    <button class="btn btn-price btn-block">Усилить за 150 <svg class="ico"><use href="icons.svg#i-gem"/></svg></button>
+    <button class="btn btn-primary btn-block" disabled>Неактивная</button>
+    <div style="display:flex;gap:var(--space-3)">
+      <button class="btn btn-icon" aria-label="Настройки"><svg class="ico"><use href="icons.svg#i-gear"/></svg></button>
+      <button class="btn btn-icon" aria-label="Закрыть"><svg class="ico"><use href="icons.svg#i-close"/></svg></button>
+      <button class="btn btn-icon btn-primary" aria-label="Отправить"><svg class="ico"><use href="icons.svg#i-send"/></svg></button>
+    </div>
+    <h2 class="head">Плашки валют</h2>
+    <div class="topbar">
+      <div class="pill pill-energy"><svg class="ico"><use href="icons.svg#i-energy"/></svg><span>0</span><button class="pill-plus" aria-label="Пополнить энергию"><svg class="ico"><use href="icons.svg#i-plus"/></svg></button></div>
+      <div class="pill pill-gem"><svg class="ico"><use href="icons.svg#i-gem"/></svg><span>99 999</span><button class="pill-plus" aria-label="Пополнить алмазы"><svg class="ico"><use href="icons.svg#i-plus"/></svg></button></div>
+    </div>
+    <div class="topbar">
+      <div class="pill pill-coin"><svg class="ico"><use href="icons.svg#i-coin"/></svg><span>50</span><button class="pill-plus" aria-label="Пополнить монеты"><svg class="ico"><use href="icons.svg#i-plus"/></svg></button></div>
+      <span class="spacer"></span>
+      <button class="btn btn-icon" aria-label="Настройки"><svg class="ico"><use href="icons.svg#i-gear"/></svg></button>
+    </div>
+    <h2 class="head">Чипы и переключатель</h2>
+    <div class="chips"><button class="chip" aria-pressed="true">Для начала</button><button class="chip" aria-pressed="false">Новые</button><button class="chip" aria-pressed="false">Популярные</button></div>
+    <div class="segmented"><button aria-selected="true" data-target="a">Энергия</button><button aria-selected="false" data-target="b">Алмазы</button></div>
+    <div data-panel="a" class="small">Панель «Энергия»</div><div data-panel="b" class="small" hidden>Панель «Алмазы»</div>
+  </div></div>
+
+  <div class="device auto"><div class="safe">
+    <h2 class="head">Карточки</h2>
+    <div class="card card-story">
+      <div class="cover" style="background:var(--art-5)"><span class="badge-flag">Рекомендуем</span>Обложка истории</div>
+      <div class="body">
+        <span class="tag">Фэнтези · Море</span>
+        <div class="head">Очень длинное название истории, которое занимает несколько строк и обязано перенестись как положено без поломки карточки</div>
+        <p class="small clamp">Описание на триста символов: её именуют сбоем в законах этого мира, но только она способна переписать его судьбу, или стать последней жертвой неминуемого конца, и ради этого ей придётся пройти через дороги, о которых не рассказывают ни в одной книге, и сделать выбор, от которого зависят многие жизни вокруг.</p>
+        <button class="btn btn-primary">Открыть</button>
+      </div>
+    </div>
+    <div class="card card-reward">
+      <div class="info"><div class="head">Бесплатная энергия</div><p class="small">Получайте порцию каждые 3 часа</p>
+        <div class="foot"><span class="timer"><svg class="ico-s"><use href="icons.svg#i-timer"/></svg><time>02:59:26</time></span></div></div>
+      <div class="art"><svg class="ico"><use href="icons.svg#i-energy"/></svg></div>
+    </div>
+    <div class="grid2">
+      <div class="card card-product"><div class="art"><svg class="ico"><use href="icons.svg#i-gem"/></svg></div><span class="amount"><svg class="ico-s"><use href="icons.svg#i-gem"/></svg>130</span><button class="btn btn-price btn-block">9,99 $</button></div>
+      <div class="card card-product card-best"><div class="art"><svg class="ico"><use href="icons.svg#i-gem"/></svg></div><span class="amount"><svg class="ico-s"><use href="icons.svg#i-gem"/></svg>270</span><button class="btn btn-price btn-block">19,99 $</button></div>
+    </div>
+  </div></div>
+
+  <div class="device auto"><div class="safe">
+    <h2 class="head">Поля и строки</h2>
+    <div class="group">
+      <div class="row"><svg class="ico"><use href="icons.svg#i-bell"/></svg><span class="label">Уведомления</span><button class="switch" role="switch" aria-checked="true" aria-label="Уведомления"></button></div>
+      <div class="row"><svg class="ico"><use href="icons.svg#i-globe"/></svg><span class="label">Язык</span><span class="stepper" data-values="Русский|English"><button aria-label="Предыдущий язык"><svg class="ico"><use href="icons.svg#i-chevron-l"/></svg></button><output>Русский</output><button aria-label="Следующий язык"><svg class="ico"><use href="icons.svg#i-chevron-r"/></svg></button></span></div>
+      <button class="row"><svg class="ico"><use href="icons.svg#i-support"/></svg><span class="label">Поддержка</span><svg class="ico"><use href="icons.svg#i-chevron-r"/></svg></button>
+    </div>
+    <label class="search"><svg class="ico"><use href="icons.svg#i-search"/></svg><input placeholder="Истории, авторы…" aria-label="Поиск"></label>
+    <h2 class="head">Навигация и чат</h2>
+    <nav class="tabbar" style="margin:0">
+      <button class="tab" aria-current="page"><svg class="ico"><use href="icons.svg#i-book"/></svg>Истории</button>
+      <button class="tab"><svg class="ico"><use href="icons.svg#i-chat"/></svg>Чат</button>
+      <button class="tab"><svg class="ico"><use href="icons.svg#i-bag"/></svg>Образы<span class="badge">24</span></button>
+    </nav>
+    <div class="bubble them">Реплика героя слева.</div>
+    <div class="bubble me">Моя реплика справа.</div>
+    <div class="chat-input"><input placeholder="Сказать…" aria-label="Сообщение"><button class="btn btn-icon btn-primary" aria-label="Отправить"><svg class="ico"><use href="icons.svg#i-send"/></svg></button></div>
+    <div class="toast" style="position:static">Тост: сохранено</div>
+  </div></div>
+</div>
+<script src="shell.js"></script>
+</body>
+</html>
