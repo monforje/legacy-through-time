@@ -87,5 +87,44 @@ namespace LegacyThroughTime.Prototype.Tests
             Assert.That(Wheel.Angle(4, 4), Is.EqualTo(1440f - 4 * 36f));
             Assert.That((Wheel.Angle(4, 4) % 360 + 360) % 360, Is.EqualTo(216f), "the same 216 degrees the mockup stopped at");
         }
+
+        [Test]
+        public void TheShopHasTheStarterSetThreeEnergyPacksAndThreeGemPacks()
+        {
+            Assert.That(ShopCatalog.Offers.Count(o => o.Section == ShopCatalog.SectionStarter), Is.EqualTo(1));
+            Assert.That(ShopCatalog.Offers.Count(o => o.Section == ShopCatalog.SectionEnergy), Is.EqualTo(3));
+            Assert.That(ShopCatalog.Offers.Count(o => o.Section == ShopCatalog.SectionGems), Is.EqualTo(3));
+            Assert.That(ShopCatalog.Offers.Select(o => o.Id).Distinct().Count(), Is.EqualTo(ShopCatalog.Offers.Length), "product ids are unique");
+            foreach (var section in new[] { ShopCatalog.SectionEnergy, ShopCatalog.SectionGems })
+                Assert.That(ShopCatalog.Offers.Count(o => o.Section == section && o.Best), Is.EqualTo(1), section);
+            Assert.That(ShopCatalog.Offers.All(o => o.Gems + o.Energy > 0 && o.Placeholder.Length > 0), Is.True);
+            Assert.That(ShopCatalog.FindOffer("gems_270").Gems, Is.EqualTo(270));
+            Assert.That(ShopCatalog.FindOffer("nope"), Is.Null);
+        }
+
+        [Test]
+        public void BoughtEnergyStaysAboveTheDailyFill()
+        {
+            var energy = new Energy { value = 3, day = "2026-10-29" };
+            energy.Add(30);
+            Assert.That(energy.value, Is.EqualTo(33));
+            Assert.That(energy.NewDay("2026-10-30"), Is.False, "nothing to fill: already above the norm");
+            Assert.That(energy.value, Is.EqualTo(33), "a new day does not take the bought energy away");
+            var low = new Energy { value = 2, day = "2026-10-29" };
+            Assert.That(low.NewDay("2026-10-30"), Is.True);
+            Assert.That(low.value, Is.EqualTo(Energy.Max));
+        }
+
+        [Test]
+        public void TheToastNamesWhatWasPaidOutInRussian()
+        {
+            Assert.That(ShopCatalog.Describe(ShopCatalog.FindOffer("starter")), Is.EqualTo("100 алмазов, 5 энергии"));
+            Assert.That(ShopCatalog.Describe(ShopCatalog.FindOffer("energy_15")), Is.EqualTo("15 энергии"));
+            Assert.That(ShopCatalog.Plural(1, "алмаз", "алмаза", "алмазов"), Is.EqualTo("алмаз"));
+            Assert.That(ShopCatalog.Plural(3, "алмаз", "алмаза", "алмазов"), Is.EqualTo("алмаза"));
+            Assert.That(ShopCatalog.Plural(11, "алмаз", "алмаза", "алмазов"), Is.EqualTo("алмазов"));
+            Assert.That(ShopCatalog.Plural(21, "алмаз", "алмаза", "алмазов"), Is.EqualTo("алмаз"));
+            Assert.That(ShopCatalog.Plural(112, "алмаз", "алмаза", "алмазов"), Is.EqualTo("алмазов"));
+        }
     }
 }

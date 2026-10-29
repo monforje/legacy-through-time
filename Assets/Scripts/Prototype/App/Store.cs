@@ -57,6 +57,7 @@ namespace LegacyThroughTime.Prototype
         {
             var products = new List<ProductDefinition>();
             foreach (var pack in ShopCatalog.Packs) products.Add(new ProductDefinition(pack.Id, ProductType.Consumable));
+            foreach (var offer in ShopCatalog.Offers) products.Add(new ProductDefinition(offer.Id, ProductType.Consumable));
             store.FetchProducts(products);
             store.FetchPurchases();
         }
@@ -86,19 +87,21 @@ namespace LegacyThroughTime.Prototype
         {
             var id = IdOf(order);
             var pack = ShopCatalog.Find(id);
+            var offer = pack == null ? ShopCatalog.FindOffer(id) : null;
             var transaction = order.Info?.TransactionID ?? "";
-            if (pack == null)
+            if (pack == null && offer == null)
             {
                 Debug.LogWarning("[store] an order of an unknown product: " + id);
                 return;                                   // not confirmed: it stays with the store
             }
             if (!Credited(transaction))
             {
-                Wallet.Add(pack.Coins);                    // saved by Wallet (PlayerPrefs.Save) ...
+                if (pack != null) Wallet.Add(pack.Coins);  // saved by Wallet (PlayerPrefs.Save) ...
+                else ShellPurse.Grant(offer);
                 Remember(transaction);                     // ... and the ledger, before the confirmation
             }
             store.ConfirmPurchase(order);
-            Finished?.Invoke(id, true, $"+{pack.Coins} монет. Спасибо!");
+            Finished?.Invoke(id, true, pack != null ? $"+{pack.Coins} монет. Спасибо!" : "Спасибо! Покупка зачислена");
         }
 
         static void OnConfirmed(Order order)

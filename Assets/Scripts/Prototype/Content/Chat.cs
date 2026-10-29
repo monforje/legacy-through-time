@@ -166,8 +166,8 @@ namespace LegacyThroughTime.Prototype
         public bool NewDay(string today)
         {
             if (day == today) return false;
-            var changed = value != Max;
-            day = today; value = Max;
+            var changed = value < Max;
+            day = today; value = Math.Max(value, Max);     // a new day fills it up to the norm, but never takes away what was bought
             return changed;
         }
 
@@ -183,7 +183,10 @@ namespace LegacyThroughTime.Prototype
         /// A message that got no reply gives its energy back.
         public void Refund() => value = Math.Min(Max, value + Cost);
 
-        public void Refill() => value = Max;
+        public void Refill() => value = Math.Max(value, Max);
+
+        /// Energy from a purchase, a reward or the wheel: it may stand above the norm (Max is the free daily fill).
+        public void Add(int amount) => value += Math.Max(0, amount);
     }
 
     /// One row of the "Чаты" list.
