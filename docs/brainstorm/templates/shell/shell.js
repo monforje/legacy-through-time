@@ -20,6 +20,20 @@ function initPanel(button, panel) {
   set(!panel.hidden);
 }
 
+function initCarousel(root) {
+  const slides = $$('.hero', root);
+  const dots = $$('.dots i', document.querySelector(root.dataset.dots));
+  const center = i => { root.scrollLeft = slides[i].offsetLeft - (root.clientWidth - slides[i].offsetWidth) / 2; };
+  const mark = () => {
+    const mid = root.scrollLeft + root.clientWidth / 2;
+    const near = slides.reduce((b, s, i) => Math.abs(s.offsetLeft + s.offsetWidth / 2 - mid) < Math.abs(slides[b].offsetLeft + slides[b].offsetWidth / 2 - mid) ? i : b, 0);
+    dots.forEach((d, i) => d.classList.toggle('on', i === near));
+    slides.forEach((s, i) => s.classList.toggle('on', i === near));
+  };
+  root.addEventListener('scroll', mark, { passive: true });
+  center(Number(root.dataset.start ?? 0)); mark();
+}
+
 function initChips(root) {
   const chips = $$('.chip', root);
   chips.forEach(c => c.addEventListener('click', () => chips.forEach(o => o.setAttribute('aria-pressed', String(o === c)))));
@@ -136,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $$('.tabbar').forEach(initTabs);
   $$('.chips').filter(c => !c.closest('.chat')).forEach(initChips);   // подсказки чата не фильтр, подсветка им не нужна
   $$('.segmented').forEach(initSegmented);
+  $$('.carousel[data-dots]').forEach(initCarousel);
   $$('.timer[data-seconds]').forEach(t => initCountdown(t, Number(t.dataset.seconds)));
   initSwitches(document);
   initSteppers(document);

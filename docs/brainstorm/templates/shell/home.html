@@ -9,7 +9,7 @@
 </head>
 <body>
 <div class="device"><div class="safe">
-  <div class="topbar">
+  <div class="topbar strip">
     <div class="pill pill-energy"><svg class="ico"><use href="icons.svg#i-energy"/></svg><span>2</span><a class="pill-plus" href="shop.html" aria-label="Пополнить энергию"><svg class="ico"><use href="icons.svg#i-plus"/></svg></a></div>
     <div class="pill pill-gem"><svg class="ico"><use href="icons.svg#i-gem"/></svg><span>50</span><a class="pill-plus" href="shop.html" aria-label="Пополнить алмазы"><svg class="ico"><use href="icons.svg#i-plus"/></svg></a></div>
     <span class="spacer"></span>
@@ -19,18 +19,18 @@
   <div class="scroll">
     <div style="position:relative;flex:none">
       <button class="btn btn-icon shuffle" aria-label="Случайная история"><svg class="ico"><use href="icons.svg#i-shuffle"/></svg></button>
-      <div class="carousel">
+      <div class="carousel" data-dots=".dots" data-start="1">
+        <article class="hero" style="background:var(--art-2)">
+          <div class="name">Город под водой</div>
+          <span class="tag">Фэнтези</span>
+          <p class="small clamp" style="color:var(--text)">Прилив уходит раз в сто лет. Этой ночью он не вернётся.</p>
+          <a class="btn btn-primary" href="chapters.html">Открыть</a>
+        </article>
         <article class="hero" style="background:var(--art-5)">
           <span class="badge-flag">Рекомендуем</span>
           <div class="name">Последний маяк</div>
           <span class="tag">Мистика · Море</span>
           <p class="small clamp" style="color:var(--text)">Остров не значится на картах, но каждую ночь на нём зажигается свет. Только она знает, кто его зажигает.</p>
-          <a class="btn btn-primary" href="chapters.html">Открыть</a>
-        </article>
-        <article class="hero" style="background:var(--art-2)">
-          <div class="name">Город под водой</div>
-          <span class="tag">Фэнтези</span>
-          <p class="small clamp" style="color:var(--text)">Прилив уходит раз в сто лет. Этой ночью он не вернётся.</p>
           <a class="btn btn-primary" href="chapters.html">Открыть</a>
         </article>
         <article class="hero" style="background:var(--art-8)">
@@ -41,7 +41,7 @@
         </article>
       </div>
     </div>
-    <div class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+    <div class="dots" aria-hidden="true"><i></i><i class="on"></i><i></i></div>
 
     <label class="search"><svg class="ico"><use href="icons.svg#i-search"/></svg><input placeholder="Истории, авторы…" aria-label="Поиск историй"></label>
     <div class="chips">
