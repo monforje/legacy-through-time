@@ -125,7 +125,8 @@ a.btn { text-decoration: none; }
 .pill-plus .ico { position: relative; width: 18px; height: 18px; }
 .topbar { display: flex; align-items: center; gap: var(--space-2); }
 .topbar .spacer { flex: 1; }
-.topbar.strip { padding: var(--space-3) 0; }   /* равные поля над и под полосой: между статус-баром и контентом */
+.topbar.strip { padding: var(--space-3) 0; }
+.topbar.strip .pill { flex: 1; }   /* две плашки делят ширину поровну, справа шестерёнка */   /* равные поля над и под полосой: между статус-баром и контентом */
 
 /* карточки */
 .card { background: var(--surface); border-radius: var(--radius-m); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
@@ -192,8 +193,8 @@ a.btn { text-decoration: none; }
 .card-best.big .art .ico { width: 64px; height: 64px; }
 .card-best.big .buy { flex: 1; display: flex; flex-direction: column; gap: var(--space-2); }
 .tab { text-decoration: none; }
-.carousel { display: flex; gap: var(--space-3); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; flex: none; position: relative; padding-inline: 11%; scroll-padding-inline: 11%; }
-.hero { flex: none; width: 78%; height: 300px; scroll-snap-align: center; border-radius: var(--radius-l); position: relative; overflow: hidden; background: var(--art-5); display: flex; flex-direction: column; justify-content: flex-end; gap: var(--space-2); padding: var(--space-4); }
+.carousel { display: flex; gap: var(--space-3); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; flex: none; position: relative; padding-inline: 8%; scroll-padding-inline: 8%; }
+.hero { flex: none; width: 100%; height: 300px; scroll-snap-align: center; border-radius: var(--radius-l); position: relative; overflow: hidden; background: var(--art-5); display: flex; flex-direction: column; justify-content: flex-end; gap: var(--space-2); padding: var(--space-4); }
 .hero { opacity: .5; transition: opacity .2s; }
 .hero.on { opacity: 1; }
 .hero::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, color-mix(in srgb, var(--scrim) 92%, transparent) 15%, transparent 80%); }
@@ -201,7 +202,7 @@ a.btn { text-decoration: none; }
 .hero .badge-flag { position: absolute; top: var(--space-3); right: var(--space-3); }
 .hero .name { position: absolute; top: 64px; left: var(--space-4); right: var(--space-4); font-size: 28px; font-weight: 800; text-align: center; line-height: 1.1; overflow-wrap: anywhere; }
 .hero .btn { align-self: flex-start; }
-.shuffle { position: absolute; left: calc(var(--space-2) * -1); top: 50%; margin-top: calc(var(--touch) / -2); z-index: 2; background: var(--accent); color: var(--accent-ink); }
+.shuffle { position: absolute; left: calc(92% + var(--space-3) / 2 - var(--touch) / 2 - 2px); top: 48px; z-index: 2;   /* в щели между центральной и правой карточкой, под бейджем */ background: var(--accent); color: var(--accent-ink); }
 .prizes { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2); }
 .prize { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--space-2) 0; border-radius: var(--radius-s); background: var(--surface); font: 800 var(--fs-small) var(--font); font-variant-numeric: tabular-nums; }
 .prize .ico { color: var(--accent); }
