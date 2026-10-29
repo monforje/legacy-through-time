@@ -1,0 +1,15 @@
+# On tender (~/heroine-chat/chat): nginx of tender.aag.company sends /heroine/ here.
+services:
+  chat:
+    build: { context: .., dockerfile: chat/Dockerfile }
+    image: heroine-chat
+    user: "${CHAT_UID:-1000}"       # the owner of ./data on the host (task chat:deploy passes it)
+    restart: unless-stopped
+    env_file: .env                  # AI_API_KEY, CHAT_TOKEN, CHAT_RATE; never in the image
+    ports: ["127.0.0.1:8765:8765"]
+    volumes: ["./data:/app/chat/data"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8765/api/night')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

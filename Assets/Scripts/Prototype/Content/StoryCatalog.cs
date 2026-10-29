@@ -9,6 +9,8 @@ namespace LegacyThroughTime.Prototype
         public string Title;
         public string Path;        // compiled chapter in StreamingAssets (`task ink`); null: "скоро"
         public string SaveId;      // the save slot of the chapter
+        public string Night;       // the night of the heroine chat after it (chat server, content/stories/*/chat); null: none
+        public string Heroine;     // who speaks in that night
         public bool Soon => Path == null;
     }
 
@@ -41,7 +43,8 @@ namespace LegacyThroughTime.Prototype
                 Chapters = new[]
                 {
                     // the save slot keeps the id of the story: the saves made before there were chapters still open
-                    new ChapterEntry { Number = 1, Title = "Перед дорогой", Path = "stories/golden-cage/episode-01.json", SaveId = "golden-cage" },
+                    new ChapterEntry { Number = 1, Title = "Перед дорогой", Path = "stories/golden-cage/episode-01.json", SaveId = "golden-cage",
+                                         Night = "ep01", Heroine = "Сююмбике" },
                     new ChapterEntry { Number = 2, Title = "Скоро", SaveId = "golden-cage-2" },
                     new ChapterEntry { Number = 3, Title = "Скоро", SaveId = "golden-cage-3" },
                     new ChapterEntry { Number = 4, Title = "Скоро", SaveId = "golden-cage-4" },

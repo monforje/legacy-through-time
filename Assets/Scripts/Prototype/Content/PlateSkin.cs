@@ -47,6 +47,7 @@ namespace LegacyThroughTime.Prototype
             PlateStyle.SpeechRight => Plain("plate-tail-l", TagSide.Right).With(s => s.Tail = TailSide.Left),
             PlateStyle.Thought => Cloud("thought"),
             PlateStyle.ThoughtPuff => Cloud("thought-cloud"),
+            PlateStyle.Voice => Plain("chat-veil", TagSide.Right).With(s => { s.TagSprite = "label-rose"; s.TagDark = true; }),
             _ => throw new ArgumentOutOfRangeException(nameof(style), style, null),
         };
 

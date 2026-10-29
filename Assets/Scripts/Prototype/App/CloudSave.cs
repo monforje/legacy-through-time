@@ -120,7 +120,8 @@ namespace LegacyThroughTime.Prototype
             var here = new Progress
             {
                 coins = Wallet.Coins, coinsAt = Wallet.ChangedAt, giftDay = Wallet.GiftDay,
-                words = new List<string>(Library.Open()), chapters = SaveStore.All(), credited = Store.Ledger(),
+                words = new List<string>(Library.Open()), chapters = SaveStore.All(), stats = SaveStore.AllStats(),
+                credited = Store.Ledger(),
             };
             // finish marks are PlayerPrefs keys, which cannot be listed: the chapters of this build and of the cloud
             var ids = new HashSet<string>();
@@ -150,6 +151,11 @@ namespace LegacyThroughTime.Prototype
                 seen |= !SaveStore.Finished(f.id);
                 SaveStore.RestoreFinished(f.id, f.at);
             }
+
+            var ended = new Dictionary<string, long>();
+            foreach (var s in here.stats) ended[s.chapter] = s.at;
+            foreach (var s in merged.stats)
+                if (!ended.TryGetValue(s.chapter, out var at) || at != s.at) SaveStore.WriteStats(s);
 
             var mine = new Dictionary<string, StorySave>();
             foreach (var c in here.chapters) mine[c.story] = c;

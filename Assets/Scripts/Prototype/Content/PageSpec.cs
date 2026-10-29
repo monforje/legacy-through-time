@@ -9,6 +9,7 @@ namespace LegacyThroughTime.Prototype
         SpeechRight, // everybody else: mirror
         Thought,     // dashed "drop" cloud with two bubbles
         ThoughtPuff, // scalloped cloud
+    Voice,       // the reader in the heroine chat, the Voice of her dream: smoky gauze, label on the right
     }
 
     sealed class Option

@@ -294,6 +294,13 @@ class Studio:
             g.link(g.add(g.mul(ham, .16), o.get('rough', .2)), i['Roughness'])
             g.bump(bsdf, [(ham, 1.0)], strength=.12, distance=.2)
             set_('Metallic', 1)
+        elif kind == 'gauze':          # the Voice's veil: thin silk you see the night through, its weave catches light
+            weave = g.voronoi(2.6, 41)
+            drift = g.noise(.09, 2, 53)
+            g.colour(bsdf, color, [(weave, .06), (drift, .1)])
+            set_('Roughness', .7); set_('Sheen Weight', 1); set_('Sheen Roughness', .25); set_('Specular IOR Level', .2)
+            g.link(g.add(g.mul(drift, .16), o.get('alpha', .45) - .08), i['Alpha'])
+            g.bump(bsdf, [(weave, 1.0)], strength=.2, distance=.15)
         elif kind == 'parchment':      # paper: fibres, cloudy stains, flecks, darker where it is shaded
             fine = g.noise(1.4, 3, 0)
             fibre = g.noise(.35, 4, 37)

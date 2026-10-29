@@ -22,6 +22,7 @@ import sprites  # noqa: E402,F401  (registers the SVG kit: its sizes and borders
 from kit.registry import REGISTRY  # noqa: E402
 
 import sprites3d  # noqa: E402
+import chat3d  # noqa: E402,F401  (the heroine chat's sprites, registered into sprites3d.KIT)
 from studio import SCALE, Studio, finish  # noqa: E402
 
 OUT = ROOT / 'png3d'

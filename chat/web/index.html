@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:,">
+<title>Беседа с Сююмбике</title>
+<style>
+/* The game's design system (docs/brainstorm/templates/DESIGN.md) drawn with the game's own Blender kit
+   (/kit/*.png = heritage/png3d). 1 CSS px = 1 unit of the 360-wide game canvas = 1 px of the kit at 1x; the PNGs
+   are @4x, so a border-image slice of N image px is a border of N/4 CSS px. Tiled sprites use `round`, as KitImage. */
+@font-face { font-family: "Yeseva One"; src: url(fonts/YesevaOne-Regular.ttf); font-display: swap; }
+@font-face { font-family: "Rubik"; src: url(fonts/Rubik-Bold.ttf); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Nunito"; src: url(fonts/Nunito-Medium.ttf); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Nunito"; src: url(fonts/Nunito-Bold.ttf); font-weight: 700; font-display: swap; }
+
+:root {
+  /* DESIGN.md palette (Theme.cs) */
+  --parchment: #f7e9d8;
+  --ink: #2a1b1b;
+  --emerald: #157554;
+  --scarlet: #e15654;
+  --rose: #f4a3a1;
+  --spring: #a3c98b;
+  --mint: #d9e1c8;
+  --bronze: #d49b55;
+
+  --accent: "Yeseva One", Georgia, serif;     /* Art.Accent: names of stories and chapters */
+  --sub: "Rubik", system-ui, sans-serif;      /* Art.Sub: labels, values */
+  --body: "Nunito", system-ui, sans-serif;    /* Art.Body / Art.Action */
+  --gutter: 16px;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--ink);
+  color: var(--parchment);
+  font: 500 16px/1.45 var(--body);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--scarlet); outline-offset: 3px; }
+
+/* ---------- kit pieces ----------
+   An element with data-kit="<sprite>" gets a canvas behind its content with the sprite drawn as the game's KitImage
+   draws it: 9-slice from slices.txt, whole tiles repeated along the edges (round), cut on whole device pixels.
+   (CSS border-image draws every piece on its own and leaves hairline seams between them.) The element must be
+   positioned; its content sits above the canvas. */
+[data-kit] { isolation: isolate; }
+.kit-bg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+
+/* the name tag (NameTag.cs): the label sticker, tilted, 17 px above the top edge, 24 px from the side */
+.tag {
+  position: absolute; top: -17px; z-index: 1;
+  min-width: 110px; height: 36px; padding: 6px 30px 4px;
+  display: flex; align-items: center; justify-content: center;
+  font: 700 15px/1 var(--sub); color: var(--parchment);
+  text-shadow: 0 1px 0 rgba(42, 27, 27, .45);
+  white-space: nowrap;
+}
+.tag::before, .tag::after {
+  content: ""; position: absolute; top: 50%; width: 10px; height: 10px; margin-top: -5px;
+  background: url(kit/label-orn.png) center / contain no-repeat;
+}
+.tag::before { left: 7px; }
+.tag::after { right: 7px; }
+.tag--left { left: 24px; transform: rotate(-1.6deg); }
+.tag--right { right: 24px; transform: rotate(1.4deg); }
+.tag--rose { color: var(--ink); text-shadow: none; }
+
+.mask {
+  display: inline-block; background: currentColor;
+  -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat;
+}
+
+/* ---------- the night ---------- */
+
+.night { position: relative; height: 100dvh; display: grid; place-items: center; overflow: hidden; }
+.night__bg {
+  position: absolute; inset: -24px;
+  background: var(--ink) center / cover no-repeat;
+  filter: blur(5px) saturate(.85) brightness(.62);
+}
+.night__bg::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 40%, transparent 25%, rgba(42, 27, 27, .9) 88%),
+    rgba(42, 27, 27, .25);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .night__bg { animation: breathe 16s ease-in-out infinite alternate; }
+  @keyframes breathe { from { transform: scale(1.03); } to { transform: scale(1.08); } }
+}
+
+.phone {
+  position: relative;
+  width: min(390px, 100vw); height: min(860px, 100dvh);
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr);
+}
+
+.top { display: flex; align-items: center; gap: 10px; padding: 14px var(--gutter) 8px; }
+.top__title { flex: 1; min-width: 0; }
+.top__title h1 {
+  margin: 0; font: 400 21px/1.15 var(--accent); color: var(--parchment);
+  text-shadow: 0 2px 10px rgba(42, 27, 27, .8);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.top__title p { margin: 3px 0 0; font-size: 13px; color: var(--parchment); opacity: .72; }
+.round-btn {
+  width: 40px; height: 42px; flex: none; border: 0; padding: 0 0 2px;
+  background: url(kit/round.png) center / contain no-repeat;
+  display: grid; place-items: center; color: var(--parchment);
+}
+.round-btn .mask { width: 20px; height: 20px; }
+.gear-btn { width: 44px; height: 46px; border: 0; padding: 0; background: url(kit/gear.png) center / contain no-repeat; }
+.round-btn:active, .gear-btn:active { transform: translateY(1px); }
+
+.feed {
+  overflow-y: auto; padding: 26px 12px 12px;
+  display: flex; flex-direction: column; gap: 26px;
+  overscroll-behavior: contain; scrollbar-width: none;
+  -webkit-mask: linear-gradient(transparent, #000 26px); mask: linear-gradient(transparent, #000 26px);
+}
+.feed::-webkit-scrollbar { display: none; }
+
+/* her line: the kit's plate (PlateSkin.Plain: pads 30 / 28 / 26), the emerald tag on the left */
+.line { position: relative; max-width: 92%; }
+.line--heroine { align-self: flex-start; }
+.line--voice { align-self: flex-end; }
+.say {
+  position: relative; min-height: 76px;
+  padding: 28px 30px 26px;
+  color: var(--ink); font: 500 17px/1.45 var(--body);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.say.is-streaming .say__text::after { content: "▍"; opacity: .5; }
+@media (prefers-reduced-motion: no-preference) {
+  .say.is-streaming .say__text::after { animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+}
+/* the Voice's line: the gauze veil, the rose tag on the right, italic */
+.line--voice .say { padding: 24px 24px 22px; min-height: 70px; font-style: italic; }
+
+.line__tools {
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: flex-start;
+  min-height: 24px; padding: 0 14px; font-size: 12px;
+}
+.report {
+  border: 0; background: none; padding: 2px 4px; color: var(--parchment); opacity: 0;
+  display: inline-flex; gap: 5px; align-items: center; transition: opacity .15s;
+}
+.report .mask { width: 14px; height: 14px; color: var(--scarlet); }
+.line:hover .report, .line:focus-within .report, .report.is-done { opacity: .85; }
+@media (hover: none) { .report { opacity: .6; } }
+.report.is-done { color: var(--spring); }
+.flag-note { padding: 1px 8px; border-radius: 999px; background: #a8302e; color: var(--parchment); font-weight: 700; }
+body:not(.debug-on) .flag-note { display: none; }
+
+.notice { align-self: center; width: 92%; position: relative; }
+.notice .say { color: var(--ink); text-align: center; font-size: 15px; }
+.notice .k-btn { margin-top: 10px; }
+
+.silence { align-self: flex-start; padding-left: 14px; font-style: italic; color: var(--parchment); opacity: .7; font-size: 14px; }
+
+.bottom { padding: 4px 12px calc(10px + env(safe-area-inset-bottom)); }
+.chips {
+  display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: none;
+  -webkit-mask: linear-gradient(90deg, #000 85%, transparent); mask: linear-gradient(90deg, #000 85%, transparent);
+}
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  position: relative; flex: none; height: 40px; padding: 10px 20px 13px; border: 0;
+  font: 700 14px/1 var(--body); color: var(--ink); background: none; white-space: nowrap;
+}
+.chips > .chip:last-child { margin-right: 40px; }
+.chip:active { transform: translateY(1px); }
+.chip:disabled { filter: saturate(.4) brightness(.8); cursor: default; }
+
+.composer { display: flex; align-items: flex-end; gap: 6px; }
+.field { position: relative; flex: 1; min-width: 0; min-height: 48px; padding: 13px 22px 13px; display: flex; }
+.field textarea {
+  flex: 1; min-width: 0; resize: none; border: 0; background: none; outline: none;
+  max-height: 110px; padding: 0; color: var(--ink); line-height: 22px; overflow-y: auto; scrollbar-width: none;
+}
+.field textarea::placeholder { color: var(--ink); opacity: .62; font-style: italic; }
+.field:focus-within { filter: drop-shadow(0 0 6px rgba(225, 86, 84, .45)); }
+.send { width: 48px; height: 48px; flex: none; border: 0; padding: 0; background: url(kit/chat-send.png) center / contain no-repeat; }
+.send:active:not(:disabled) { transform: translateY(1px); }
+.send:disabled { filter: grayscale(.7) brightness(.75); opacity: .7; cursor: default; }
+
+.foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; padding: 0 6px; font-size: 12px; }
+.foot__note { opacity: .7; }
+.beads { position: relative; display: flex; gap: 2px; flex: none; }
+.beads::before { content: ""; position: absolute; left: 4px; right: 4px; top: 50%; height: 1px; background: var(--scarlet); }
+.bead { position: relative; width: 12px; height: 12px; background: url(kit/chat-bead.png) center / contain no-repeat; }
+.bead.is-out { background-image: url(kit/chat-bead-out.png); }
+
+.wake {
+  position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; padding: 24px;
+  background: rgba(42, 27, 27, 0); pointer-events: none; opacity: 0; transition: opacity 1.2s, background 1.2s;
+}
+.wake.is-on { opacity: 1; pointer-events: auto; background: rgba(42, 27, 27, .78); }
+.wake__card { position: relative; max-width: 320px; padding: 34px 32px 38px; text-align: center; }
+.wake__card p { margin: 0 0 20px; font: 400 18px/1.45 var(--accent); color: var(--ink); }
+.k-btn {
+  position: relative; min-width: 160px; height: 50px; padding: 13px 26px 17px; border: 0; background: none;
+  font: 700 17px/1 var(--body); color: var(--parchment); text-shadow: 0 1px 0 rgba(42, 27, 27, .4);
+}
+.k-btn:active { transform: translateY(1px); }
+
+/* ---------- debug: a page of the kit (shop / library ground) ---------- */
+
+.debug {
+  position: relative; width: 420px; height: 100dvh; padding: 22px 24px 24px;
+  display: none; grid-template-rows: auto auto minmax(0, 1fr);
+  background: var(--ink); color: var(--parchment); font-size: 14px;
+}
+body.debug-on .debug { display: grid; }
+.debug__head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 8px; }
+.debug__head h2 { margin: 0; font: 400 19px var(--accent); }
+.tabs { display: flex; gap: 2px; flex-wrap: wrap; padding-bottom: 8px; border-bottom: 1px dashed rgba(247, 233, 216, .3); }
+.tab { border: 0; background: none; padding: 6px 9px; color: var(--parchment); opacity: .65; font: 700 13px var(--sub); }
+.tab[aria-selected="true"] { opacity: 1; box-shadow: inset 0 -2px 0 var(--scarlet); }
+.pane { overflow-y: auto; padding: 12px 2px 8px; scrollbar-width: thin; }
+.pane[hidden] { display: none; }
+.pane h3 { font: 700 12px var(--sub); color: var(--spring); margin: 16px 0 8px; }
+.pane h3:first-child { margin-top: 0; }
+.var { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 10px; padding: 5px 0; border-bottom: 1px solid rgba(247, 233, 216, .1); }
+.var output { color: var(--bronze); min-width: 22px; text-align: right; font-weight: 700; }
+.var input[type=range] { grid-column: 1 / -1; accent-color: var(--scarlet); width: 100%; }
+.var input[type=checkbox], .row input[type=checkbox] { accent-color: var(--scarlet); width: 17px; height: 17px; }
+.state-lines { margin: 0; padding-left: 18px; opacity: .85; }
+.state-lines li { margin-bottom: 6px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.row label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.input { width: 100%; background: rgba(247, 233, 216, .08); border: 1px solid rgba(247, 233, 216, .25); border-radius: 8px; padding: 7px 10px; }
+.input--short { width: 90px; }
+.hit { padding: 10px 0; border-bottom: 1px solid rgba(247, 233, 216, .1); }
+.hit__meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: baseline; font-size: 12px; opacity: .85; }
+.hit__meta b { font-size: 13px; }
+.layer { padding: 0 7px; border-radius: 999px; font: 700 11px/1.6 var(--sub); color: var(--ink); }
+.layer--fact { background: var(--emerald); color: var(--parchment); }
+.layer--setting { background: var(--spring); }
+.layer--fiction { background: var(--rose); }
+.layer--legend { background: var(--bronze); }
+.layer--interp { background: var(--mint); }
+.hit p { margin: 6px 0 0; font-size: 13px; line-height: 1.45; opacity: .9; }
+.empty { opacity: .6; font-style: italic; }
+.prompt { white-space: pre-wrap; font-size: 12.5px; line-height: 1.45; margin: 0; }
+.metrics { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; }
+.metrics dt { opacity: .65; }
+.debug .k-btn { min-width: 0; height: 44px; padding: 11px 20px 14px; font-size: 15px; }
+
+@media (max-width: 899px) {
+  body { grid-template-columns: 1fr; }
+  .debug { position: fixed; inset: auto 0 0 0; width: auto; height: 74dvh; z-index: 10; }
+}
+</style>
+</head>
+<body>
+
+<main class="night">
+  <div class="night__bg" id="bg"></div>
+  <section class="phone" aria-label="Беседа">
+    <header class="top">
+      <div class="top__title">
+        <h1 id="title">Ночь</h1>
+        <p id="subtitle">Сююмбике спит. Говорит Голос.</p>
+      </div>
+      <button class="round-btn" id="restart" title="Начать ночь заново" aria-label="Начать ночь заново">
+        <span class="mask" style="--m: url(kit/restart.png)"></span>
+      </button>
+      <button class="gear-btn" id="debug-toggle" title="Отладка" aria-label="Показать отладку" aria-pressed="false"></button>
+    </header>
+
+    <div class="feed" id="feed" aria-live="polite"></div>
+
+    <footer class="bottom">
+      <div class="chips" id="chips"></div>
+      <form class="composer" id="composer">
+        <div class="field" data-kit="chat-field">
+          <textarea id="input" rows="1" maxlength="600" placeholder="Сказать во сне…" aria-label="Что скажет Голос"></textarea>
+        </div>
+        <button class="send" id="send" type="submit" aria-label="Сказать" disabled></button>
+      </form>
+      <div class="foot">
+        <span class="foot__note">Вымышленный диалог. Сюжет и факты в эпизодах.</span>
+        <span class="beads" id="beads" role="img"></span>
+      </div>
+    </footer>
+
+    <div class="wake" id="wake" role="dialog" aria-modal="true" aria-labelledby="wake-text">
+      <div class="wake__card" data-kit="card">
+        <p id="wake-text"></p>
+        <button class="k-btn" data-kit="btn" id="wake-again">Уснуть снова</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<aside class="debug" data-kit="page" id="debug" aria-label="Отладка">
+  <div class="debug__head">
+    <h2>Отладка</h2>
+    <button class="round-btn" id="debug-close" aria-label="Скрыть отладку">
+      <span class="mask" style="--m: url(kit/exit.png)"></span>
+    </button>
+  </div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-pane="state" aria-selected="true">Состояние</button>
+    <button class="tab" role="tab" data-pane="sources" aria-selected="false">Сведения</button>
+    <button class="tab" role="tab" data-pane="prompt" aria-selected="false">Промпт</button>
+    <button class="tab" role="tab" data-pane="search" aria-selected="false">Поиск</button>
+    <button class="tab" role="tab" data-pane="stats" aria-selected="false">Замеры</button>
+  </div>
+
+  <div class="pane" id="pane-state">
+    <h3>Что читатель выбрал в эпизоде 1</h3>
+    <div id="vars"></div>
+    <h3>Что из этого видит героиня</h3>
+    <ul class="state-lines" id="state-lines"></ul>
+  </div>
+
+  <div class="pane" id="pane-sources" hidden>
+    <h3>Слои в поиске</h3>
+    <div class="row" id="layers"></div>
+    <div class="row"><label>Фрагментов <input class="input input--short" id="k" type="number" min="0" max="12" value="6"></label></div>
+    <h3>Запрос</h3>
+    <p class="empty" id="query">Пока ничего не спрошено.</p>
+    <div id="hits"></div>
+  </div>
+
+  <div class="pane" id="pane-prompt" hidden>
+    <pre class="prompt" id="prompt"><span class="empty">Промпт появится после первой реплики.</span></pre>
+  </div>
+
+  <div class="pane" id="pane-search" hidden>
+    <form id="search-form">
+      <div class="row"><input class="input" id="search-q" placeholder="Что искать в корпусе"></div>
+      <div class="row">
+        <label>До года <input class="input input--short" id="search-year" type="number" placeholder="любой"></label>
+        <label><input type="checkbox" id="search-all" checked> все слои</label>
+        <button class="k-btn" data-kit="btn" type="submit">Найти</button>
+      </div>
+    </form>
+    <div id="search-hits"></div>
+  </div>
+
+  <div class="pane" id="pane-stats" hidden>
+    <dl class="metrics" id="metrics"></dl>
+  </div>
+</aside>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("suyumbike:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("suyumbike:" + k, JSON.stringify(v)); } catch {} },
+};
+const LAYERS = ["fact", "setting", "fiction", "legend", "interp"];
+const LAYER_NAMES = { fact: "факт", setting: "быт", fiction: "вымысел", legend: "легенда", interp: "трактовка", canon: "канон" };
+// the public server wants its token: open the page once as /?token=..., it is remembered
+const token = new URLSearchParams(location.search).get("token") ?? store.get("token", "");
+store.set("token", token);
+const json = (body) => ({
+  method: "POST",
+  headers: { "Content-Type": "application/json", "X-Game-Token": token },
+  body: JSON.stringify(body),
+});
+
+let night = null, history = [], state = {}, layers = [], busy = false;
+const totals = { cost: 0, turns: 0 };
+const last = {};
+
+/* ---------- the kit: KitImage.cs in a canvas ---------- */
+
+const kit = { slices: {}, images: {} };
+const KIT_SPRITES = ["plate", "plate-rose", "chat-veil", "label", "label-rose", "chat-chip", "chat-field", "card", "btn", "page"];
+
+async function loadKit() {
+  const txt = await (await fetch("kit/slices.txt")).text();
+  for (const line of txt.trim().split("\n")) {        // name left bottom right top sliced|tiled fill, in PNG px
+    const [name, l, b, r, t, kind, fill] = line.split(" ");
+    kit.slices[name] = { l: +l, b: +b, r: +r, t: +t, tiled: kind === "tiled", fill: fill === "1" };
+  }
+  await Promise.all(KIT_SPRITES.map((name) => new Promise((done) => {
+    const img = new Image();
+    img.onload = img.onerror = done;
+    img.src = `kit/${name}.png`;
+    kit.images[name] = img;
+  })));
+  document.querySelectorAll("[data-kit]").forEach(kitify);
+  new MutationObserver((changes) => changes.forEach((m) => m.addedNodes.forEach((n) => {
+    if (n.nodeType !== 1) return;
+    if (n.dataset.kit) kitify(n);
+    n.querySelectorAll("[data-kit]").forEach(kitify);
+  }))).observe(document.body, { childList: true, subtree: true });
+}
+
+const kitResize = new ResizeObserver((entries) => entries.forEach((e) => paintKit(e.target)));
+function kitify(el) {
+  if (el.kitCanvas) return;
+  el.kitCanvas = document.createElement("canvas");
+  el.kitCanvas.className = "kit-bg";
+  el.kitCanvas.setAttribute("aria-hidden", "true");
+  el.prepend(el.kitCanvas);
+  kitResize.observe(el);
+}
+
+/** Cut positions along one side: the two borders, then a whole number of tiles in between (KitImage.Cuts). */
+function cuts(size, b0, b1, tile, tiled) {
+  const start = Math.round(b0), end = Math.round(size - b1), mid = end - start;
+  const n = tiled && tile > 0 ? Math.max(1, Math.round(mid / tile)) : 1;
+  const out = [0, start];
+  for (let i = 1; i < n; i++) out.push(Math.round(start + (mid * i) / n));
+  out.push(end, size);
+  return out;
+}
+
+function paintKit(el) {
+  const c = el.kitCanvas, name = el.dataset.kit, img = kit.images[name], s = kit.slices[name];
+  if (!c || !img?.naturalWidth) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = Math.round(el.offsetWidth * dpr), H = Math.round(el.offsetHeight * dpr);
+  if (!W || !H) return;
+  c.width = W; c.height = H;
+  const g = c.getContext("2d");
+  g.imageSmoothingQuality = "high";
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  if (!s) { g.drawImage(img, 0, 0, W, H); return; }
+  const k = dpr / 4;                                   // PNG @4x px -> device px
+  let [L, R, T, B] = [s.l * k, s.r * k, s.t * k, s.b * k];
+  const kx = L + R > W ? W / (L + R) : 1, ky = T + B > H ? H / (T + B) : 1;   // squeeze, as Sliced does
+  L *= kx; R *= kx; T *= ky; B *= ky;
+  const xs = cuts(W, L, R, (iw - s.l - s.r) * k, s.tiled);
+  const ys = cuts(H, T, B, (ih - s.t - s.b) * k, s.tiled);
+  const sx = [0, s.l, iw - s.r, iw], sy = [0, s.t, ih - s.b, ih];
+  for (let i = 0; i < xs.length - 1; i++) {
+    for (let j = 0; j < ys.length - 1; j++) {
+      const col = i === 0 ? 0 : i === xs.length - 2 ? 2 : 1;
+      const row = j === 0 ? 0 : j === ys.length - 2 ? 2 : 1;
+      const dw = xs[i + 1] - xs[i], dh = ys[j + 1] - ys[j];
+      if ((col === 1 && row === 1 && !s.fill) || dw <= 0 || dh <= 0) continue;
+      g.drawImage(img, sx[col], sy[row], sx[col + 1] - sx[col], sy[row + 1] - sy[row], xs[i], ys[j], dw, dh);
+    }
+  }
+}
+
+/* ---------- start ---------- */
+
+async function boot() {
+  await loadKit();
+  night = await (await fetch("api/night")).json();
+  $("#title").textContent = night.title;
+  $("#subtitle").textContent = `${night.year} год. Сююмбике спит. Говорит Голос.`;
+  $("#bg").style.backgroundImage = `url(art/${night.background})`;
+  $("#wake-text").textContent = night.wake;
+
+  state = Object.fromEntries(Object.entries(night.vars).map(([k, v]) => [k, v.default]));
+  Object.assign(state, store.get("state", {}));
+  layers = store.get("layers", [...night.layers]);
+  history = store.get("history:" + night.id, []);
+  setDebug(store.get("debug", false));
+
+  renderVars(); renderLayers(); renderChips(); renderStats();
+  if (!history.length) startNight(); else redraw();
+  updateLeft();
+}
+
+/* ---------- night ---------- */
+
+function startNight() {
+  history = [{ role: "heroine", content: night.opening[Math.floor(Math.random() * night.opening.length)] }];
+  save(); redraw();
+  $("#wake").classList.remove("is-on");
+  updateLeft();
+  $("#input").focus();
+}
+const voiceCount = () => history.filter((m) => m.role === "voice").length;
+const save = () => store.set("history:" + night.id, history);
+
+function updateLeft() {
+  const left = Math.max(0, night.limit - voiceCount());
+  const beads = $("#beads");
+  beads.innerHTML = "";
+  for (let i = 0; i < night.limit; i++) {
+    const b = document.createElement("span");
+    b.className = "bead" + (i >= left ? " is-out" : "");
+    beads.append(b);
+  }
+  beads.setAttribute("aria-label", left ? `Осталось ${left} из ${night.limit}` : "Ночь кончилась");
+  beads.title = beads.getAttribute("aria-label");
+  $("#chips").hidden = left === 0;
+  if (left === 0 && !busy) setTimeout(() => $("#wake").classList.add("is-on"), 900);
+  syncSend();
+}
+
+function redraw() {
+  $("#feed").innerHTML = "";
+  history.forEach((m, i) => addLine(m.role, m.content, { index: i, flags: m.flags }));
+}
+
+function addLine(role, text, { index, flags = [], streaming = false } = {}) {
+  if (role === "heroine" && text.startsWith("[ВНЕ РОЛИ]")) {
+    return notice(text.replace("[ВНЕ РОЛИ]", "").trim(), "Важно");
+  }
+  const line = document.createElement("div");
+  line.className = `line line--${role}`;
+  const heroine = role === "heroine";
+  line.innerHTML =
+    `<div class="say${streaming ? " is-streaming" : ""}" data-kit="${heroine ? "plate" : "chat-veil"}">` +
+    `<span class="tag ${heroine ? "tag--left" : "tag--right tag--rose"}" data-kit="${heroine ? "label" : "label-rose"}">` +
+    `${heroine ? "Сююмбике" : "Голос"}</span>` +
+    `<span class="say__text"></span></div>` + (heroine ? `<div class="line__tools"></div>` : "");
+  line.querySelector(".say__text").textContent = text;
+  if (heroine && !streaming && index > 0) addTools(line, index, flags);
+  $("#feed").append(line);
+  scrollDown();
+  return line;
+}
+
+function notice(text, tag, retry) {
+  const box = document.createElement("div");
+  box.className = "notice";
+  box.innerHTML = `<div class="say" data-kit="plate-rose"><span class="tag tag--left tag--rose" data-kit="label-rose"></span><span class="say__text"></span></div>`;
+  box.querySelector(".tag").textContent = tag;
+  box.querySelector(".say__text").textContent = text;
+  if (retry) {
+    const b = document.createElement("button");
+    b.className = "k-btn"; b.type = "button"; b.textContent = "Повторить"; b.dataset.kit = "btn";
+    b.onclick = () => { box.remove(); retry(); };
+    box.querySelector(".say").append(document.createElement("br"), b);
+  }
+  $("#feed").append(box);
+  scrollDown();
+  return box;
+}
+
+function addTools(line, index, flags) {
+  const tools = line.querySelector(".line__tools");
+  tools.innerHTML = "";
+  const r = document.createElement("button");
+  r.className = "report"; r.type = "button";
+  r.innerHTML = `<span class="mask" style="--m: url(kit/flag.png)"></span><span>Пожаловаться</span>`;
+  r.onclick = async () => {
+    if (r.classList.contains("is-done")) return;
+    await fetch("api/report", json({ message: history[index].content, history: history.slice(0, index + 1), state }));
+    r.lastChild.textContent = "Жалоба отправлена"; r.classList.add("is-done");
+  };
+  tools.append(r);
+  for (const f of flags || []) {
+    const b = document.createElement("span");
+    b.className = "flag-note"; b.textContent = `${f.kind}: ${f.detail}`;
+    tools.append(b);
+  }
+}
+
+function scrollDown() { const f = $("#feed"); f.scrollTop = f.scrollHeight; }
+
+/* ---------- talking ---------- */
+
+async function say(text) {
+  text = text.trim();
+  if (!text || busy || voiceCount() >= night.limit) return;
+  history.push({ role: "voice", content: text });
+  save();
+  addLine("voice", text);
+  $("#input").value = ""; autosize();
+  updateLeft();
+  await reply();
+}
+
+async function reply() {
+  busy = true; syncSend();
+  const silence = document.createElement("div");
+  silence.className = "silence"; silence.textContent = "Сююмбике молчит…";
+  $("#feed").append(silence); scrollDown();
+
+  let line = null, text = "", done = null;
+  try {
+    const res = await fetch("api/chat", json({ history, state, layers, k: Number($("#k").value), debug: true }));
+    if (!res.ok) throw new Error(`сервер ответил ${res.status}: ${await res.text()}`);
+    for await (const [event, data] of sse(res)) {
+      if (event === "sources") showSources(data);
+      else if (event === "delta") {
+        if (!line) { silence.remove(); line = addLine("heroine", "", { streaming: true }); }
+        text += data.text;
+        line.querySelector(".say__text").textContent = text;
+        scrollDown();
+      } else if (event === "done") done = data;
+      else if (event === "error") throw new Error(data.message);
+    }
+    if (!text.trim()) throw new Error("пустой ответ модели");
+    history.push({ role: "heroine", content: text.trim(), flags: done?.flags || [] });
+    save();
+    line.remove();
+    addLine("heroine", text.trim(), { index: history.length - 1, flags: done?.flags || [] });
+    showStats(done);
+  } catch (e) {
+    if (line) line.remove();
+    const lastLine = history[history.length - 1];
+    notice(`Ответ не пришёл: ${e.message}`, "Сбой", lastLine?.role === "voice" ? reply : null);
+  } finally {
+    silence.remove();
+    busy = false; syncSend(); updateLeft();
+  }
+}
+
+async function* sse(res) {
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let i;
+    while ((i = buf.indexOf("\n\n")) >= 0) {
+      const block = buf.slice(0, i); buf = buf.slice(i + 2);
+      let event = "message", data = "";
+      for (const l of block.split("\n")) {
+        if (l.startsWith("event: ")) event = l.slice(7);
+        else if (l.startsWith("data: ")) data += l.slice(6);
+      }
+      if (data) yield [event, JSON.parse(data)];
+    }
+  }
+}
+
+/* ---------- composer ---------- */
+
+function syncSend() {
+  const over = voiceCount() >= night.limit;
+  $("#send").disabled = busy || over || !$("#input").value.trim();
+  $("#input").disabled = over;
+  $("#input").placeholder = over ? "Голос больше не слышен" : "Сказать во сне…";
+  document.querySelectorAll(".chip").forEach((c) => (c.disabled = busy || over));
+}
+function autosize() { const t = $("#input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 110) + "px"; }
+
+$("#input").addEventListener("input", () => { autosize(); syncSend(); });
+$("#input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); say($("#input").value); }
+});
+$("#composer").addEventListener("submit", (e) => { e.preventDefault(); say($("#input").value); });
+$("#restart").onclick = () => { if (!busy) startNight(); };
+$("#wake-again").onclick = () => startNight();
+
+function renderChips() {
+  $("#chips").innerHTML = "";
+  for (const c of night.chips) {
+    const b = document.createElement("button");
+    b.className = "chip"; b.type = "button"; b.textContent = c; b.dataset.kit = "chat-chip";
+    b.onclick = () => say(c);
+    $("#chips").append(b);
+  }
+}
+
+/* ---------- debug ---------- */
+
+function setDebug(on) {
+  document.body.classList.toggle("debug-on", on);
+  $("#debug-toggle").setAttribute("aria-pressed", String(on));
+  store.set("debug", on);
+}
+$("#debug-toggle").onclick = () => setDebug(!document.body.classList.contains("debug-on"));
+$("#debug-close").onclick = () => setDebug(false);
+document.querySelectorAll(".tab").forEach((t) => (t.onclick = () => {
+  document.querySelectorAll(".tab").forEach((x) => x.setAttribute("aria-selected", String(x === t)));
+  document.querySelectorAll(".pane").forEach((p) => (p.hidden = p.id !== "pane-" + t.dataset.pane));
+}));
+
+function renderVars() {
+  const box = $("#vars"); box.innerHTML = "";
+  for (const [name, spec] of Object.entries(night.vars)) {
+    const row = document.createElement("div");
+    row.className = "var";
+    const id = "var-" + name;
+    if (typeof spec.default === "boolean") {
+      row.innerHTML = `<label for="${id}"></label><input type="checkbox" id="${id}">`;
+      const input = row.querySelector("input");
+      input.checked = !!state[name];
+      input.onchange = () => { state[name] = input.checked; onState(); };
+    } else {
+      row.innerHTML = `<label for="${id}"></label><output></output><input type="range" id="${id}" min="${spec.min}" max="${spec.max}" step="1">`;
+      const input = row.querySelector("input"), out = row.querySelector("output");
+      input.value = state[name]; out.textContent = state[name];
+      input.oninput = () => { state[name] = Number(input.value); out.textContent = input.value; onState(); };
+    }
+    row.querySelector("label").textContent = spec.label;
+    box.append(row);
+  }
+  previewState();
+}
+function onState() { store.set("state", state); previewState(); }
+let previewTimer = null;
+function previewState() {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(async () => {
+    const res = await fetch("api/state", json(state));
+    if (res.ok) renderStateLines(await res.json());
+  }, 150);
+}
+function renderStateLines(lines) {
+  const sl = $("#state-lines"); sl.innerHTML = "";
+  if (!lines.length) sl.innerHTML = `<li class="empty">Ничего особенного.</li>`;
+  lines.forEach((s) => { const li = document.createElement("li"); li.textContent = s; sl.append(li); });
+}
+
+function renderLayers() {
+  const box = $("#layers"); box.innerHTML = "";
+  for (const l of LAYERS) {
+    const lab = document.createElement("label");
+    lab.innerHTML = `<input type="checkbox"> <span class="layer layer--${l}">${LAYER_NAMES[l]}</span>`;
+    const input = lab.querySelector("input");
+    input.checked = layers.includes(l);
+    input.onchange = () => {
+      layers = [...box.querySelectorAll("input")].map((x, i) => x.checked && LAYERS[i]).filter(Boolean);
+      store.set("layers", layers);
+    };
+    box.append(lab);
+  }
+}
+
+function hitHtml(h) {
+  const el = document.createElement("div");
+  el.className = "hit";
+  el.innerHTML = `<div class="hit__meta"><span class="layer layer--${h.layer}"></span><b></b><span></span></div><p></p>`;
+  el.querySelector(".layer").textContent = LAYER_NAMES[h.layer] || h.layer;
+  el.querySelector("b").textContent = h.title + (h.heading ? " › " + h.heading : "");
+  el.querySelector(".hit__meta span:last-child").textContent =
+    `${h.event_year ?? "без года"}, вес ${h.score.toFixed(4)}, по смыслу ${h.dense_rank ?? "–"}-й, по словам ${h.sparse_rank ?? "–"}-й`;
+  el.querySelector("p").textContent = h.text;
+  return el;
+}
+
+function showSources(d) {
+  $("#query").textContent = d.query || "—";
+  $("#query").classList.toggle("empty", !d.query);
+  const hits = $("#hits"); hits.innerHTML = "";
+  if (!d.hits.length) hits.innerHTML = `<p class="empty">Ничего не найдено или поиск выключен.</p>`;
+  d.hits.forEach((h) => hits.append(hitHtml(h)));
+  renderStateLines(d.state_lines);
+  if (d.system) $("#prompt").textContent = d.system;
+  last.input = d.input_flags?.length ? d.input_flags.join(", ") : undefined;
+  last.retrieval = d.retrieval_ms;
+}
+
+function showStats(d) {
+  if (!d) return;
+  const u = d.usage || {};
+  totals.turns += 1; totals.cost += u.cost || 0;
+  Object.assign(last, {
+    first: d.first_token_ms, total: d.total_ms, prompt: u.prompt_tokens, completion: u.completion_tokens,
+    reasoning: u.completion_tokens_details?.reasoning_tokens, cost: u.cost, finish: d.finish_reason,
+  });
+  renderStats();
+}
+function renderStats() {
+  const rows = [
+    ["Модель", night.model],
+    ["Размышление", JSON.stringify(night.reasoning)],
+    ["Эмбеддинги", `${night.index.embed_model}, ${night.index.chunks} фрагментов`],
+    ["Индекс собран", night.index.built_at],
+    ["Поиск, мс", last.retrieval],
+    ["Первое слово, мс", last.first],
+    ["Весь ответ, мс", last.total],
+    ["Токены вход / выход", last.prompt != null ? `${last.prompt} / ${last.completion}` : undefined],
+    ["Из них размышление", last.reasoning],
+    ["Цена ответа, $", last.cost?.toFixed(6)],
+    ["Конец ответа", last.finish],
+    ["Флаги входа", last.input],
+    ["Всего ответов / $", totals.turns ? `${totals.turns} / ${totals.cost.toFixed(5)}` : undefined],
+  ];
+  $("#metrics").innerHTML = "";
+  for (const [k, v] of rows) {
+    if (v == null) continue;
+    const dt = document.createElement("dt"); dt.textContent = k;
+    const dd = document.createElement("dd"); dd.textContent = v;
+    $("#metrics").append(dt, dd);
+  }
+}
+
+$("#search-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const q = $("#search-q").value.trim();
+  if (!q) return;
+  const box = $("#search-hits");
+  box.innerHTML = `<p class="empty">Ищу…</p>`;
+  const year = $("#search-year").value ? Number($("#search-year").value) : null;
+  const res = await fetch("api/search", json({ q, year, layers: $("#search-all").checked ? null : layers, k: 10 }));
+  const hits = await res.json();
+  box.innerHTML = "";
+  if (!hits.length) box.innerHTML = `<p class="empty">Ничего не найдено.</p>`;
+  hits.forEach((h) => box.append(hitHtml(h)));
+});
+
+boot().catch((e) => notice(`Сервер беседы не отвечает: ${e.message}. Запустите task chat:serve.`, "Сбой"));
+</script>
+</body>
+</html>

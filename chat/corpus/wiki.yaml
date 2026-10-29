@@ -1,0 +1,25 @@
+# Статьи русской Википедии (CC BY-SA 4.0) для корпуса.
+# `uv run python -m rag fetch-wiki` скачивает их в corpus/wiki/<id>.md.
+# Файл с ручными пометками <!-- meta: ... --> повторная загрузка не затирает.
+skip_sections:
+  - Примечания
+  - Литература
+  - Ссылки
+  - См. также
+  - Источники
+  - Галерея
+  - Библиография
+articles:
+  - { id: wiki-suyumbike, title: Сююмбике }
+  - { id: wiki-yusuf, title: Юсуф-бий }
+  - { id: wiki-jan-ali, title: Джан-Али }
+  - { id: wiki-gauharshad, title: Гаухаршад }
+  - { id: wiki-safa-girey, title: Сафа-Гирей }
+  - { id: wiki-nogai-horde, title: Ногайская Орда }
+  - { id: wiki-mangyts, title: Мангыты }
+  - { id: wiki-kazan-khanate, title: Казанское ханство }
+  - { id: wiki-kazan-history, title: Казанская история, layer: interp }
+  - { id: wiki-kalfak, title: Калфак, layer: setting }
+  - { id: wiki-katyk, title: Катык, layer: setting }
+  - { id: wiki-kobyz, title: Кобыз, layer: setting }
+  - { id: wiki-yurt, title: Юрта, layer: setting }

@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "chat/web/index.html"
+        ],
+        "createdAt": "2026-10-29T12:33:37.212Z",
+        "reason": "Claude: backgrounds here are kit sprites drawn via border-image (parchment plates, field), invisible to the checker; flagged pair ink-on-ink is really ink on parchment #f7e9d8"
+      }
+    ]
+  }
+}

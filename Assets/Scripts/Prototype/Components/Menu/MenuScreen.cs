@@ -140,6 +140,23 @@ namespace LegacyThroughTime.Prototype
             return false;
         }
 
+        // ------------------------------------------------------------ the night after a chapter
+        /// "Сон" between the purse and the gear: the heroine of a chapter read waits for the Voice of her dream.
+        public void ShowDream(Action open)
+        {
+            if (!Root || Root.Find("Dream")) return;
+            var pill = Ui.Img(Root, "Dream", Art.Sprite("pill"));
+            pill.type = Art.Tiled("pill") ? Image.Type.Tiled : Image.Type.Sliced;
+            pill.raycastTarget = true;
+            Ui.Box(pill.rectTransform, A.TopCenter, A.TopCenter, new Vector2(0, -(Metrics.InsetTop + 16 + Viewport.ExtraTop)), new Vector2(104, 44));
+            Ui.Lift(pill, 4, .3f);
+            Ui.Icon(pill.rectTransform, "Bubble", "bubble", A.MidLeft, A.MidLeft, new Vector2(14, 1), 20);
+            var label = Ui.Txt(pill.rectTransform, "Text", "Сон", Art.Accent, 18, Theme.Parchment, TextAnchor.MiddleLeft);
+            Ui.Emboss(label);
+            Ui.Box(label.rectTransform, A.MidLeft, A.MidLeft, new Vector2(42, 1), new Vector2(56, 30));
+            PressButton.On(pill.gameObject, () => { if (!leaving) open(); }, .95f);
+        }
+
         // ------------------------------------------------------------ a newer build
         /// A card over the stories: a newer build of the game can be downloaded; "Позже" removes it. `download` starts
         /// the update and reports progress through the callback it is given (null = back to normal). `auto` starts

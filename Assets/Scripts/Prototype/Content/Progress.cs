@@ -23,7 +23,8 @@ namespace LegacyThroughTime.Prototype
     }
 
     /// Everything of the reader's that should outlive a phone: the purse, the day of the last gift, the words of the
-    /// library, the finished chapters, the chapters in progress and the purchases already credited. One copy lives on
+    /// library, the finished chapters, the chapters in progress, the stats each finished chapter ended with and the
+    /// purchases already credited. One copy lives on
     /// the phone (spread over the stores that own each part), one in the reader's Google Play saved games.
     [Serializable]
     sealed class Progress
@@ -37,6 +38,7 @@ namespace LegacyThroughTime.Prototype
         public List<string> words = new();
         public List<FinishMark> finished = new();
         public List<StorySave> chapters = new();
+        public List<ChapterStats> stats = new();
         public List<string> credited = new();
 
         public static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -68,6 +70,11 @@ namespace LegacyThroughTime.Prototype
             foreach (var s in latest.Values)
                 if (!done.TryGetValue(s.story, out var finishedAt) || finishedAt <= s.at)
                     merged.chapters.Add(new StorySave { story = s.story, machine = s.machine, background = s.background, at = s.at });
+
+            var ends = new Dictionary<string, ChapterStats>();
+            foreach (var s in Both(here.stats, cloud.stats))
+                if (s.chapter != null && (!ends.TryGetValue(s.chapter, out var other) || s.at > other.at)) ends[s.chapter] = s;
+            merged.stats.AddRange(ends.Values);
             return merged;
         }
 

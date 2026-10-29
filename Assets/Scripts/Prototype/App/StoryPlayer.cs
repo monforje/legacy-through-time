@@ -21,6 +21,7 @@ namespace LegacyThroughTime.Prototype
         StoryAudio audio;
         SettingsToast settings;
         MenuScreen menu;
+        NightScreen night;                     // the talk with the heroine after a chapter; null elsewhere
         StoryEntry story;                      // null in the menu
         ChapterEntry chapter;                  // the chapter being read
         StoryMachine machine;
@@ -121,7 +122,7 @@ namespace LegacyThroughTime.Prototype
         }
 
         // ------------------------------------------------------------ menu and settings
-        void OpenSettings() => settings.Open(story != null ? ShowMenu : null, Quit, CloudRow());
+        void OpenSettings() => settings.Open(story != null ? ShowMenu : night != null ? night.Leave : null, Quit, CloudRow());
 
         /// The Google Play row of the settings: who is signed in, or the button that signs in; none without Play Games.
         SettingsToast.Cloud CloudRow() => CloudSave.Status switch
@@ -184,6 +185,7 @@ namespace LegacyThroughTime.Prototype
         void Back()
         {
             if (settings.IsOpen) settings.Close();
+            else if (night != null) night.Leave();
             else if (story != null) OpenSettings();
             else if (menu == null || !menu.Back()) Quit();
         }
@@ -199,10 +201,12 @@ namespace LegacyThroughTime.Prototype
             session++;
             story = null; chapter = null; machine = null; lastPlate = null; hints.Clear();
             host.Clear();
+            if (night != null) { StartCoroutine(night.Close()); night = null; }
             if (Persist) CloudSave.Sync();
             Scenery(MenuBackground);
             menu = new MenuScreen(host.Pages, StoryCatalog.All, ProgressOf, Open, Terms(), animated: true);
             if (update != null) menu.ShowUpdate(update, ShowUpdateProgress);
+            if (Persist && DreamOpen() is var (s, c) && c != null) menu.ShowDream(() => OpenNight(s, c));
             TellNews();
         }
 
@@ -259,6 +263,7 @@ namespace LegacyThroughTime.Prototype
                 }
             }
             if (fresh && Persist) SaveStore.Delete(part.SaveId);
+            if (save == null && Persist) ChapterStats.Before(entry, part, SaveStore.ReadStats)?.ApplyTo(machine);
             FillPurse();
 
             Scenery("title"); audio.Ui("title_in");
@@ -331,10 +336,18 @@ namespace LegacyThroughTime.Prototype
 
                     case StoryPhase.End:
                         Ended = true;
-                        if (Persist) { SaveStore.Delete(chapter.SaveId); SaveStore.MarkFinished(chapter.SaveId); }
+                        if (Persist)
+                        {
+                            // what the reader became goes on into the next chapter; the save of this one is done
+                            SaveStore.WriteStats(ChapterStats.Of(machine, chapter.SaveId, Progress.Now()));
+                            SaveStore.Delete(chapter.SaveId); SaveStore.MarkFinished(chapter.SaveId);
+                        }
                         audio.Scene("black"); audio.Ui("episode_end");
-                        Show(new Page { Id = "end", Title = new TitleSpec { Name = "Конец эпизода", Scene = "Тап — в меню" } },
-                             ScreenHost.Transition.Cross, ShowMenu);
+                        var dreams = Persist && Opens(chapter);
+                        var after = dreams ? "Тап — дальше" : "Тап — в меню";
+                        var (endedStory, endedChapter) = (story, chapter);
+                        Show(new Page { Id = "end", Title = new TitleSpec { Name = "Конец эпизода", Scene = after } },
+                             ScreenHost.Transition.Cross, dreams ? () => InviteToNight(endedStory, endedChapter) : ShowMenu);
                         return;
 
                     default:
@@ -342,6 +355,52 @@ namespace LegacyThroughTime.Prototype
                         return;
                 }
             }
+        }
+
+        // ------------------------------------------------------------ the night after a chapter
+        /// The night of a chapter opens once it is read, with the heroine's prophetic dream in it.
+        static bool Opens(ChapterEntry c) =>
+            c?.Night != null && Dream.Opens(SaveStore.Finished(c.SaveId), SaveStore.ReadStats(c.SaveId));
+
+        /// The latest night open in any story, for the "Сон" of the menu; (null, null) when there is none.
+        static (StoryEntry, ChapterEntry) DreamOpen()
+        {
+            (StoryEntry, ChapterEntry) found = (null, null);
+            foreach (var s in StoryCatalog.All)
+                foreach (var c in s.Chapters)
+                    if (!c.Soon && Opens(c)) found = (s, c);
+            return found;
+        }
+
+        /// After the end of a chapter: she falls asleep and the Voice comes; the reader answers or goes to the menu.
+        void InviteToNight(StoryEntry entry, ChapterEntry part)
+        {
+            Scenery("heroine_room_night");
+            var page = new Page
+            {
+                Id = "night",
+                Plate = new PlateSpec
+                {
+                    Style = PlateStyle.Narr, Label = "Ночь",
+                    Text = $"{part.Heroine} задремала у окна. И во сне снова, как тогда на башне, звучит Голос: «Ханбике…» Теперь ты можешь ответить ей.",
+                },
+                Choice = new ChoiceSpec { Items = new[] { new Option("Ответить", 0, 0), new Option("В меню", 0, 1) } },
+            };
+            Show(page, ScreenHost.Transition.Cross, () =>
+            {
+                if (host.Current.ChosenIndex == 0) OpenNight(entry, part);
+                else ShowMenu();
+            });
+        }
+
+        void OpenNight(StoryEntry entry, ChapterEntry part)
+        {
+            session++;
+            if (menu != null) { StartCoroutine(menu.Leave()); menu = null; }
+            story = null; chapter = null; machine = null; lastPlate = null; hints.Clear();
+            host.Clear();
+            Scenery("heroine_room_night");
+            night = new NightScreen(host.Pages, this, entry, part, SaveStore.ReadStats(part.SaveId), ShowMenu, (text, icon) => host.Banner(text, icon));
         }
 
         /// A line on its plate; a long one in parts, one screen each (the speaker says it in two taps), the hints of

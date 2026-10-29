@@ -3,6 +3,9 @@ btn-chosen 88 80 88 64 tiled 1
 btn-pressed 88 80 88 64 tiled 1
 btn 88 80 88 64 tiled 1
 card 104 120 104 104 tiled 1
+chat-chip 80 64 80 56 tiled 1
+chat-field 96 88 96 80 tiled 1
+chat-veil 128 128 128 128 tiled 1
 field 56 56 56 56 tiled 1
 frame 40 40 40 40 tiled 0
 info 128 128 128 128 tiled 1
