@@ -106,10 +106,15 @@ a.btn { text-decoration: none; }
 .btn-primary { background: var(--accent); color: var(--accent-ink); }
 .btn-secondary { background: transparent; box-shadow: inset 0 0 0 2px var(--line); }
 .btn-block { width: 100%; }
+.btn-icon.btn-sq { border-radius: var(--radius-s); }
+.btn-split { justify-content: space-between; min-height: 52px; text-align: left; }
+.btn-split .tail { display: inline-flex; align-items: center; gap: var(--space-2); font-variant-numeric: tabular-nums; }
+.btn-split .tail .ico { color: inherit; }
 .btn-login { border-radius: var(--radius-s); }   /* кнопки входа одинаковые, скругление меньше обычного */
 .btn-price { background: var(--accent); color: var(--accent-ink); }
 .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; }
 .btn-icon { padding: 0; border-radius: 50%; }
+.btn-icon.btn-sq { border-radius: var(--radius-s); }
 
 /* плашки валют */
 .pill {
@@ -208,13 +213,13 @@ a.btn { text-decoration: none; }
 .hero .btn { align-self: flex-start; }
 .shuffle { position: absolute; left: calc(8% - var(--space-3) / 2 - var(--touch) / 2 + 2px); top: 96px; z-index: 2;   /* на левом краю центральной карточки, в щели с левой */ background: var(--accent); color: var(--accent-ink); }
 .prizes { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2); }
-.prize { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--space-2) 0; border-radius: var(--radius-s); background: var(--surface); font: 800 var(--fs-small) var(--font); font-variant-numeric: tabular-nums; }
+.prize { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--space-1) 0; border-radius: var(--radius-s); background: var(--surface); font: 800 var(--fs-small) var(--font); font-variant-numeric: tabular-nums; }
 .prize .ico { color: var(--accent); }
-.wheel { position: relative; width: 280px; height: 280px; margin: var(--space-3) auto; flex: none; }
+.wheel { position: relative; width: 256px; height: 256px; margin: var(--space-2) auto; flex: none; }
 .wheel-disc { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 6px var(--surface-2);
   background: conic-gradient(from -18deg, var(--art-1) 0 36deg, var(--art-2) 36deg 72deg, var(--art-3) 72deg 108deg, var(--art-4) 108deg 144deg, var(--art-5) 144deg 180deg, var(--art-6) 180deg 216deg, var(--art-7) 216deg 252deg, var(--art-8) 252deg 288deg, var(--art-9) 288deg 324deg, var(--art-10) 324deg 360deg); }
 .wheel-disc .seg { position: absolute; left: 50%; top: 0; width: 0; height: 50%; transform-origin: 50% 100%; transform: rotate(calc(var(--i) * 36deg)); }
-.wheel-disc .seg .ico { position: absolute; top: 22px; left: -12px; color: var(--text); }
+.wheel-disc .seg .ico { position: absolute; top: 18px; left: -12px; color: var(--text); }
 .wheel-hub { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 4px var(--surface-2); display: grid; place-items: center; color: var(--accent); }
 .wheel-pointer { position: absolute; left: 50%; top: -10px; margin-left: -12px; width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 22px solid var(--accent); z-index: 2; }
 .mini { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
@@ -227,6 +232,11 @@ a.btn { text-decoration: none; }
 .modal { position: absolute; inset: var(--inset-top) var(--space-3) var(--inset-bottom); background: var(--surface); border-radius: var(--radius-l); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); box-shadow: var(--shadow); }
 .modal-head { display: flex; align-items: center; justify-content: center; position: relative; min-height: var(--touch); }
 .modal-head .btn-icon { position: absolute; right: 0; top: 0; background: none; }
+dialog.modal { width: auto; height: auto; max-width: none; max-height: none; margin: 0; border: 0; color: var(--text); }
+dialog.modal:not([open]) { display: none; }
+dialog.wheel-dialog { inset: var(--space-4) var(--space-3); }
+.modal .toast { bottom: var(--space-4); }
+.bg { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; }
 .dim { position: absolute; inset: 0; background: color-mix(in srgb, var(--scrim) 60%, transparent); }
 .sheet { position: absolute; left: var(--space-4); right: var(--space-4); bottom: 96px; background: var(--surface-2); border-radius: var(--radius-m); padding: var(--space-2); box-shadow: var(--shadow); display: flex; flex-direction: column; }
 .sheet[hidden] { display: none; }
@@ -249,7 +259,7 @@ a.btn { text-decoration: none; }
 .nowrap { white-space: nowrap; }
 .row[disabled] { opacity: .5; cursor: not-allowed; }
 .prize b { font-size: var(--fs-body); }
-.wheel-disc .seg .n { position: absolute; top: 48px; left: -22px; width: 44px; text-align: center; font: 800 var(--fs-small) var(--font); }
+.wheel-disc .seg .n { position: absolute; top: 44px; left: -22px; width: 44px; text-align: center; font: 800 var(--fs-small) var(--font); }
 .tabbar:has(.tab[aria-expanded="true"]) .tab[aria-current="page"] { color: var(--text-muted); background: none; }
 .tab[aria-expanded="true"] { color: var(--accent); background: var(--surface-2); }
 .demo { display: flex; gap: var(--space-2); justify-content: center; margin-bottom: var(--space-3); }

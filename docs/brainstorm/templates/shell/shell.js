@@ -86,18 +86,16 @@ function pick(prizes) {
   return prizes[prizes.length - 1].id;
 }
 
-const plural = (n, [one, few, many]) => n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many;
-
 function initWheel(root, prizes) {
   const disc = root.querySelector('.wheel-disc');
   const spin = root.querySelector('[data-spin]');
   const toast = root.querySelector('.toast');
-  const counter = root.querySelector('[data-attempts]');
+  const counters = $$('[data-attempts]', root);
   const seg = 360 / prizes.length;
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let turns = 0, attempts = Number(root.dataset.attempts ?? 1), hideTimer;
   const draw = () => {
-    counter.textContent = `${attempts} ${plural(attempts, ['попытка', 'попытки', 'попыток'])}`;
+    counters.forEach(c => { c.textContent = String(attempts); });
     spin.disabled = attempts === 0;
   };
   const done = id => {
@@ -119,6 +117,8 @@ function initWheel(root, prizes) {
     if (still) done(id); else disc.addEventListener('transitionend', () => done(id), { once: true });
   });
 }
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.querySelector('dialog.wheel-dialog[open]')) location.href = 'home.html'; });
 
 function initChatStates(root) {
   const chat = root.querySelector('.chat');
