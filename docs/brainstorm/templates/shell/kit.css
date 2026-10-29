@@ -225,7 +225,7 @@ details[open] > summary .chev { transform: rotate(90deg); }   /* раскрыт�
 .hero.after { transform: scale(.88); transform-origin: left center; }
 .hero::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, color-mix(in srgb, var(--scrim) 92%, transparent) 15%, transparent 80%); }
 .hero > * { position: relative; }
-.hero .badge-flag { position: absolute; top: var(--space-3); right: var(--space-3); }
+.hero .badge-flag { background: color-mix(in srgb, var(--accent) 80%, transparent); backdrop-filter: blur(6px); position: absolute; top: var(--space-3); right: var(--space-3); }
 .hero .name { position: absolute; top: 64px; left: var(--space-4); right: var(--space-4); font-size: 28px; font-weight: 800; text-align: center; line-height: 1.1; overflow-wrap: anywhere; }
 .hero .btn { align-self: flex-start; }
 .shuffle { position: absolute; left: calc(8% - var(--space-3) / 2 - var(--touch) / 2 + 2px); top: 96px; z-index: 2;   /* на левом краю центральной карточки, в щели с левой */ background: var(--accent); color: var(--accent-ink); }
