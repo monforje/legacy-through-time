@@ -152,9 +152,9 @@ a.btn { text-decoration: none; }
 .card-reward .foot .actions { margin-left: auto; display: flex; gap: var(--space-2); }
 .card-reward { padding: var(--space-3); }
 .card-reward .foot > *, .card-reward .actions > * { flex: none; }
-.card-reward .foot .timer { height: 36px; padding: 0 var(--space-3); }   /* справа столько же воздуха, сколько слева от иконки */
-.card-reward .foot .btn { position: relative; height: 36px; min-height: 36px; width: var(--action-w); padding: 0 var(--space-2); font-size: var(--fs-body); white-space: nowrap; }
-.card-reward .foot .btn.two-line { font-size: var(--fs-micro); line-height: 1.15; white-space: normal; }
+.card-reward .foot .timer { height: 40px; padding: 0 var(--space-3); }   /* справа столько же воздуха, сколько слева от иконки */
+.card-reward .foot .btn { position: relative; height: 40px; min-height: 40px; width: var(--action-w); padding: 0 var(--space-2); font-size: var(--fs-body); white-space: nowrap; }
+.card-reward .foot .btn.two-line { font-size: var(--fs-micro); line-height: 1.1; white-space: normal; }
 .card-reward .foot .btn.btn-icon { width: 28px; min-width: 28px; height: 28px; min-height: 28px; padding: 0; }
 .card-reward .foot .btn::after { content: ""; position: absolute; inset: -4px 0; }
 .card-reward .foot .btn-icon::after { display: none; }   /* замок неактивный, зона нажатия не нужна */   /* видимая высота 36, зона нажатия 44 */
