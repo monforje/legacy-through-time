@@ -386,3 +386,11 @@ dialog.popup[open] { animation: pop-in var(--dur-slow) var(--ease-out); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: var(--dur-instant) !important; animation-delay: var(--dur-instant) !important; animation-iteration-count: 1 !important; transition-duration: var(--dur-instant) !important; scroll-behavior: auto !important; }
 }
+
+/* состояния экранов: пусто, загрузка, нет сети */
+.state-box { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); text-align: center; padding: var(--space-5); }
+.state-box .ico-xl { width: 56px; height: 56px; color: var(--text-muted); }
+.state-box .small { max-width: 260px; }
+.sk-avatar { width: 48px; height: 48px; flex: none; border-radius: 50%; }
+.sk-line { display: block; height: 12px; }
+.sk-card { height: 132px; border-radius: var(--radius-m); }

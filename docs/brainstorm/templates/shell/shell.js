@@ -254,6 +254,23 @@ function initShuffle() {
 // Списки появляются по очереди.
 function initStagger() { $$('[data-stagger]').forEach(p => [...p.children].slice(0, 8).forEach((ch, i) => ch.style.setProperty('--n', i))); }
 
+// Состояния экрана для макета: кнопки [data-set] переключают блоки [data-s="..."]; [data-retry] имитирует повтор запроса.
+function setScreenState(root, state) {
+  $$('[data-set]', root).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.set === state)));
+  $$('[data-s]', root).forEach(el => { el.hidden = !el.dataset.s.split(' ').includes(state); });
+}
+function initScreenStates() {
+  $$('[data-screen-demo]').forEach(root => {
+    const buttons = $$('[data-set]', root);
+    buttons.forEach(b => b.addEventListener('click', () => setScreenState(root, b.dataset.set)));
+    if (buttons[0]) setScreenState(root, buttons[0].dataset.set);
+    $$('[data-retry]', root).forEach(b => b.addEventListener('click', () => {
+      b.classList.add('is-loading');
+      setTimeout(() => { b.classList.remove('is-loading'); setScreenState(root, 'normal'); }, still() ? 0 : token('--dur-net'));
+    }));
+  });
+}
+
 function initChatStates(root) {
   const chat = root.querySelector('.chat');
   $$('[data-state-btn]', root).forEach(b => b.addEventListener('click', () => {
@@ -291,5 +308,5 @@ document.addEventListener('DOMContentLoaded', () => {
   $$('[data-sheet]').forEach(b => initPanel(b, document.getElementById(b.dataset.sheet)));
   $$('[data-wheel]').forEach(w => initWheel(w, JSON.parse(w.dataset.wheel)));
   $$('[data-chat-demo]').forEach(initChatStates);
-  initToastLinks(); initClaim(); initPurchase(); initChat(); initSearch(); initShuffle(); initStagger();
+  initToastLinks(); initClaim(); initPurchase(); initChat(); initSearch(); initShuffle(); initStagger(); initScreenStates();
 });

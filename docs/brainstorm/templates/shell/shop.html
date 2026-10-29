@@ -7,7 +7,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap">
 <link rel="stylesheet" href="kit.css">
 </head>
-<body>
+<body style="display:block">
+<main data-screen-demo style="width:360px;max-width:100%;margin:0 auto">
+  <!-- Переключатель состояний только для макета, в приложении его нет -->
+  <div class="demo" role="group" aria-label="Состояние экрана">
+    <button class="chip" data-set="normal" aria-pressed="true">Магазин</button>
+    <button class="chip" data-set="loading" aria-pressed="false">Загрузка</button>
+    <button class="chip" data-set="offline" aria-pressed="false">Нет сети</button>
+  </div>
+
+
 <div class="device"><div class="safe">
   <div class="topbar strip">
     <div class="pill pill-energy"><svg class="ico"><use href="icons.svg#i-energy"/></svg><span>2</span><button class="pill-plus" aria-label="Пополнить энергию"><svg class="ico"><use href="icons.svg#i-plus"/></svg></button></div>
@@ -16,6 +25,7 @@
   </div>
 
   <div class="scroll">
+    <div class="stack" data-s="normal">
     <article class="card card-best starter">
       <div class="card-title"><div class="head">Для начинающих</div></div>
       <div class="art"><svg class="ico"><use href="icons.svg#i-gift"/></svg></div>
@@ -55,6 +65,19 @@
       </div>
     </div>
     <p class="small" style="text-align:center">Покупки проходят через Google Play</p>
+    </div>
+    <div class="stack" data-s="loading" hidden aria-hidden="true">
+      <div class="skeleton sk-card"></div>
+      <div class="skeleton" style="height:52px;border-radius:999px"></div>
+      <div class="skeleton sk-card"></div>
+      <div class="grid2"><div class="skeleton sk-card"></div><div class="skeleton sk-card"></div></div>
+    </div>
+    <div class="state-box" data-s="offline" hidden>
+      <svg class="ico ico-xl"><use href="icons.svg#i-cart"/></svg>
+      <div class="head">Магазин недоступен</div>
+      <p class="small">Проверьте соединение и попробуйте ещё раз</p>
+      <button class="btn btn-primary" data-retry>Повторить</button>
+    </div>
   </div>
 
   <div class="toast" id="shop-toast" role="status" hidden></div>
@@ -64,6 +87,7 @@
     <button class="tab"><svg class="ico"><use href="icons.svg#i-receipt"/></svg>Покупки</button>
   </nav>
 </div></div>
+</main>
 <script src="shell.js"></script>
 </body>
 </html>
