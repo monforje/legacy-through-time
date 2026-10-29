@@ -118,7 +118,7 @@ function initWheel(root, prizes) {
   });
 }
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.querySelector('dialog.wheel-dialog[open]')) location.href = 'home.html'; });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.querySelector('dialog.popup[open]')) location.href = 'home.html'; });
 
 function initToastLinks() {
   $$('[data-toast]').forEach(b => {

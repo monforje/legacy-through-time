@@ -8,9 +8,12 @@
 <link rel="stylesheet" href="kit.css">
 </head>
 <body>
-<div class="device"><div class="safe">
+<div class="device">
+  <iframe class="bg" src="home.html" title="Главная" aria-hidden="true" tabindex="-1" inert></iframe>
+  <div class="dim soft"></div>
+  <dialog open class="modal popup" aria-labelledby="rewards-title">
   <div class="modal-head">
-    <h1 class="title">Награды</h1>
+    <h1 class="title" id="rewards-title">Награды</h1>
     <a class="btn btn-icon" href="home.html" aria-label="Закрыть"><svg class="ico"><use href="icons.svg#i-close"/></svg></a>
   </div>
 
@@ -66,14 +69,8 @@
     </article>
   </div>
 
-  <nav class="tabbar">
-    <a class="tab" href="home.html"><svg class="ico"><use href="icons.svg#i-book"/></svg>Истории</a>
-    <a class="tab" href="chat.html"><svg class="ico"><use href="icons.svg#i-chat"/></svg>Чат</a>
-    <a class="tab" href="wheel.html"><svg class="ico"><use href="icons.svg#i-wheel"/></svg>Колесо</a>
-    <a class="tab" href="library.html"><svg class="ico"><use href="icons.svg#i-star"/></svg>Слова</a>
-    <a class="tab" href="rewards.html" aria-current="page"><svg class="ico"><use href="icons.svg#i-gift"/></svg>Награды</a>
-  </nav>
-</div></div>
+</dialog>
+</div>
 <script src="shell.js"></script>
 </body>
 </html>
