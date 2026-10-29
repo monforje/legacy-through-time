@@ -16,12 +16,13 @@ namespace LegacyThroughTime.Editor
         const string BgDir = "Assets/Resources/Art/Backgrounds/";   // painted scene backgrounds: plain sprites, compressed
         const string CharDir = "Assets/Resources/Art/Characters/";   // sprites of the characters: cut-outs with alpha
         const string AudioDir = "Assets/Resources/Audio/";         // sounds of the story: see docs/audio
+        const string ShellDir = "Assets/Resources/Shell/";      // 3D icons of the app shell (Blender renders, docs/brainstorm/shell-3d-assets.md)
         const string IconDir = "Assets/Art/Brand/";            // launcher icon layers: plain textures for PlayerSettings
         // PNGs are @4x; with the default Canvas reference of 100 ppu this gives 1 canvas unit = 1 px of the 360x780 layout.
         public const float PixelsPerUnit = 400f;
 
         /// Bump when the settings below change: Unity then reimports every texture and sound with them.
-        public override uint GetVersion() => 4;
+        public override uint GetVersion() => 5;
 
         void OnPreprocessTexture()
         {
@@ -29,6 +30,7 @@ namespace LegacyThroughTime.Editor
             if (assetPath.StartsWith(LogoDir)) { ImportBrand(sprite: true); return; }
             if (assetPath.StartsWith(BgDir)) { ImportBackground(); return; }
             if (assetPath.StartsWith(CharDir)) { ImportCharacter(); return; }
+            if (assetPath.StartsWith(ShellDir)) { ImportShell(); return; }
             if (assetPath.StartsWith(IconDir)) { ImportBrand(sprite: false); return; }
             if (!assetPath.StartsWith(Dir) && !assetPath.StartsWith(Dir3D)) return;
 
@@ -101,6 +103,25 @@ namespace LegacyThroughTime.Editor
             importer.npotScale = TextureImporterNPOTScale.None;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.maxTextureSize = 1024;
+        }
+
+        /// Icons of the shell: rendered once at 512 (pictures) or 192 (glyphs), shown from 20 to 100 canvas units, so mip-maps and
+        /// trilinear filtering keep the downscale smooth; alpha is real (soft edges), no 9-slice.
+        void ImportShell()
+        {
+            var importer = (TextureImporter)assetImporter;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = 100;
+            importer.mipmapEnabled = true;
+            importer.mipMapsPreserveCoverage = false;
+            importer.filterMode = FilterMode.Trilinear;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.alphaIsTransparency = true;
+            importer.npotScale = TextureImporterNPOTScale.None;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.maxTextureSize = 512;
+            AndroidAstc4x4(importer);
         }
 
         /// Brand art is not 9-sliced: the logo is a sprite at the size of its pixels / 100, the icon layers plain textures.
