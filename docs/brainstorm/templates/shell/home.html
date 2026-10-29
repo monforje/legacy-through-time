@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Главная</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="kit.css">
+</head>
+<body>
+<div class="device"><div class="safe">
+  <div class="topbar">
+    <div class="pill pill-energy"><svg class="ico"><use href="icons.svg#i-energy"/></svg><span>2</span><a class="pill-plus" href="shop.html" aria-label="Пополнить энергию"><svg class="ico"><use href="icons.svg#i-plus"/></svg></a></div>
+    <div class="pill pill-gem"><svg class="ico"><use href="icons.svg#i-gem"/></svg><span>50</span><a class="pill-plus" href="shop.html" aria-label="Пополнить алмазы"><svg class="ico"><use href="icons.svg#i-plus"/></svg></a></div>
+    <span class="spacer"></span>
+    <a class="btn btn-icon" href="settings.html" aria-label="Настройки"><svg class="ico"><use href="icons.svg#i-gear"/></svg></a>
+  </div>
+
+  <div class="scroll">
+    <div style="position:relative;flex:none">
+      <button class="btn btn-icon shuffle" aria-label="Случайная история"><svg class="ico"><use href="icons.svg#i-shuffle"/></svg></button>
+      <div class="carousel">
+        <article class="hero" style="background:var(--art-5)">
+          <span class="badge-flag">Рекомендуем</span>
+          <div class="name">Последний маяк</div>
+          <span class="tag">Мистика · Море</span>
+          <p class="small clamp" style="color:var(--text)">Остров не значится на картах, но каждую ночь на нём зажигается свет. Только она знает, кто его зажигает.</p>
+          <a class="btn btn-primary" href="chapters.html">Открыть</a>
+        </article>
+        <article class="hero" style="background:var(--art-2)">
+          <div class="name">Город под водой</div>
+          <span class="tag">Фэнтези</span>
+          <p class="small clamp" style="color:var(--text)">Прилив уходит раз в сто лет. Этой ночью он не вернётся.</p>
+          <a class="btn btn-primary" href="chapters.html">Открыть</a>
+        </article>
+        <article class="hero" style="background:var(--art-8)">
+          <div class="name">Золотая клетка</div>
+          <span class="tag">История · 1533</span>
+          <p class="small clamp" style="color:var(--text)">Юная дочь бия впервые едет в город, где решаются судьбы.</p>
+          <a class="btn btn-primary" href="chapters.html">Открыть</a>
+        </article>
+      </div>
+    </div>
+    <div class="dots" aria-hidden="true"><i></i><i class="on"></i><i></i><i></i></div>
+
+    <label class="search"><svg class="ico"><use href="icons.svg#i-search"/></svg><input placeholder="Истории, авторы…" aria-label="Поиск историй"></label>
+    <div class="chips">
+      <button class="chip" aria-pressed="true">Для начала</button>
+      <button class="chip" aria-pressed="false">Новые</button>
+      <button class="chip" aria-pressed="false">Популярные</button>
+      <button class="chip" aria-pressed="false">По жанрам</button>
+    </div>
+    <div class="grid2">
+      <div class="mini"><div class="cover" style="background:var(--art-6)"></div><span class="head">Сага о грозах</span><span class="small">Фэнтези</span></div>
+      <div class="mini"><div class="cover" style="background:var(--art-3)"></div><span class="head">Письма из лета</span><span class="small">Романтика</span></div>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet" hidden>
+    <button class="row"><svg class="ico"><use href="icons.svg#i-ads"/></svg><span class="label">Смотреть рекламу<br><span class="small">00:09:01</span></span><span class="badge-flag">+3 <svg class="ico-s" style="vertical-align:-2px"><use href="icons.svg#i-gem"/></svg></span></button>
+    <a class="row" href="rewards.html" style="text-decoration:none"><svg class="ico"><use href="icons.svg#i-gift"/></svg><span class="label">Награды<br><span class="small">Получите бесплатные ресурсы</span></span><svg class="ico"><use href="icons.svg#i-chevron-r"/></svg></a>
+    <button class="row" disabled style="opacity:.5"><svg class="ico"><use href="icons.svg#i-cart"/></svg><span class="label">Распродажа<br><span class="small">Сейчас распродаж нет</span></span></button>
+  </div>
+
+  <nav class="tabbar">
+    <a class="tab" href="home.html" aria-current="page"><svg class="ico"><use href="icons.svg#i-book"/></svg>Истории</a>
+    <a class="tab" href="chat.html"><svg class="ico"><use href="icons.svg#i-chat"/></svg>Чат</a>
+    <a class="tab" href="wheel.html"><svg class="ico"><use href="icons.svg#i-wheel"/></svg>Колесо</a>
+    <a class="tab" href="library.html"><svg class="ico"><use href="icons.svg#i-star"/></svg>Слова</a>
+    <button class="tab" data-sheet="sheet" aria-expanded="false"><svg class="ico"><use href="icons.svg#i-gift"/></svg>Награды<span class="badge">+3</span></button>
+  </nav>
+</div></div>
+<script src="shell.js"></script>
+</body>
+</html>
