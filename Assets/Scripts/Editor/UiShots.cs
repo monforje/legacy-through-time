@@ -135,9 +135,10 @@ namespace LegacyThroughTime.Editor
                 new StatBanner(c, "Прогресс восстановлен из Google Play", NoAnimator.Instance, "check");
             });
 
-            Add("menu-dream", c => Menu(c, terms).ShowDream(() => { }));
-            Add("night-chat", c => Night(c, said: 2));
-            Add("night-dawn", c => Night(c, said: 3, limit: 3));
+            Add("chats", c => Menu(c, terms).Select(MenuScreen.Tab.Chat));
+            Add("chat", c => Chat(c, said: 2, energy: 7));
+            Add("chat-long", c => Chat(c, said: 3, energy: 6, longReply: true));
+            Add("chat-empty-energy", c => Chat(c, said: 2, energy: 0));
 
             foreach (var page in DemoFlow.Pages())
                 Add("demo-" + page.Id, c => Page(c, "khan_chamber", page));
@@ -180,40 +181,29 @@ namespace LegacyThroughTime.Editor
             cleanup.Add(() => { if (before != null) PlayerPrefs.SetString("library:open", before); else PlayerPrefs.DeleteKey("library:open"); });
             var menu = new MenuScreen(c, StoryCatalog.All,
                                       ch => ch.Soon ? MenuScreen.Progress.Locked : ch.Number == 1 ? MenuScreen.Progress.InProgress : MenuScreen.Progress.New,
-                                      (_, _, _) => { }, terms, animated: false);
+                                      (_, _, _) => { }, _ => { }, terms, animated: false);
             cleanup.Add(menu.Dispose);
             SettingsToast.Gear(c, () => { });
             return menu;
         }
 
-        /// The night after chapter 1 with a few lines said (no server: the dream is given), on the colour of the room.
-        static void Night(RectTransform c, int said, int limit = 10)
+        /// A chat with the hero with a few lines said (no server: the lines are given).
+        static void Chat(RectTransform c, int said, int energy, bool longReply = false)
         {
-            var room = Ui.Img(c, "Backdrop", ProceduralArt.White);
-            room.color = Theme.FromTone(Backdrops.For("heroine_room_night"));
-            Ui.Bleed(room.rectTransform);
-            Ui.Stretch(Ui.Img(c, "Vignette", ProceduralArt.Vignette()).rectTransform);
-            var night = new DreamNight
-            {
-                Id = "ep01", Title = "Первая ночь в Казани", Limit = limit,
-                Chips = { "Кто тот мальчик из сна?", "Каким тебе показался хан?", "Ты скучаешь по степи?", "Ты доверяешь Сафии?" },
-                Wake = "Сююмбике вздрагивает и открывает глаза. За окном серый рассвет. В соседней комнате ровно дышит Сафия. Голоса больше не слышно.",
-            };
+            var story = StoryCatalog.All[0];
             var talk = new[]
             {
-                ("heroine", "Это снова ты. Я узнала тебя. Ты звал меня тогда, на башне."),
-                ("voice", "Ты скучаешь по степи?"),
-                ("heroine", "Каждую ночь. Здесь стены, а там ветер. Ветер не спрашивает, чья ты дочь."),
-                ("voice", "Каким тебе показался хан?"),
-                ("heroine", "Молодым. И чужим. Он смотрел на меня, как на подарок, который прислали не ему."),
-                ("voice", "Ты доверяешь Сафии?"),
-                ("heroine", "Сафия спит за стеной. Она одна здесь говорит со мной как с человеком."),
+                (ChatLine.Hero, story.Opening),
+                (ChatLine.Reader, "Ты скучаешь по степи?"),
+                (ChatLine.Hero, "Каждую ночь. Здесь стены, а там ветер. Ветер не спрашивает, чья ты дочь."),
+                (ChatLine.Reader, "Каким тебе показался хан?"),
+                (ChatLine.Hero, longReply
+                    ? "Молодым. И чужим. Он смотрел на меня, как на подарок, который прислали не ему, и я никак не могла понять, радоваться мне этому или бояться, пока вокруг было так тихо."
+                    : "Молодым. И чужим."),
             };
-            var dream = new Dream { night = "ep01", day = "2026-10-29" };
-            for (var i = 0; i < 1 + 2 * said && i < talk.Length; i++)
-                dream.lines.Add(new DreamLine { role = talk[i].Item1, text = talk[i].Item2, reported = i == 4 });
-            var view = new NightScreen(c, null, StoryCatalog.All[0], StoryCatalog.All[0].First, null, () => { }, (_, _) => { }, animated: false);
-            view.Show(dream, night);
+            var chat = new Chat { story = story.Id };
+            for (var i = 0; i < 1 + 2 * said && i < talk.Length; i++) chat.lines.Add(new ChatLine { role = talk[i].Item1, text = talk[i].Item2 });
+            var view = new ChatScreen(c, null, story, chat, new Energy { value = energy }, null, () => { }, () => { }, (_, _) => { }, animated: false);
             SettingsToast.Gear(c, () => { });
         }
 

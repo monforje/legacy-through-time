@@ -40,6 +40,27 @@ namespace LegacyThroughTime.Prototype
             }
         }
 
+        static readonly System.Collections.Generic.Dictionary<int, Sprite> rounded = new();
+
+        /// A white rounded rectangle as a 9-slice (the game tints it): bubbles, fields, rows of the neutral kit.
+        public static Sprite Rounded(int radius)
+        {
+            if (rounded.TryGetValue(radius, out var cached) && cached) return cached;
+            var n = radius * 2 + 2;
+            var t = NewTexture(n, n);
+            for (var y = 0; y < n; y++)
+                for (var x = 0; x < n; x++)
+                {
+                    // distance to the nearest corner centre, 0 along the straight edges
+                    var dx = Mathf.Max(0, Mathf.Max(radius - (x + .5f), x + .5f - (n - radius)));
+                    var dy = Mathf.Max(0, Mathf.Max(radius - (y + .5f), y + .5f - (n - radius)));
+                    t.SetPixel(x, y, new Color(1, 1, 1, Mathf.Clamp01(radius - Mathf.Sqrt(dx * dx + dy * dy) + .5f)));
+                }
+            t.Apply();
+            var border = new Vector4(radius, radius, radius, radius);
+            return rounded[radius] = Sprite.Create(t, new Rect(0, 0, n, n), new Vector2(.5f, .5f), 100, 0, SpriteMeshType.FullRect, border);
+        }
+
         // 8-bit alpha has only 256 levels, so a smooth dark gradient stretched over a phone screen shows as
         // visible bands. A fixed pseudo-random offset of about one level breaks the bands up (dithering).
         static float Dither(int x, int y) { unchecked { return ((x * 73856093 ^ y * 19349663) & 255) / 255f - .5f; } }

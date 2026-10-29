@@ -4,16 +4,16 @@ using UnityEngine.UI;
 
 namespace LegacyThroughTime.Prototype
 {
-    /// The bar at the bottom of the menu: stories, library, shop. The tab that is open is gold, with a ruby under it.
+    /// The bar at the bottom of the menu: stories, chats, library, shop. The tab that is open is gold, with a ruby under it.
     sealed class TabBar
     {
         public const float Height = 66;
-        static readonly (string icon, string label)[] Tabs = { ("tab-stories", "Истории"), ("tab-library", "Библиотека"), ("tab-shop", "Магазин") };
+        static readonly (string icon, string label)[] Tabs = { ("tab-stories", "Истории"), ("bubble", "Чат"), ("tab-library", "Библиотека"), ("tab-shop", "Магазин") };
 
         public readonly RectTransform Root;
-        readonly Image[] icons = new Image[3];
-        readonly Text[] labels = new Text[3];
-        readonly Image[] pips = new Image[3];
+        readonly Image[] icons = new Image[Tabs.Length];
+        readonly Text[] labels = new Text[Tabs.Length];
+        readonly Image[] pips = new Image[Tabs.Length];
 
         public TabBar(RectTransform parent, Action<MenuScreen.Tab> select)
         {
@@ -37,10 +37,10 @@ namespace LegacyThroughTime.Prototype
                 var k = i;
                 var cell = Ui.Img(row, Tabs[i].label, ProceduralArt.White);
                 cell.color = Color.clear; cell.raycastTarget = true;
-                Ui.Box(cell.rectTransform, A.BottomLeft, A.BottomLeft, new Vector2(Metrics.RefWidth / 3 * i, 0), new Vector2(Metrics.RefWidth / 3, block));
+                Ui.Box(cell.rectTransform, A.BottomLeft, A.BottomLeft, new Vector2(Metrics.RefWidth / Tabs.Length * i, 0), new Vector2(Metrics.RefWidth / Tabs.Length, block));
                 icons[i] = Ui.Icon(cell.rectTransform, "Icon", Tabs[i].icon, A.TopCenter, A.TopCenter, Vector2.zero, 30);
                 labels[i] = MenuUi.Fit(Ui.Txt(cell.rectTransform, "Label", Tabs[i].label, Art.Sub, 12, Theme.Parchment, TextAnchor.MiddleCenter), 9);
-                Ui.Box(labels[i].rectTransform, A.TopCenter, A.TopCenter, new Vector2(0, -32), new Vector2(Metrics.RefWidth / 3 - 8, 16));
+                Ui.Box(labels[i].rectTransform, A.TopCenter, A.TopCenter, new Vector2(0, -32), new Vector2(Metrics.RefWidth / Tabs.Length - 8, 16));
                 pips[i] = Ui.Icon(cell.rectTransform, "Pip", "dot-on", A.BottomCenter, A.Center, new Vector2(0, 1), 9);
                 PressButton.On(cell.gameObject, () => select((MenuScreen.Tab)k), .94f);
             }

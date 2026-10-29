@@ -12,7 +12,7 @@ namespace LegacyThroughTime.Prototype
     /// a card, the chapters, another tab, then the owner's turn (it leaves the app).
     sealed class MenuScreen
     {
-        public enum Tab { Stories, Library, Shop }
+        public enum Tab { Stories, Chat, Library, Shop }
         public enum Progress { Locked, New, InProgress, Finished }
 
         const float UpdateHeight = 92, UpdateShift = 34;
@@ -22,6 +22,7 @@ namespace LegacyThroughTime.Prototype
         readonly IReadOnlyList<StoryEntry> stories;
         readonly Func<ChapterEntry, Progress> progress;
         readonly Action<StoryEntry, ChapterEntry, bool> open;
+        readonly Action<StoryEntry> openChat;
         readonly IReadOnlyList<Glossary.Term> terms;
         readonly RectTransform stage, storiesTab;
         readonly TabBar tabs;
@@ -30,6 +31,7 @@ namespace LegacyThroughTime.Prototype
         ChapterList chapters;
         LibraryPanel library;
         ShopPanel shop;
+        ChatsPanel chats;
         RectTransform update;
         Tab tab;
         bool leaving;
@@ -37,9 +39,9 @@ namespace LegacyThroughTime.Prototype
         public Tab Current => tab;
 
         public MenuScreen(RectTransform column, IReadOnlyList<StoryEntry> stories, Func<ChapterEntry, Progress> progress,
-                          Action<StoryEntry, ChapterEntry, bool> open, IReadOnlyList<Glossary.Term> terms, bool animated)
+                          Action<StoryEntry, ChapterEntry, bool> open, Action<StoryEntry> openChat, IReadOnlyList<Glossary.Term> terms, bool animated)
         {
-            this.stories = stories; this.progress = progress; this.open = open; this.terms = terms;
+            this.stories = stories; this.progress = progress; this.open = open; this.openChat = openChat; this.terms = terms;
             Root = Ui.Rect(column, "Menu");
             Ui.Stretch(Root);
             Root.gameObject.AddComponent<CanvasGroup>();
@@ -87,9 +89,12 @@ namespace LegacyThroughTime.Prototype
             if (shop != null) { shop.Dispose(); UnityEngine.Object.Destroy(shop.Root.gameObject); shop = null; }
             tab = next;
             storiesTab.gameObject.SetActive(tab == Tab.Stories);
+            if (chats != null) { UnityEngine.Object.Destroy(chats.Root.gameObject); chats = null; }
+            if (tab == Tab.Chat) chats = new ChatsPanel(stage, ChatStore.Rows(stories, Started), s => { if (!leaving) openChat(s); }, () => Select(Tab.Stories), DateTime.Now, anim);
             if (tab == Tab.Library) library = new LibraryPanel(stage, terms, anim);
             if (tab == Tab.Shop) shop = new ShopPanel(stage, anim);
-            var panel = tab == Tab.Library ? library.Root : tab == Tab.Shop ? shop.Root : null;
+            purse.transform.parent.gameObject.SetActive(tab != Tab.Chat);       // the chats are the shell's, not the fire's
+            var panel = tab == Tab.Chat ? chats.Root : tab == Tab.Library ? library.Root : tab == Tab.Shop ? shop.Root : null;
             if (panel && anim.Enabled)
             {
                 var group = Ui.Group(panel); group.alpha = 0;
@@ -101,6 +106,14 @@ namespace LegacyThroughTime.Prototype
         /// For the tools (smoke, screenshots): the chapters of a story, a turn of the carousel, a word of the library.
         public void ShowChapters(StoryEntry story) => OpenChapters(story);
         public void Turn(int step) => carousel.Turn(step);
+        /// A story the reader has begun (a chapter in progress or read): its hero is in the chats.
+        bool Started(StoryEntry story)
+        {
+            foreach (var c in story.Chapters)
+                if (!c.Soon && progress(c) is Progress.InProgress or Progress.Finished) return true;
+            return false;
+        }
+
         public void ShowTerm(Glossary.Term term) { if (tab != Tab.Library) Select(Tab.Library); library.Show(term); }
 
         /// Lets go of the purse and the store (the menu is destroyed without Leave).
@@ -113,7 +126,8 @@ namespace LegacyThroughTime.Prototype
         void OpenChapters(StoryEntry story)
         {
             CloseChapters();
-            chapters = new ChapterList(stage, story, progress, (chapter, fresh) => { if (!leaving) open(story, chapter, fresh); }, CloseChapters, anim);
+            chapters = new ChapterList(stage, story, progress, (chapter, fresh) => { if (!leaving) open(story, chapter, fresh); },
+                                       () => { if (!leaving) openChat(story); }, CloseChapters, anim);
             Carousel(false);                                 // the list over the fire, not over the cards
         }
 
@@ -138,23 +152,6 @@ namespace LegacyThroughTime.Prototype
             if (chapters != null) { CloseChapters(); return true; }
             if (tab != Tab.Stories) { Select(Tab.Stories); return true; }
             return false;
-        }
-
-        // ------------------------------------------------------------ the night after a chapter
-        /// "Сон" between the purse and the gear: the heroine of a chapter read waits for the Voice of her dream.
-        public void ShowDream(Action open)
-        {
-            if (!Root || Root.Find("Dream")) return;
-            var pill = Ui.Img(Root, "Dream", Art.Sprite("pill"));
-            pill.type = Art.Tiled("pill") ? Image.Type.Tiled : Image.Type.Sliced;
-            pill.raycastTarget = true;
-            Ui.Box(pill.rectTransform, A.TopCenter, A.TopCenter, new Vector2(0, -(Metrics.InsetTop + 16 + Viewport.ExtraTop)), new Vector2(104, 44));
-            Ui.Lift(pill, 4, .3f);
-            Ui.Icon(pill.rectTransform, "Bubble", "bubble", A.MidLeft, A.MidLeft, new Vector2(14, 1), 20);
-            var label = Ui.Txt(pill.rectTransform, "Text", "Сон", Art.Accent, 18, Theme.Parchment, TextAnchor.MiddleLeft);
-            Ui.Emboss(label);
-            Ui.Box(label.rectTransform, A.MidLeft, A.MidLeft, new Vector2(42, 1), new Vector2(56, 30));
-            PressButton.On(pill.gameObject, () => { if (!leaving) open(); }, .95f);
         }
 
         // ------------------------------------------------------------ a newer build

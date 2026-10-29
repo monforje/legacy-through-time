@@ -45,7 +45,7 @@ namespace LegacyThroughTime.Editor
                 foreach (var progress in new[] { MenuScreen.Progress.New, MenuScreen.Progress.InProgress, MenuScreen.Progress.Finished })
                 {
                     var menu = new MenuScreen(canvas, StoryCatalog.All, c => c.Soon ? MenuScreen.Progress.Locked : progress,
-                                              (_, _, _) => { }, terms, animated: false);
+                                              (_, _, _) => { }, _ => { }, terms, animated: false);
                     menu.ShowUpdate("2099-01-01-0000", _ => { });
                     menu.ShowChapters(StoryCatalog.All[0]);
                     menu.Turn(1);

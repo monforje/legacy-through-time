@@ -73,6 +73,15 @@ namespace LegacyThroughTime.Prototype
 
         public void MarkSeen() => unread = 0;
 
+        /// The line the flag in the header reports: the hero's last answer, not yet reported. The author's first line
+        /// is not an answer; -1 when there is none.
+        public int ReportableIndex()
+        {
+            for (var i = lines.Count - 1; i > 0; i--)
+                if (lines[i].role == ChatLine.Hero) return lines[i].reported ? -1 : i;
+            return -1;
+        }
+
         /// Lines not yet in the memory, with at least one of the reader's among them.
         public bool Unremembered
         {
@@ -151,6 +160,16 @@ namespace LegacyThroughTime.Prototype
         public const int Max = 10, Cost = 1;
 
         public int value = Max;
+        public string day = "";         // "yyyy-MM-dd": the day the energy was last filled
+
+        /// The stub of the refill: a new day fills it up. True when it did.
+        public bool NewDay(string today)
+        {
+            if (day == today) return false;
+            var changed = value != Max;
+            day = today; value = Max;
+            return changed;
+        }
 
         public bool CanSend => value >= Cost;
 
@@ -199,6 +218,28 @@ namespace LegacyThroughTime.Prototype
             for (var i = 0; i < rows.Count; i++) order[rows[i]] = i;
             rows.Sort((a, b) => a.At != b.At ? b.At.CompareTo(a.At) : order[a].CompareTo(order[b]));
             return rows;
+        }
+
+        /// The time on a row: the hour today, "Вчера", the weekday within the week, else the date. `at` is unix ms.
+        public static string When(long at, DateTime now)
+        {
+            if (at <= 0) return "";
+            var t = DateTimeOffset.FromUnixTimeMilliseconds(at).ToLocalTime().DateTime;
+            var days = (now.Date - t.Date).Days;
+            if (days <= 0) return t.ToString("HH:mm", CultureInfo.InvariantCulture);
+            if (days == 1) return "Вчера";
+            if (days < 7) return Weekdays[(int)t.DayOfWeek];
+            return t.ToString("dd.MM", CultureInfo.InvariantCulture);
+        }
+
+        static readonly string[] Weekdays = { "Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб" };
+
+        /// Which of the ten art colours a hero's avatar takes (stable: the same story, the same colour).
+        public static int ArtIndex(string id)
+        {
+            var sum = 0;
+            foreach (var c in id ?? "") sum = (sum * 31 + c) % 10007;
+            return sum % 10;
         }
 
         /// The stats the hero's mood comes from: those of the chapter read last.

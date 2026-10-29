@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace LegacyThroughTime.Prototype
 {
-    /// The chapters of a story over the dimmed fire: read ones with a gold check, the one being read with "Продолжить"
+    /// The chapters of a story over the dimmed fire (and the way into the chat with its hero): read ones with a gold check, the one being read with "Продолжить"
     /// and a two-tap "Начать сначала", open ones with "Читать", those to come dark with a lock.
     sealed class ChapterList
     {
@@ -15,7 +15,7 @@ namespace LegacyThroughTime.Prototype
         readonly Action<ChapterEntry, bool> open;          // (chapter, from the beginning)
 
         public ChapterList(RectTransform parent, StoryEntry story, Func<ChapterEntry, MenuScreen.Progress> progress,
-                           Action<ChapterEntry, bool> open, Action close, IAnimator anim)
+                           Action<ChapterEntry, bool> open, Action openChat, Action close, IAnimator anim)
         {
             this.open = open; this.anim = anim;
             Root = Ui.Rect(parent, "Chapters");
@@ -35,6 +35,13 @@ namespace LegacyThroughTime.Prototype
             {
                 Row(list, chapter, progress(chapter), y);
                 y += RowHeight + RowGap;
+            }
+            if (!string.IsNullOrEmpty(story.Hero))
+            {
+                // the way into the chat with the hero of the story
+                var talk = MenuUi.Button(list, "Chat", "Чат с героем: " + story.Hero, openChat, "btn-chosen", "bubble");
+                Ui.TopRow(talk.rectTransform, 0, 0, y, 52);
+                y += 52 + RowGap;
             }
             MenuUi.SetHeight(list, y + 20);
 

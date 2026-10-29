@@ -57,6 +57,22 @@ namespace LegacyThroughTime.Prototype.Tests
         }
 
         [Test]
+        public void TheFlagReportsTheLastAnswerOnceAndNeverTheAuthorsOpening()
+        {
+            var chat = Chat.Begin("golden-cage", "Привет.", 1);
+            Assert.That(chat.ReportableIndex(), Is.EqualTo(-1), "only the author's line");
+            chat.Say("Ну?", 2);
+            chat.Reply("Что?", 3, true);
+            chat.Say("Ещё", 4);
+            chat.Reply("Да.", 5, true);
+            Assert.That(chat.ReportableIndex(), Is.EqualTo(4));
+            chat.lines[4].reported = true;
+            Assert.That(chat.ReportableIndex(), Is.EqualTo(-1), "the last answer is reported already; the older ones are not offered");
+            chat.Say("И?", 6);
+            Assert.That(chat.ReportableIndex(), Is.EqualTo(-1), "the reader spoke last: still the last answer");
+        }
+
+        [Test]
         public void OnlyTheLinesNotYetRememberedGoToTheSummary()
         {
             var chat = Chat.Begin("golden-cage", "Привет.", 1);
@@ -149,6 +165,60 @@ namespace LegacyThroughTime.Prototype.Tests
             Assert.That(e.value, Is.EqualTo(Energy.Max - 1));
             e.Refill();
             Assert.That(e.value, Is.EqualTo(Energy.Max));
+        }
+
+        [Test]
+        public void ANewDayFillsTheEnergyUp()
+        {
+            var e = new Energy();
+            Assert.That(e.NewDay("2026-10-30"), Is.False, "full already: nothing changed, the day is kept");
+            e.TrySpend(); e.TrySpend();
+            Assert.That(e.NewDay("2026-10-30"), Is.False, "the same day");
+            Assert.That(e.value, Is.EqualTo(Energy.Max - 2));
+            Assert.That(e.NewDay("2026-10-31"), Is.True);
+            Assert.That(e.value, Is.EqualTo(Energy.Max));
+        }
+
+        [Test]
+        public void TheTimeOfARowIsTheHourTheDayOrTheDate()
+        {
+            var now = new System.DateTime(2026, 10, 30, 15, 0, 0, System.DateTimeKind.Local);
+            long Ms(System.DateTime t) => new System.DateTimeOffset(t).ToUnixTimeMilliseconds();
+            Assert.That(ChatList.When(Ms(now.Date.AddHours(12).AddMinutes(40)), now), Is.EqualTo("12:40"));
+            Assert.That(ChatList.When(Ms(now.AddDays(-1)), now), Is.EqualTo("Вчера"));
+            Assert.That(ChatList.When(Ms(now.AddDays(-4)), now), Is.EqualTo("Пн"), "2026-10-26 is a Monday");
+            Assert.That(ChatList.When(Ms(now.AddDays(-30)), now), Is.EqualTo("30.09"));
+            Assert.That(ChatList.When(0, now), Is.EqualTo(""), "never said anything");
+        }
+
+        [Test]
+        public void AnAvatarKeepsItsColour()
+        {
+            Assert.That(ChatList.ArtIndex("golden-cage"), Is.EqualTo(ChatList.ArtIndex("golden-cage")));
+            Assert.That(ChatList.ArtIndex("golden-cage"), Is.InRange(0, 9));
+            Assert.That(ChatList.ArtIndex(null), Is.InRange(0, 9));
+        }
+
+        // ------------------------------------------------------------ the stream of the server
+        [Test]
+        public void TheStreamIsReadWhateverTheChunksAre()
+        {
+            const string wire =
+                "event: sources\ndata: {\"hits\":[]}\n\n" +
+                "event: delta\ndata: {\"text\":\"Степь \"}\n\n" +
+                "event: delta\r\ndata: {\"text\":\"шепчет.\"}\r\n\r\n" +
+                "event: done\ndata: {\"flags\":[{\"kind\":\"future\",\"detail\":\"1552\"}]}\n\n";
+            foreach (var size in new[] { 1, 3, 7, wire.Length })
+            {
+                var stream = new ChatStream();
+                var events = new List<ChatStream.Event>();
+                for (var i = 0; i < wire.Length; i += size) events.AddRange(stream.Feed(wire.Substring(i, System.Math.Min(size, wire.Length - i))));
+                Assert.That(events.Select(e => e.Name), Is.EqualTo(new[] { "sources", "delta", "delta", "done" }), $"chunks of {size}");
+                Assert.That(string.Concat(events.Select(e => e.Text)), Is.EqualTo("Степь шепчет."));
+                Assert.That(events[3].Flags, Is.EqualTo(new[] { "future" }));
+            }
+            var error = new ChatStream().Feed("event: error\ndata: {\"message\":\"HTTP 502\"}\n\n").Single();
+            Assert.That((error.Name, error.Message), Is.EqualTo(("error", "HTTP 502")));
         }
 
         // ------------------------------------------------------------ the list of chats

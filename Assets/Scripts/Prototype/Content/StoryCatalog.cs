@@ -24,6 +24,7 @@ namespace LegacyThroughTime.Prototype
         public string Cover;       // background id shown on the card (Resources/Art/Backgrounds/<id>.png)
         public bool Soon;          // a story announced, not playable: a dark card with a lock
         public string Hero;        // the main hero: who the reader talks to in the story's chat
+        public string Opening;     // the hero's first line in an empty chat (the author's; the chat server takes over after it)
         public IReadOnlyList<ChapterEntry> Chapters = new ChapterEntry[0];
 
         /// The first chapter: the one a story opens with.
@@ -40,7 +41,7 @@ namespace LegacyThroughTime.Prototype
             {
                 Id = "golden-cage", Title = "Золотая клетка", Episode = "Эпизод 1",
                 Blurb = "Ногайская Орда, 1533 год. Юную Сююмбике везут в Казань — к хану, которого она никогда не видела.",
-                Cover = "title", Hero = "Сююмбике",
+                Cover = "title", Hero = "Сююмбике", Opening = "Привет. Я рада, что ты пришёл. О чём поговорим?",
                 Chapters = new[]
                 {
                     // the save slot keeps the id of the story: the saves made before there were chapters still open
