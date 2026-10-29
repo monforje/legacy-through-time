@@ -253,18 +253,6 @@ details[open] > summary .chev { transform: rotate(90deg); }   /* раскрыт�
 .hero .name { position: absolute; top: 64px; left: var(--space-4); right: var(--space-4); font-size: 28px; font-weight: 800; text-align: center; line-height: 1.1; overflow-wrap: anywhere; }
 .hero .btn { align-self: flex-start; }
 .shuffle { position: absolute; left: calc(8% - var(--space-3) / 2 - var(--touch) / 2 + 2px); top: 96px; z-index: 2;   /* на левом краю центральной карточки, в щели с левой */ background: var(--accent); color: var(--accent-ink); }
-.prizes { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2); }
-.prize { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--space-1) 0; border-radius: var(--radius-s); background: var(--surface); font: 800 var(--fs-small) var(--font); font-variant-numeric: tabular-nums; }
-.prize { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; column-gap: var(--space-1); }
-.prize .ico { width: 16px; height: 16px; color: var(--accent); }
-.prize .pct { grid-column: 1 / -1; text-align: center; }
-.wheel { position: relative; width: 244px; height: 244px; margin: var(--space-2) auto; flex: none; }
-.wheel-disc { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 6px var(--surface-2);
-  background: conic-gradient(from -18deg, var(--art-1) 0 36deg, var(--art-2) 36deg 72deg, var(--art-3) 72deg 108deg, var(--art-4) 108deg 144deg, var(--art-5) 144deg 180deg, var(--art-6) 180deg 216deg, var(--art-7) 216deg 252deg, var(--art-8) 252deg 288deg, var(--art-9) 288deg 324deg, var(--art-10) 324deg 360deg); }
-.wheel-disc .seg { position: absolute; left: 50%; top: 0; width: 0; height: 50%; transform-origin: 50% 100%; transform: rotate(calc(var(--i) * 36deg)); }
-.wheel-disc .seg .ico { position: absolute; top: 18px; left: -12px; color: var(--text); }
-.wheel-hub { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 4px var(--surface-2); display: grid; place-items: center; color: var(--accent); }
-.wheel-pointer { position: absolute; left: 50%; top: -10px; margin-left: -12px; width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 22px solid var(--accent); z-index: 2; }
 .mini { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
 .mini .cover { aspect-ratio: 16 / 9; }
 .dots { display: flex; justify-content: center; gap: var(--space-2); }
@@ -304,8 +292,6 @@ dialog.popup { background: var(--bg); }   /* тот же цвет, что был
 .msgs::before { content: ""; margin-top: auto; }   /* прижимает короткий диалог ко дну и не прячет начало длинного */
 .nowrap { white-space: nowrap; }
 .row[disabled] { opacity: .5; cursor: not-allowed; }
-.prize b { font-size: var(--fs-body); }
-.wheel-disc .seg .n { position: absolute; top: 44px; left: -22px; width: 44px; text-align: center; font: 800 var(--fs-small) var(--font); }
 .tabbar:has(.tab[aria-expanded="true"]) .tab[aria-current="page"] { color: var(--text-muted); background: none; }
 .tab[aria-expanded="true"] { color: var(--accent); background: var(--surface-2); }
 .demo { display: flex; gap: var(--space-2); justify-content: center; margin-bottom: var(--space-3); }
@@ -428,10 +414,7 @@ dialog.popup[open] { animation: pop-in var(--dur-slow) var(--ease-out); }
 .pill .ico-3d { width: 32px; height: 32px; }
 .pill.compact .ico-3d { width: 20px; height: 20px; }
 .amount .ico-3d { width: 28px; height: 28px; }
-.prize .ico-3d { width: 20px; height: 20px; }
 .badge-flag .ico-3d { width: 16px; height: 16px; }
-.wheel-disc .seg .ico-3d { position: absolute; top: 14px; left: -16px; width: 32px; height: 32px; }
-.wheel-hub .ico-3d { width: 30px; height: 30px; }
 .card-reward .art .ico-3d { width: 88px; height: 88px; }
 .card-best .art .ico-3d, .card-product .art .ico-3d { width: var(--art-size); height: var(--art-size); }
 .state-box .ico-3d { width: 96px; height: 96px; }
@@ -453,3 +436,27 @@ img.nav3d { opacity: 1; }
 .btn-icon .ico.nav3d { width: 26px; height: 26px; }
 .btn-icon .ico.g { width: 28px; height: 28px; }
 .pill-plus .ico.g { width: 22px; height: 22px; }
+
+/* колесо фортуны */
+.prizes { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-3) var(--space-1); }
+.prize { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); font: 800 var(--fs-small) var(--font); font-variant-numeric: tabular-nums; }
+.t-coin { --tint: var(--coin); } .t-energy { --tint: var(--energy); } .t-gem { --tint: var(--gem); } .t-gift { --tint: var(--accent); }
+.token, .tile { position: relative; display: grid; place-items: center; background: color-mix(in srgb, var(--tint) 30%, var(--surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tint) 50%, transparent); }
+.token { width: 40px; height: 40px; border-radius: 50%; }
+.token img { width: 28px; height: 28px; }
+.tile { width: 46px; height: 46px; border-radius: 14px; }
+.tile img { width: 32px; height: 32px; }
+.token b, .tile b { position: absolute; right: -8px; bottom: -6px; min-width: 20px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); font: 800 var(--fs-micro)/18px var(--font); text-align: center; }
+.token b { top: -4px; bottom: auto; }
+.wheel { position: relative; width: 252px; height: 252px; margin: var(--space-3) auto; flex: none; }
+.wheel::before { content: ""; position: absolute; inset: -14px; border-radius: 50%; box-shadow: 0 0 0 1px var(--line), 0 0 32px color-mix(in srgb, var(--accent) 22%, transparent); }
+.wheel-disc { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 6px var(--surface-2), 0 0 0 7px var(--line);
+  background: repeating-conic-gradient(from -18deg, var(--line) 0 .6deg, transparent .6deg 36deg), repeating-conic-gradient(from -18deg, var(--surface) 0 36deg, var(--surface-2) 36deg 72deg); }
+.wheel-disc .seg { position: absolute; left: 50%; top: 0; width: 0; height: 50%; transform-origin: 50% 100%; transform: rotate(calc(var(--i) * 36deg)); }
+.wheel-disc .seg .tile { position: absolute; top: 20px; left: -23px; }
+.wheel-active { position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(from -18deg, var(--accent) 0 .8deg, transparent .8deg 35.2deg, var(--accent) 35.2deg 36deg, transparent 36deg);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 55%, transparent)); }   /* подсвеченный сектор: приз, который выпадет */
+.wheel-mark { position: absolute; left: 50%; top: 44px; width: 1px; height: 1px; }
+.wheel-hub { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 5px var(--accent), 0 0 0 7px var(--surface-2); display: grid; place-items: center; }
+.wheel-hub img { width: 36px; height: 36px; }

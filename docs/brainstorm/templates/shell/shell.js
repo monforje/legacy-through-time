@@ -186,7 +186,7 @@ function initWheel(root, prizes) {
   };
   const done = id => {
     showToast(toast, 'Выпало: ' + prizes.find(p => p.id === id).label); draw();
-    burst(root.querySelector('.wheel-pointer'), 6);
+    burst(root.querySelector('.wheel-mark'), 6);
   };
   draw();
   spin.addEventListener('click', () => {
@@ -356,7 +356,7 @@ function shellAudit() {
     .map(selector);
   const overflow = $$('.device *').filter(visible).filter(el => {
     const o = getComputedStyle(el).overflowX;
-    return el.scrollWidth > el.clientWidth + 1 && o !== 'auto' && o !== 'scroll' && el.clientWidth > 0 && !(el instanceof SVGElement) && !el.closest('[data-audit-skip]') && getComputedStyle(el).textOverflow !== 'ellipsis';   // вращающийся круг: рамка повёрнутого квадрата шире круга
+    return el.scrollWidth > el.clientWidth + 1 && o !== 'auto' && o !== 'scroll' && el.clientWidth > 0 && !(el instanceof SVGElement) && !el.closest('[data-audit-skip]') && getComputedStyle(el).textOverflow !== 'ellipsis' && !el.matches('.token');   // бейдж количества выступает за медальон намеренно   // вращающийся круг: рамка повёрнутого квадрата шире круга
   }).map(selector);
   return { smallTargets, overflow, hScroll: document.documentElement.scrollWidth > document.documentElement.clientWidth };
 }
