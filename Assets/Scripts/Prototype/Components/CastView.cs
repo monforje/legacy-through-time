@@ -4,15 +4,19 @@ using UnityEngine.UI;
 
 namespace LegacyThroughTime.Prototype
 {
-    /// The characters of the scene between the background and the plate: the heroine on one side, the other on the
-    /// opposite one, the speaker bright and in front, the other dimmer. Pictures come from Resources/Art/Characters.
+    /// The characters of the scene between the background and the plate, life-size like in a romance visual novel: a
+    /// full-length figure whose head is in the upper third and whose legs go off the bottom edge under the plate. The
+    /// heroine stands on one side (mirrored, so that she looks at the other), the other character on the opposite
+    /// one; the speaker is bright and in front, the other dimmer. Pictures come from Resources/Art/Characters; they ride
+    /// in from (and out to) the side of the screen.
     sealed class CastView
     {
         const bool HeroineRight = true;
         const float Speed = 5, Dim = .62f;
-        // how big and how high: the plate covers the lower part of the screen, so the figure stands above it
-        const float SlideSpeed = 8, SlideReach = .75f;      // the figure rides in from (and out to) the side of the screen
-        const float HeightShare = .5f, Lift = .1f, WidthShare = 1f, Side = .2f, ShadeShare = .3f;
+        const float SlideSpeed = 8, SlideReach = .75f;
+        // The figure is as tall as the screen; its head top is at HeadTop of the screen height from the top, so the legs
+        // are cut by the bottom edge. Each figure is shifted to its side by Side of the screen width (they overlap).
+        const float HeightShare = 1f, HeadTop = .2f, WidthShare = 1f, Side = .2f;
 
         sealed class Slot
         {
@@ -24,7 +28,6 @@ namespace LegacyThroughTime.Prototype
 
         readonly Slot left, right;
         readonly RectTransform root;
-        readonly Image shade;           // the cut of the figures at the waist sinks into this dark gradient at the screen's bottom
         static readonly Dictionary<string, Sprite> sprites = new();
         int width, height;
 
@@ -33,26 +36,6 @@ namespace LegacyThroughTime.Prototype
             root = Ui.Rect(canvas, "Cast");
             Ui.Stretch(root);
             left = Make("CastLeft"); right = Make("CastRight");
-            shade = Ui.Img(root, "CastShade", Gradient()); shade.enabled = false;
-            var r = shade.rectTransform;
-            r.anchorMin = Vector2.zero; r.anchorMax = new Vector2(1, 0); r.pivot = new Vector2(.5f, 0);
-        }
-
-        static Sprite gradient;
-
-        /// One column of pixels, clear at the top and dark at the bottom.
-        static Sprite Gradient()
-        {
-            if (gradient) return gradient;
-            const int n = 64;
-            var texture = new Texture2D(1, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
-            for (var y = 0; y < n; y++)
-            {
-                var t = Mathf.SmoothStep(0, 1, Mathf.Clamp01((float)(n - 1 - y) / (n - 1) * 1.6f));   // y = 0 is the bottom
-                texture.SetPixel(0, y, new Color(.07f, .05f, .04f, t));
-            }
-            texture.Apply();
-            return gradient = Sprite.Create(texture, new Rect(0, 0, 1, n), new Vector2(.5f, 0));
         }
 
         Slot Make(string name)
@@ -61,6 +44,8 @@ namespace LegacyThroughTime.Prototype
             image.enabled = false; image.preserveAspect = true;
             var r = image.rectTransform;
             r.anchorMin = r.anchorMax = new Vector2(.5f, 0); r.pivot = new Vector2(.5f, 0);
+            // every picture is drawn looking a little to the right: the one on the right side is mirrored, so that the two face each other
+            if (name == "CastRight") r.localScale = new Vector3(-1, 1, 1);
             return new Slot { Image = image };
         }
 
@@ -91,7 +76,6 @@ namespace LegacyThroughTime.Prototype
             slot.GoalAlpha = 1; slot.GoalBright = bright;
             slot.Image.transform.SetAsLastSibling();           // the one told last is in front ...
             if (bright < 1) slot.Image.transform.SetAsFirstSibling();   // ... and the silent one behind
-            shade.transform.SetAsLastSibling();                         // the dark gradient is over both
         }
 
         static Sprite Load(string name)
@@ -115,13 +99,9 @@ namespace LegacyThroughTime.Prototype
                 s.Image.color = new Color(s.Bright, s.Bright, s.Bright, s.Alpha);
                 if (s.Alpha <= 0 && s.GoalAlpha <= 0) { s.Image.enabled = false; s.Image.sprite = null; }
             }
-            var shown = Mathf.Max(left.Alpha, right.Alpha);
-            shade.enabled = shown > 0;
-            shade.color = new Color(1, 1, 1, shown);
-            shade.rectTransform.sizeDelta = new Vector2(0, Viewport.Height * ShadeShare);
         }
 
-        /// Size and place by the screen: the figure's height is a share of the screen, but never wider than the screen.
+        /// Size and place by the screen: the figure is as tall as the screen share, but never wider than the screen.
         void Fit(Slot slot)
         {
             var sprite = slot.Image.sprite;
@@ -130,8 +110,7 @@ namespace LegacyThroughTime.Prototype
             var h = Viewport.Height * HeightShare;
             var w = h * aspect;
             if (w > Viewport.Width * WidthShare) { w = Viewport.Width * WidthShare; h = w / aspect; }
-            var r = slot.Image.rectTransform;
-            r.sizeDelta = new Vector2(w, h);
+            slot.Image.rectTransform.sizeDelta = new Vector2(w, h);
             Place(slot);
         }
 
@@ -139,7 +118,9 @@ namespace LegacyThroughTime.Prototype
         {
             var side = slot == right ? 1 : -1;
             var x = Viewport.Width * (Side + SlideReach * slot.Slide);
-            slot.Image.rectTransform.anchoredPosition = new Vector2(side * x, Viewport.Height * Lift);
+            // the bottom of the picture is below the screen: the head top stays at HeadTop from the top
+            var y = Viewport.Height * (1 - HeadTop) - slot.Image.rectTransform.sizeDelta.y;
+            slot.Image.rectTransform.anchoredPosition = new Vector2(side * x, y);
         }
     }
 }
