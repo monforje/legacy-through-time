@@ -28,7 +28,7 @@ function initCarousel(root) {
     const mid = root.scrollLeft + root.clientWidth / 2;
     const near = slides.reduce((b, s, i) => Math.abs(s.offsetLeft + s.offsetWidth / 2 - mid) < Math.abs(slides[b].offsetLeft + slides[b].offsetWidth / 2 - mid) ? i : b, 0);
     dots.forEach((d, i) => d.classList.toggle('on', i === near));
-    slides.forEach((s, i) => s.classList.toggle('on', i === near));
+    slides.forEach((s, i) => { s.classList.toggle('on', i === near); s.classList.toggle('before', i < near); s.classList.toggle('after', i > near); });
   };
   root.addEventListener('scroll', mark, { passive: true });
   center(Number(root.dataset.start ?? 0)); mark();
@@ -137,7 +137,7 @@ function selector(el) {
 function shellAudit() {
   const visible = el => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
   const smallTargets = $$('.device button, .device a[href], .device input, .device [role=switch], .device [role=tab]')
-    .filter(visible).filter(el => { const r = el.getBoundingClientRect(); return r.width < 43.5 || r.height < 43.5; })
+    .filter(visible).filter(el => { return el.offsetWidth < 43.5 || el.offsetHeight < 43.5; })   // размеры раскладки, без учёта scale у боковых карточек
     .map(selector);
   const overflow = $$('.device *').filter(visible).filter(el => {
     const o = getComputedStyle(el).overflowX;
