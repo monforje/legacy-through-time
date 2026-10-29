@@ -152,7 +152,7 @@ a.btn { text-decoration: none; }
 .card-reward .foot .actions { margin-left: auto; display: flex; align-items: center; gap: var(--space-2); }
 .card-reward { padding: var(--space-3); }
 .card-reward .foot > *, .card-reward .actions > * { flex: none; }
-.card-reward .foot .timer { height: 40px; padding: 0 10px; }   /* справа столько же воздуха, сколько слева от иконки */
+.card-reward .foot .timer { height: 40px; padding: 0 var(--space-2); }   /* справа столько же воздуха, сколько слева от иконки */
 .card-reward .foot .btn { position: relative; height: 40px; min-height: 40px; width: var(--action-w); padding: 0 var(--space-2); font-size: var(--fs-body); white-space: nowrap; }
 .card-reward .foot .btn.two-line { font-size: var(--fs-micro); line-height: 1.1; white-space: normal; }
 .card-reward .foot .btn.btn-icon { width: 28px; min-width: 28px; height: 28px; min-height: 28px; padding: 0; }
