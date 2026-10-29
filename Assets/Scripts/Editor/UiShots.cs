@@ -142,6 +142,11 @@ namespace LegacyThroughTime.Editor
             foreach (var page in DemoFlow.Pages())
                 Add("demo-" + page.Id, c => Page(c, "khan_chamber", page));
 
+            CastShot("cast-yusuf", "yusuf_hall", "suyumbike_court_angry", "yusuf_angry", -1, "Юсуф", "Ты поедешь в Казань. Это не просьба.");
+            CastShot("cast-heroine", "yusuf_hall", "suyumbike_court_determined", "yusuf_cold", 1, "Сююмбике", "Тогда я поеду так, как решу сама.");
+            CastShot("cast-safiya", "tent_entrance", "suyumbike_travel_thoughtful", "safiya_smile", -1, "Сафия", "Ханбике, я принесла вам одеяние к дороге.");
+            CastShot("cast-khan", "khan_chamber", "suyumbike_court_afraid", "jan_ali_sad", -1, "Джан-Али", "Не тогда, когда речь идёт о ханском дворе.");
+            CastShot("cast-solo", "cart_road", "suyumbike_travel_laugh", null, 1, "Сююмбике", "Впервые за много дней она смеётся.");
             StoryScreens();
             Add("story-settings", c =>
             {
@@ -149,6 +154,19 @@ namespace LegacyThroughTime.Editor
                 new SettingsToast(c, NoAnimator.Instance).Open(() => { }, () => { });
             });
         }
+
+        /// A line with the characters on the screen: the heroine on one side, the other on the other; speaker 1 is the heroine.
+        static void CastShot(string name, string background, string heroine, string other, int speaker, string label, string text) =>
+            Add(name, c =>
+            {
+                Backdrop(c, background);
+                var cast = new CastView(c);
+                cast.Show(heroine, null, other, null, speaker);
+                cast.Tick(10);
+                var plate = new PlateSpec { Style = speaker > 0 ? PlateStyle.SpeechLeft : PlateStyle.SpeechRight, Label = label, Text = text, Instant = true };
+                var view = new PageView(c, BeatMapper.LinePage(plate), new Bank(), () => { }, animated: false);
+                cleanup.Add(view.Dispose);
+            });
 
         static void Add(string name, Action<RectTransform> build) => shots.Add(new Shot { Name = name, Build = build });
 

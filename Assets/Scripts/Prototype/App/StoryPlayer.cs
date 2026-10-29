@@ -18,6 +18,8 @@ namespace LegacyThroughTime.Prototype
     {
         ScreenHost host;
         BackdropTint tint;
+        CastView cast;
+        string heroineId, heroineEmo, otherId, otherEmo;   // who stands on the screen now: the heroine (or her as a child) and the other
         StoryAudio audio;
         SettingsToast settings;
         MenuScreen menu;
@@ -56,6 +58,7 @@ namespace LegacyThroughTime.Prototype
             lastWidth = Screen.width; lastHeight = Screen.height;
             var canvas = Stage.BuildCanvas();
             tint = Stage.BuildBackground(canvas);
+            cast = new CastView(canvas);
             audio = new StoryAudio(transform);
             host = new ScreenHost(this, canvas);
             settings = new SettingsToast(host.Overlay, host.OverlayAnimator);
@@ -106,6 +109,7 @@ namespace LegacyThroughTime.Prototype
         void Update()
         {
             tint?.Tick(Time.unscaledDeltaTime);
+            cast?.Tick(Time.unscaledDeltaTime);
             audio?.Tick(Time.unscaledDeltaTime);
             var keyboard = Keyboard.current;                 // Android Back arrives as Escape
             if (settings != null && keyboard != null && keyboard.escapeKey.wasPressedThisFrame) Back();
@@ -232,7 +236,36 @@ namespace LegacyThroughTime.Prototype
         void Scenery(string backgroundId)
         {
             tintId = backgroundId;
+            ResetCast();
             tint.Set(backgroundId); audio.Scene(backgroundId);
+        }
+
+        void ResetCast()
+        {
+            heroineId = heroineEmo = otherId = otherEmo = null;
+            cast.Clear();
+        }
+
+        /// The characters of a line: the speaker comes on the screen (the heroine on one side, the other on the other),
+        /// the one who is silent dims; narration leaves them as they are. `# emo: sad` is the face, `# look: travel` the outfit.
+        void UpdateCast(Beat beat)
+        {
+            var speaker = beat.Voice switch
+            {
+                Voice.Thought => BeatMapper.Heroine,
+                Voice.Dialogue or Voice.Flashback => beat.Speaker,
+                _ => null,
+            };
+            var id = Cast.Id(speaker);
+            if (id == null) return;
+            var emotion = beat.TagValue("emo");
+            var isHeroine = id == Cast.Heroine || id == Cast.Child;
+            if (isHeroine) { heroineId = id; heroineEmo = emotion; } else { otherId = id; otherEmo = emotion; }
+            var look = beat.TagValue("look");
+            var travel = look != null ? look == "travel" : Cast.Travel(tintId);
+            cast.Show(heroineId == null ? null : Cast.Sprite(heroineId, heroineEmo, travel), heroineId == null ? null : Cast.Plain(heroineId, travel),
+                      otherId == null ? null : Cast.Sprite(otherId, otherEmo, travel), otherId == null ? null : Cast.Plain(otherId, travel),
+                      isHeroine ? 1 : -1);
         }
 
         // ------------------------------------------------------------ flow
@@ -295,6 +328,7 @@ namespace LegacyThroughTime.Prototype
                 {
                     var bg = beat.TagValue("bg");
                     if (bg != null && bg != tintId) audio.Ui("scene_change", .6f);
+                    if (bg != tintId) ResetCast();
                     tintId = bg;
                     tint.Set(bg); audio.Scene(bg);
                 }
@@ -318,6 +352,7 @@ namespace LegacyThroughTime.Prototype
                             continue;
                         }
                         var plate = BeatMapper.Plate(beat);
+                        UpdateCast(beat);
                         Save();
                         var note = BeatMapper.Note(beat);
                         if (note != null) { hints.Add(note); audio.Ui("system_info"); Library.Unlock(beat.TagValue("note")); }
