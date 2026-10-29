@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Магазин</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="kit.css">
+</head>
+<body>
+<div class="device"><div class="safe">
+  <div class="topbar">
+    <div class="pill pill-energy"><svg class="ico"><use href="icons.svg#i-energy"/></svg><span>2</span><button class="pill-plus" aria-label="Пополнить энергию"><svg class="ico"><use href="icons.svg#i-plus"/></svg></button></div>
+    <div class="pill pill-gem"><svg class="ico"><use href="icons.svg#i-gem"/></svg><span>50</span><button class="pill-plus" aria-label="Пополнить алмазы"><svg class="ico"><use href="icons.svg#i-plus"/></svg></button></div>
+    <span class="spacer"></span>
+    <a class="btn btn-icon" href="settings.html" aria-label="Настройки"><svg class="ico"><use href="icons.svg#i-gear"/></svg></a>
+  </div>
+
+  <div class="scroll">
+    <article class="card card-best starter">
+      <div class="art"><svg class="ico"><use href="icons.svg#i-gift"/></svg></div>
+      <div class="buy">
+        <div class="head">Для начинающих</div>
+        <span class="amount"><svg class="ico-s" style="color:var(--gem)"><use href="icons.svg#i-gem"/></svg>100</span>
+        <span class="amount"><svg class="ico-s" style="color:var(--energy)"><use href="icons.svg#i-energy"/></svg>5</span>
+        <button class="btn btn-price">6,99 $</button>
+      </div>
+    </article>
+
+    <div class="segmented" role="tablist">
+      <button role="tab" aria-selected="true" data-target="energy">Энергия</button>
+      <button role="tab" aria-selected="false" data-target="gems">Алмазы</button>
+    </div>
+
+    <div class="stack" data-panel="energy">
+      <article class="card card-best big">
+        <div class="art" style="color:var(--energy)"><svg class="ico"><use href="icons.svg#i-energy"/></svg></div>
+        <div class="buy"><div class="head">Лучшая выгода</div><span class="amount"><svg class="ico-s" style="color:var(--energy)"><use href="icons.svg#i-energy"/></svg>30</span><button class="btn btn-price">19,99 $</button></div>
+      </article>
+      <div class="grid2">
+        <div class="card card-product"><div class="art" style="color:var(--energy)"><svg class="ico"><use href="icons.svg#i-energy"/></svg></div><span class="amount"><svg class="ico-s" style="color:var(--energy)"><use href="icons.svg#i-energy"/></svg>15</span><button class="btn btn-price btn-block">10,99 $</button></div>
+        <div class="card card-product"><div class="art" style="color:var(--energy)"><svg class="ico"><use href="icons.svg#i-energy"/></svg></div><span class="amount"><svg class="ico-s" style="color:var(--energy)"><use href="icons.svg#i-energy"/></svg>5</span><button class="btn btn-price btn-block">3,99 $</button></div>
+      </div>
+    </div>
+
+    <div class="stack" data-panel="gems" hidden>
+      <article class="card card-best big">
+        <div class="art"><svg class="ico"><use href="icons.svg#i-gem"/></svg></div>
+        <div class="buy"><div class="head">Лучшая выгода</div><span class="amount"><svg class="ico-s" style="color:var(--gem)"><use href="icons.svg#i-gem"/></svg>270</span><button class="btn btn-price">19,99 $</button></div>
+      </article>
+      <div class="grid2">
+        <div class="card card-product"><div class="art"><svg class="ico"><use href="icons.svg#i-gem"/></svg></div><span class="amount"><svg class="ico-s" style="color:var(--gem)"><use href="icons.svg#i-gem"/></svg>130</span><button class="btn btn-price btn-block">9,99 $</button></div>
+        <div class="card card-product"><div class="art"><svg class="ico"><use href="icons.svg#i-gem"/></svg></div><span class="amount"><svg class="ico-s" style="color:var(--gem)"><use href="icons.svg#i-gem"/></svg>60</span><button class="btn btn-price btn-block">4,99 $</button></div>
+      </div>
+    </div>
+    <p class="small" style="text-align:center">Покупки проходят через Google Play</p>
+  </div>
+
+  <nav class="tabbar">
+    <a class="tab" href="home.html"><svg class="ico"><use href="icons.svg#i-back"/></svg>Назад</a>
+    <a class="tab" href="shop.html" aria-current="page"><svg class="ico"><use href="icons.svg#i-cart"/></svg>Магазин</a>
+    <button class="tab"><svg class="ico"><use href="icons.svg#i-receipt"/></svg>Покупки</button>
+  </nav>
+</div></div>
+<script src="shell.js"></script>
+</body>
+</html>
