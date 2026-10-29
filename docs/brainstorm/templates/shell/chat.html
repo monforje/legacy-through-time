@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ИИ-чат с героем</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="kit.css">
+</head>
+<body style="display:block">
+<main data-chat-demo style="width:360px;max-width:100%;margin:0 auto">
+  <!-- Переключатель состояний только для макета, в приложении его нет -->
+  <div class="demo" role="group" aria-label="Состояние чата">
+    <button class="chip" data-state-btn="normal" aria-pressed="true">Диалог</button>
+    <button class="chip" data-state-btn="empty" aria-pressed="false">Пусто</button>
+    <button class="chip" data-state-btn="long" aria-pressed="false">Длинное</button>
+    <button class="chip" data-state-btn="limit" aria-pressed="false">Лимит</button>
+  </div>
+
+  <div class="device"><div class="safe">
+    <div class="topbar">
+      <a class="btn btn-icon" href="home.html" aria-label="Назад"><svg class="ico"><use href="icons.svg#i-chevron-l"/></svg></a>
+      <div class="avatar" aria-hidden="true">Л</div>
+      <div style="flex:1;min-width:0"><div class="head">Лея</div><span class="small">Настроение: тревожится</span></div>
+      <button class="btn btn-icon" aria-label="Пожаловаться на ответ"><svg class="ico"><use href="icons.svg#i-flag"/></svg></button>
+    </div>
+
+    <div class="chat" data-state="normal">
+      <div class="msgs">
+        <div class="bubble them" data-only="empty">Привет. Я рада, что ты пришёл. О чём поговорим?</div>
+        <div class="bubble them" data-only="normal limit">Ты видел, как я промолчала перед отцом? Я до сих пор думаю, права ли я была.</div>
+        <div class="bubble me" data-only="normal limit">Ты поступила смело.</div>
+        <div class="bubble them" data-only="normal limit">Смело или глупо. Иногда это одно и то же.</div>
+        <div class="bubble them" data-only="long">Знаешь, когда я стояла в зале и все смотрели на меня, мне казалось, что стены становятся ближе с каждым вдохом, а голос отца звучит откуда-то издалека, будто из другой жизни, и я никак не могла понять, что мне нужно сделать: ответить, уйти или просто молчать, пока всё не закончится само собой.</div>
+        <div class="bubble me" data-only="long">Это было страшно?</div>
+        <div class="card" data-only="limit" style="align-items:center;text-align:center">
+          <div class="head">Лея устала и ушла отдыхать</div>
+          <p class="small">Бесплатные сообщения на сегодня закончились. Продолжите сейчас или возвращайтесь завтра.</p>
+          <button class="btn btn-price btn-block">Продолжить за 20 <svg class="ico"><use href="icons.svg#i-gem"/></svg></button>
+        </div>
+      </div>
+
+      <div class="chips" data-only="normal empty long">
+        <button class="chip" aria-pressed="false">Что ты чувствуешь?</button>
+        <button class="chip" aria-pressed="false">Расскажи о Сафии</button>
+        <button class="chip" aria-pressed="false">Чего ты боишься?</button>
+      </div>
+
+      <div class="chat-input" data-only="normal empty long">
+        <input placeholder="Сказать…" aria-label="Сообщение">
+        <button class="btn btn-icon btn-primary" aria-label="Отправить"><svg class="ico"><use href="icons.svg#i-send"/></svg></button>
+      </div>
+      <div class="chat-input" data-only="limit">
+        <input placeholder="Лимит исчерпан" aria-label="Сообщение" disabled>
+        <button class="btn btn-icon btn-primary" aria-label="Отправить" disabled><svg class="ico"><use href="icons.svg#i-send"/></svg></button>
+      </div>
+
+      <p class="small" style="text-align:center" data-only="normal empty long">Вымышленный диалог по мотивам истории · 7 из 10</p>
+      <p class="small" style="text-align:center" data-only="limit">Вымышленный диалог по мотивам истории · 10 из 10</p>
+    </div>
+
+    <nav class="tabbar">
+      <a class="tab" href="home.html"><svg class="ico"><use href="icons.svg#i-book"/></svg>Истории</a>
+      <a class="tab" href="chat.html" aria-current="page"><svg class="ico"><use href="icons.svg#i-chat"/></svg>Чат</a>
+      <a class="tab" href="wheel.html"><svg class="ico"><use href="icons.svg#i-wheel"/></svg>Колесо</a>
+      <a class="tab" href="library.html"><svg class="ico"><use href="icons.svg#i-star"/></svg>Слова</a>
+      <a class="tab" href="rewards.html"><svg class="ico"><use href="icons.svg#i-gift"/></svg>Награды</a>
+    </nav>
+  </div></div>
+</main>
+<script src="shell.js"></script>
+</body>
+</html>

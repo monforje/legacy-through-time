@@ -2,6 +2,7 @@
 // Проверка раскладки в браузере: shellAudit() в консоли.
 
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+if (self !== top) document.documentElement.classList.add('embed');   // в индексе рамки без полей
 
 function initTabs(root) {
   const tabs = $$('.tab', root);

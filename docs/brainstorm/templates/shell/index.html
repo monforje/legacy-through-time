@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Оболочка: экраны</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="kit.css">
+<style>
+  body { display: block; }
+  .page { max-width: 1280px; margin: 0 auto; }
+  .page h1 { text-align: left; }
+  .page a { color: var(--accent); }
+  .wall { display: flex; flex-wrap: wrap; gap: var(--space-5); margin-top: var(--space-5); }
+  figure { display: flex; flex-direction: column; gap: var(--space-2); }
+  .frame { width: calc(var(--w) * .62); height: calc(var(--h) * .62); overflow: hidden; border-radius: var(--radius-m); box-shadow: var(--shadow); }
+  .frame iframe { width: var(--w); height: var(--h); border: 0; transform: scale(.62); transform-origin: 0 0; background: var(--bg); }
+  figcaption { font-weight: 800; }
+  figcaption span { display: block; font-weight: 600; color: var(--text-muted); font-size: var(--fs-small); }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 class="title">Оболочка приложения: экраны</h1>
+  <p class="muted">Нейтральный временный кит, рамка Galaxy S23. Каталог токенов и компонентов: <a href="kit.html">kit.html</a>. Клик по подписи открывает экран целиком.</p>
+  <div class="wall">
+    <figure><div class="frame"><iframe src="home.html" title="Главная" loading="lazy"></iframe></div><figcaption><a href="home.html">1. Главная</a><span>карусель, поиск, ленты</span></figcaption></figure>
+    <figure><div class="frame"><iframe src="home-panel.html" title="Главная с панелью" loading="lazy"></iframe></div><figcaption><a href="home-panel.html">2. Главная с панелью</a><span>реклама, награды, распродажа</span></figcaption></figure>
+    <figure><div class="frame"><iframe src="rewards.html" title="Награды" loading="lazy"></iframe></div><figcaption><a href="rewards.html">3. Награды</a><span>ежедневные, таймеры</span></figcaption></figure>
+    <figure><div class="frame"><iframe src="shop.html" title="Магазин" loading="lazy"></iframe></div><figcaption><a href="shop.html">4. Магазин</a><span>энергия и алмазы</span></figcaption></figure>
+    <figure><div class="frame"><iframe src="wheel.html" title="Колесо фортуны" loading="lazy"></iframe></div><figcaption><a href="wheel.html">5. Колесо фортуны</a><span>шансы, вращение</span></figcaption></figure>
+    <figure><div class="frame"><iframe src="settings.html" title="Настройки" loading="lazy"></iframe></div><figcaption><a href="settings.html">6. Настройки</a><span>тумблеры, вход, документы</span></figcaption></figure>
+    <figure><div class="frame"><iframe src="chat.html" title="ИИ-чат с героем" loading="lazy"></iframe></div><figcaption><a href="chat.html">7. ИИ-чат с героем</a><span>диалог, пусто, длинное, лимит</span></figcaption></figure>
+    <figure><div class="frame"><iframe src="chapters.html" title="Главы истории" loading="lazy"></iframe></div><figcaption><a href="chapters.html">8. Главы истории</a><span>прогресс, замки</span></figcaption></figure>
+    <figure><div class="frame"><iframe src="library.html" title="Библиотека слов" loading="lazy"></iframe></div><figcaption><a href="library.html">9. Библиотека слов</a><span>термины</span></figcaption></figure>
+  </div>
+</div>
+</body>
+</html>

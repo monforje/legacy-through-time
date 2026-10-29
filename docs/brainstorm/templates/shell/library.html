@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Библиотека слов</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="kit.css">
+</head>
+<body>
+<div class="device"><div class="safe">
+  <h1 class="title" style="padding:var(--space-2) 0">Слова</h1>
+  <label class="search"><svg class="ico"><use href="icons.svg#i-search"/></svg><input placeholder="Найти слово…" aria-label="Поиск слов"></label>
+
+  <div class="scroll" style="margin-top:var(--space-3)">
+    <p class="small">Слова и понятия, которые вы встретили в историях: 3 из 12</p>
+    <div class="group">
+      <details open>
+        <summary class="row" style="cursor:pointer;list-style:none"><svg class="ico"><use href="icons.svg#i-book"/></svg><span class="label">Маяк</span><svg class="ico"><use href="icons.svg#i-chevron-r"/></svg></summary>
+        <p class="small" style="padding:0 var(--space-3) var(--space-3) calc(var(--space-3) + 34px)">Башня с сильным огнём наверху. Он показывает кораблям, где берег и где опасные скалы.</p>
+      </details>
+      <details>
+        <summary class="row" style="cursor:pointer;list-style:none"><svg class="ico"><use href="icons.svg#i-book"/></svg><span class="label">Смотритель</span><svg class="ico"><use href="icons.svg#i-chevron-r"/></svg></summary>
+        <p class="small" style="padding:0 var(--space-3) var(--space-3) calc(var(--space-3) + 34px)">Человек, который следит за огнём маяка и живёт рядом с ним.</p>
+      </details>
+      <details>
+        <summary class="row" style="cursor:pointer;list-style:none"><svg class="ico"><use href="icons.svg#i-book"/></svg><span class="label">Отлив</span><svg class="ico"><use href="icons.svg#i-chevron-r"/></svg></summary>
+        <p class="small" style="padding:0 var(--space-3) var(--space-3) calc(var(--space-3) + 34px)">Время, когда море уходит от берега и открывает дно.</p>
+      </details>
+      <div class="row muted"><svg class="ico"><use href="icons.svg#i-lock"/></svg><span class="label">Закрытое слово<br><span class="small">Откроется позже в истории</span></span></div>
+    </div>
+  </div>
+
+  <nav class="tabbar">
+    <a class="tab" href="home.html"><svg class="ico"><use href="icons.svg#i-book"/></svg>Истории</a>
+    <a class="tab" href="chat.html"><svg class="ico"><use href="icons.svg#i-chat"/></svg>Чат</a>
+    <a class="tab" href="wheel.html"><svg class="ico"><use href="icons.svg#i-wheel"/></svg>Колесо</a>
+    <a class="tab" href="library.html" aria-current="page"><svg class="ico"><use href="icons.svg#i-star"/></svg>Слова</a>
+    <a class="tab" href="rewards.html"><svg class="ico"><use href="icons.svg#i-gift"/></svg>Награды</a>
+  </nav>
+</div></div>
+<script src="shell.js"></script>
+</body>
+</html>
