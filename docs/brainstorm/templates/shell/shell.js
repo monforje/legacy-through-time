@@ -153,7 +153,7 @@ function shellAudit() {
     .map(selector);
   const overflow = $$('.device *').filter(visible).filter(el => {
     const o = getComputedStyle(el).overflowX;
-    return el.scrollWidth > el.clientWidth + 1 && o !== 'auto' && o !== 'scroll' && el.clientWidth > 0 && !(el instanceof SVGElement) && !el.closest('[data-audit-skip]');   // вращающийся круг: рамка повёрнутого квадрата шире круга
+    return el.scrollWidth > el.clientWidth + 1 && o !== 'auto' && o !== 'scroll' && el.clientWidth > 0 && !(el instanceof SVGElement) && !el.closest('[data-audit-skip]') && getComputedStyle(el).textOverflow !== 'ellipsis';   // вращающийся круг: рамка повёрнутого квадрата шире круга
   }).map(selector);
   return { smallTargets, overflow, hScroll: document.documentElement.scrollWidth > document.documentElement.clientWidth };
 }

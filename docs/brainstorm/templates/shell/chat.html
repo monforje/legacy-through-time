@@ -18,10 +18,10 @@
   </div>
 
   <div class="device"><div class="safe">
-    <div class="topbar">
-      <a class="btn btn-icon" href="home.html" aria-label="Назад"><svg class="ico"><use href="icons.svg#i-chevron-l"/></svg></a>
-      <div class="avatar" aria-hidden="true">Л</div>
-      <div style="flex:1;min-width:0"><div class="head">Лея</div><span class="small">Настроение: тревожится</span></div>
+    <div class="topbar strip">
+      <a class="btn btn-icon" href="chats.html" aria-label="К списку чатов"><svg class="ico"><use href="icons.svg#i-chevron-l"/></svg></a>
+      <div class="avatar" style="background:var(--art-5)" aria-hidden="true">Л</div>
+      <div class="head" style="flex:1;min-width:0">Лея</div>
       <button class="btn btn-icon" aria-label="Пожаловаться на ответ"><svg class="ico"><use href="icons.svg#i-flag"/></svg></button>
     </div>
 
@@ -41,32 +41,15 @@
         </div>
       </div>
 
-      <div class="chips" data-only="normal empty long">
-        <button class="chip" aria-pressed="false">Что ты чувствуешь?</button>
-        <button class="chip" aria-pressed="false">Расскажи о Сафии</button>
-        <button class="chip" aria-pressed="false">Чего ты боишься?</button>
-      </div>
-
       <div class="chat-input" data-only="normal empty long">
         <input placeholder="Сказать…" aria-label="Сообщение">
-        <button class="btn btn-icon btn-primary" aria-label="Отправить"><svg class="ico"><use href="icons.svg#i-send"/></svg></button>
+        <button class="send" aria-label="Отправить"><svg class="ico"><use href="icons.svg#i-arrow-right"/></svg></button>
       </div>
       <div class="chat-input" data-only="limit">
         <input placeholder="Лимит исчерпан" aria-label="Сообщение" disabled>
-        <button class="btn btn-icon btn-primary" aria-label="Отправить" disabled><svg class="ico"><use href="icons.svg#i-send"/></svg></button>
+        <button class="send" aria-label="Отправить" disabled><svg class="ico"><use href="icons.svg#i-arrow-right"/></svg></button>
       </div>
-
-      <p class="small" style="text-align:center" data-only="normal empty long">Вымышленный диалог по мотивам истории · <span class="nowrap">7 из 10</span></p>
-      <p class="small" style="text-align:center" data-only="limit">Вымышленный диалог по мотивам истории · <span class="nowrap">10 из 10</span></p>
     </div>
-
-    <nav class="tabbar">
-      <a class="tab" href="home.html"><svg class="ico"><use href="icons.svg#i-book"/></svg>Истории</a>
-      <a class="tab" href="chat.html" aria-current="page"><svg class="ico"><use href="icons.svg#i-chat"/></svg>Чат</a>
-      <a class="tab" href="wheel.html"><svg class="ico"><use href="icons.svg#i-wheel"/></svg>Колесо</a>
-      <a class="tab" href="library.html"><svg class="ico"><use href="icons.svg#i-star"/></svg>Слова</a>
-      <a class="tab" href="rewards.html"><svg class="ico"><use href="icons.svg#i-gift"/></svg>Награды</a>
-    </nav>
   </div></div>
 </main>
 <script src="shell.js"></script>
