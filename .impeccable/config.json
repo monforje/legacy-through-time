@@ -83,6 +83,15 @@
         ],
         "createdAt": "2026-10-29T16:45:43.880Z",
         "reason": "false positive: the hub sits inside the wheel disc and the prize tiles are small chips, none is a card inside a card; assistant decision, not user confirmed"
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/library.html"
+        ],
+        "createdAt": "2026-10-29T17:49:39.816Z",
+        "reason": "false positive: the toast floats over the screen as a transient overlay and the word rows are list rows inside one group, not cards in cards; assistant decision, not user confirmed"
       }
     ]
   }
