@@ -160,7 +160,7 @@ a.btn { text-decoration: none; }
 .card-reward .foot .btn-icon::after { display: none; }   /* замок неактивный, зона нажатия не нужна */   /* видимая высота 36, зона нажатия 44 */
 .card-reward .foot .btn .ico { width: 16px; height: 16px; }
 .timer { display: inline-flex; align-items: center; gap: var(--space-2); font: 800 var(--fs-small) var(--font); font-variant-numeric: tabular-nums; background: var(--surface-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-s); }
-.card-product { align-items: center; text-align: center; }
+.card-product { align-items: center; text-align: center; background: var(--surface-2); }   /* фон как у стартовой и «лучшей выгоды» */
 .card-product .art { width: 100%; height: 48px; display: grid; place-items: center; color: var(--gem); }
 .card-product .art .ico { width: 40px; height: 40px; }
 .amount { display: inline-flex; align-items: center; gap: var(--space-2); font: 800 var(--fs-num) var(--font); font-variant-numeric: tabular-nums; background: var(--surface-2); padding: var(--space-1) var(--space-4); border-radius: var(--radius-s); min-width: 0; }
@@ -215,9 +215,9 @@ details[open] > summary .chev { transform: rotate(90deg); }   /* раскрыт�
 .card-best .buy { display: flex; flex-direction: column; gap: var(--space-2); }
 .buy .amounts, .card-product .amounts { align-self: stretch; }
 /* блок количества: одна фигура, внутри строки с разделителем; ширина как у кнопки цены */
-.amounts { display: flex; flex-direction: column; background: none; box-shadow: inset 0 0 0 1px var(--line); border-radius: var(--radius-s); overflow: hidden; }   /* контурная, одинаковая на любой карточке */
+.amounts { display: flex; flex-direction: column; background: var(--surface); border-radius: var(--radius-s); overflow: hidden; }   /* залитая, темнее карточки; одна и та же на любой карточке */
 .amounts .amount { background: none; border-radius: 0; justify-content: center; padding: var(--space-2) var(--space-4); }
-.amounts .amount + .amount { box-shadow: inset 0 1px 0 var(--line); }   /* плашка количества той же ширины, что кнопка цены */
+.amounts .amount + .amount { box-shadow: inset 0 1px 0 var(--surface-2); }   /* плашка количества той же ширины, что кнопка цены */
 .tab { text-decoration: none; }
 .carousel { display: flex; gap: var(--space-3); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; flex: none; position: relative; padding-inline: 8%; scroll-padding-inline: 8%; }
 .hero { flex: none; width: 100%; height: 300px; scroll-snap-align: center; border-radius: var(--radius-l); position: relative; overflow: hidden; background: var(--art-5); display: flex; flex-direction: column; justify-content: flex-end; gap: var(--space-2); padding: var(--space-4); }
