@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Настройки</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="kit.css">
+</head>
+<body>
+<div class="device"><div class="safe">
+  <div class="modal-head">
+    <h1 class="title">Настройки</h1>
+    <a class="btn btn-icon" href="home.html" aria-label="Закрыть" style="position:absolute;right:0;top:0;background:none"><svg class="ico"><use href="icons.svg#i-close"/></svg></a>
+  </div>
+
+  <div class="scroll">
+    <div class="group">
+      <div class="row"><svg class="ico"><use href="icons.svg#i-bell"/></svg><span class="label">Уведомления</span><button class="switch" role="switch" aria-checked="true" aria-label="Уведомления"></button></div>
+      <div class="row"><svg class="ico"><use href="icons.svg#i-sound"/></svg><span class="label">Звук</span><button class="switch" role="switch" aria-checked="true" aria-label="Звук"></button></div>
+      <div class="row"><svg class="ico"><use href="icons.svg#i-globe"/></svg><span class="label">Язык</span>
+        <span class="stepper" data-values="Русский|English"><button aria-label="Предыдущий язык"><svg class="ico"><use href="icons.svg#i-chevron-l"/></svg></button><output>Русский</output><button aria-label="Следующий язык"><svg class="ico"><use href="icons.svg#i-chevron-r"/></svg></button></span></div>
+      <div class="row"><svg class="ico"><use href="icons.svg#i-book"/></svg><span class="label">Размер текста</span>
+        <span class="stepper" data-values="Обычный|Крупный"><button aria-label="Предыдущий размер"><svg class="ico"><use href="icons.svg#i-chevron-l"/></svg></button><output>Обычный</output><button aria-label="Следующий размер"><svg class="ico"><use href="icons.svg#i-chevron-r"/></svg></button></span></div>
+    </div>
+
+    <div class="group" style="padding:var(--space-3);gap:var(--space-2)">
+      <p class="small" style="text-align:center">Войдите, чтобы прогресс сохранялся в облаке</p>
+      <button class="btn btn-primary btn-block"><svg class="ico"><use href="icons.svg#i-user"/></svg>Войти с почтой</button>
+      <button class="btn btn-secondary btn-block">Войти через Google</button>
+      <button class="btn btn-secondary btn-block">Войти через Apple</button>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:var(--space-3)">
+      <button class="btn btn-icon" aria-label="Telegram">TG</button>
+      <button class="btn btn-icon" aria-label="ВКонтакте">VK</button>
+      <button class="btn btn-icon" aria-label="YouTube">YT</button>
+    </div>
+
+    <div class="group">
+      <button class="row"><svg class="ico"><use href="icons.svg#i-support"/></svg><span class="label">Поддержка</span><svg class="ico"><use href="icons.svg#i-chevron-r"/></svg></button>
+      <button class="row"><svg class="ico"><use href="icons.svg#i-shield"/></svg><span class="label">Конфиденциальность</span><svg class="ico"><use href="icons.svg#i-chevron-r"/></svg></button>
+      <button class="row"><svg class="ico"><use href="icons.svg#i-doc"/></svg><span class="label">Пользовательское соглашение</span><svg class="ico"><use href="icons.svg#i-chevron-r"/></svg></button>
+      <button class="row"><svg class="ico"><use href="icons.svg#i-tools"/></svg><span class="label">Инструменты</span><svg class="ico"><use href="icons.svg#i-chevron-r"/></svg></button>
+    </div>
+  </div>
+</div></div>
+<script src="shell.js"></script>
+</body>
+</html>

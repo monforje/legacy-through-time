@@ -195,6 +195,16 @@ a.btn { text-decoration: none; }
 .hero .name { position: absolute; top: 64px; left: var(--space-4); right: var(--space-4); font-size: 28px; font-weight: 800; text-align: center; line-height: 1.1; overflow-wrap: anywhere; }
 .hero .btn { align-self: flex-start; }
 .shuffle { position: absolute; left: var(--space-3); top: var(--space-3); z-index: 2; background: var(--accent); color: var(--accent-ink); }
+.prizes { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2); }
+.prize { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--space-2) 0; border-radius: var(--radius-s); background: var(--surface); font: 800 var(--fs-small) var(--font); font-variant-numeric: tabular-nums; }
+.prize .ico { color: var(--accent); }
+.wheel { position: relative; width: 280px; height: 280px; margin: var(--space-3) auto; flex: none; }
+.wheel-disc { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 6px var(--surface-2);
+  background: conic-gradient(from -18deg, var(--art-1) 0 36deg, var(--art-2) 36deg 72deg, var(--art-3) 72deg 108deg, var(--art-4) 108deg 144deg, var(--art-5) 144deg 180deg, var(--art-6) 180deg 216deg, var(--art-7) 216deg 252deg, var(--art-8) 252deg 288deg, var(--art-9) 288deg 324deg, var(--art-10) 324deg 360deg); }
+.wheel-disc .seg { position: absolute; left: 50%; top: 0; width: 0; height: 50%; transform-origin: 50% 100%; transform: rotate(calc(var(--i) * 36deg)); }
+.wheel-disc .seg .ico { position: absolute; top: 22px; left: -12px; color: var(--text); }
+.wheel-hub { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 4px var(--surface-2); display: grid; place-items: center; color: var(--accent); }
+.wheel-pointer { position: absolute; left: 50%; top: -10px; margin-left: -12px; width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 22px solid var(--accent); z-index: 2; }
 .mini { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
 .mini .cover { aspect-ratio: 3 / 4; }
 .dots { display: flex; justify-content: center; gap: var(--space-2); }
