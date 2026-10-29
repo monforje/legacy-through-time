@@ -49,6 +49,7 @@
   --space-5: 24px;
   --space-6: 32px;
   --touch: 44px;
+  --action-w: 108px;   /* ширина кнопки действия в наградах; картинка стоит над ней по центру */
   --shadow: 0 8px 24px color-mix(in srgb, var(--scrim) 50%, transparent);
 
   /* типографика */
@@ -145,18 +146,19 @@ a.btn { text-decoration: none; }
 .badge-flag { background: var(--accent); color: var(--accent-ink); font-size: var(--fs-small); font-weight: 800; padding: var(--space-1) var(--space-3); border-radius: var(--radius-s); }
 .card-reward { display: grid; grid-template-columns: 1fr 1fr; grid-template-areas: "info art" "foot foot"; gap: var(--space-2) var(--space-3); }
 .card-reward .info { grid-area: info; min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); }
-.card-reward .art { grid-area: art; display: grid; place-items: center; color: var(--accent); }   /* картинка занимает половину карточки */
+.card-reward .art { grid-area: art; justify-self: end; width: var(--action-w); display: grid; place-items: center; color: var(--accent); }   /* центр картинки совпадает с центром кнопки снизу */
 .card-reward .art .ico { width: 88px; height: 88px; }
 .card-reward .foot { grid-area: foot; display: flex; align-items: center; gap: var(--space-2); }
 .card-reward .foot .actions { margin-left: auto; display: flex; gap: var(--space-2); }
 .card-reward { padding: var(--space-3); }
 .card-reward .foot > *, .card-reward .actions > * { flex: none; }
-.card-reward .foot .timer { width: 84px; height: 36px; justify-content: center; padding: 0; }
-.card-reward .foot .btn { position: relative; height: 36px; min-height: 36px; width: 140px; padding: 0 var(--space-2); font-size: var(--fs-small); white-space: nowrap; }
-.card-reward .foot .btn.btn-icon { width: 36px; min-width: 36px; padding: 0; }
+.card-reward .foot .timer { height: 36px; padding: 0 var(--space-3); }   /* справа столько же воздуха, сколько слева от иконки */
+.card-reward .foot .btn { position: relative; height: 36px; min-height: 36px; width: var(--action-w); padding: 0 var(--space-2); font-size: var(--fs-body); white-space: nowrap; }
+.card-reward .foot .btn.two-line { font-size: var(--fs-micro); line-height: 1.15; white-space: normal; }
+.card-reward .foot .btn.btn-icon { width: 28px; min-width: 28px; height: 28px; min-height: 28px; padding: 0; }
 .card-reward .foot .btn::after { content: ""; position: absolute; inset: -4px 0; }
 .card-reward .foot .btn-icon::after { display: none; }   /* замок неактивный, зона нажатия не нужна */   /* видимая высота 36, зона нажатия 44 */
-.card-reward .foot .btn .ico { width: 18px; height: 18px; }
+.card-reward .foot .btn .ico { width: 16px; height: 16px; }
 .timer { display: inline-flex; align-items: center; gap: var(--space-2); font: 800 var(--fs-small) var(--font); font-variant-numeric: tabular-nums; background: var(--surface-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-s); }
 .card-product { align-items: center; text-align: center; }
 .card-product .art { width: 100%; height: 48px; display: grid; place-items: center; color: var(--gem); }
