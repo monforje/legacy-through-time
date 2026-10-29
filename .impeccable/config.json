@@ -20,6 +20,60 @@
         ],
         "createdAt": "2026-10-29T16:36:44.259Z",
         "reason": "false positive: wheel pointer sits inside the 12px margin of .wheel, verified in screenshot (fully visible); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/kit.css"
+        ],
+        "createdAt": "2026-10-29T16:39:35.999Z",
+        "reason": "false positive: L210 is the wheel pointer, a CSS triangle drawn with borders, not a card border; assistant decision, not user confirmed"
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/kit.html"
+        ],
+        "createdAt": "2026-10-29T16:39:36.006Z",
+        "reason": "false positive: small amount/tag/badge chips inside product, story and reward cards, and kit.html demo frames are catalog samples; assistant decision, not user confirmed"
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/home.html"
+        ],
+        "createdAt": "2026-10-29T16:39:36.015Z",
+        "reason": "false positive: small amount/tag/badge chips inside product, story and reward cards, and kit.html demo frames are catalog samples; assistant decision, not user confirmed"
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/shop.html"
+        ],
+        "createdAt": "2026-10-29T16:39:36.022Z",
+        "reason": "false positive: small amount/tag/badge chips inside product, story and reward cards, and kit.html demo frames are catalog samples; assistant decision, not user confirmed"
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/chapters.html"
+        ],
+        "createdAt": "2026-10-29T16:39:36.030Z",
+        "reason": "false positive: small amount/tag/badge chips inside product, story and reward cards, and kit.html demo frames are catalog samples; assistant decision, not user confirmed"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/kit.html"
+        ],
+        "createdAt": "2026-10-29T16:39:36.039Z",
+        "reason": "false positive: token swatches in the catalog are labels on colour samples; assistant decision, not user confirmed"
       }
     ]
   }

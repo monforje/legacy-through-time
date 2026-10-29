@@ -72,6 +72,7 @@ def forbidden_hues(toks: dict[str, str]) -> list[str]:
 
 PAIRS = [("--text", "--bg"), ("--text", "--surface"), ("--text", "--surface-2"),
          ("--accent-ink", "--accent"), ("--text-muted", "--bg"), ("--text-muted", "--surface")]
+NON_TEXT = [("--line", "--surface"), ("--line", "--bg")]  # WCAG 1.4.11: границы и треки не ниже 3:1
 
 
 def contrast(toks: dict[str, str]) -> list[str]:
@@ -82,6 +83,10 @@ def contrast(toks: dict[str, str]) -> list[str]:
             errors.append(f"{fg}/{bg}: нет токена")
         elif ratio(a, b) < 4.5:
             errors.append(f"{fg}/{bg}: контраст {ratio(a, b):.2f} < 4.5")
+    for fg, bg in NON_TEXT:
+        a, b = rgb(toks.get(fg, "")), rgb(toks.get(bg, ""))
+        if a is not None and b is not None and ratio(a, b) < 3:
+            errors.append(f"{fg}/{bg}: контраст границы {ratio(a, b):.2f} < 3")
     return errors
 
 

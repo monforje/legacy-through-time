@@ -117,6 +117,34 @@
     <div class="chat-input"><input placeholder="Сказать…" aria-label="Сообщение"><button class="btn btn-icon btn-primary" aria-label="Отправить"><svg class="ico"><use href="icons.svg#i-send"/></svg></button></div>
     <div class="toast" style="position:static">Тост: сохранено</div>
   </div></div>
+
+  <div class="device auto"><div class="safe">
+    <h2 class="head">Слои</h2>
+    <p class="small">Модалка поверх затемнения, всплывающая панель и тост. Экраны «Награды», «Настройки» и «Колесо» в макетах стоят во весь экран, но собираются из этой же модалки.</p>
+    <div style="position:relative;height:300px;border-radius:var(--radius-m);overflow:hidden;background:var(--bg)">
+      <div class="dim"></div>
+      <div class="modal" style="inset:var(--space-3)">
+        <div class="modal-head"><h3 class="head">Заголовок модалки</h3><button class="btn btn-icon" aria-label="Закрыть"><svg class="ico"><use href="icons.svg#i-close"/></svg></button></div>
+        <p class="small">Содержимое модалки.</p>
+        <button class="btn btn-primary btn-block">Действие</button>
+      </div>
+    </div>
+    <div class="sheet" style="position:static">
+      <button class="row"><svg class="ico"><use href="icons.svg#i-gift"/></svg><span class="label">Строка панели</span><svg class="ico"><use href="icons.svg#i-chevron-r"/></svg></button>
+      <button class="row" disabled><svg class="ico"><use href="icons.svg#i-cart"/></svg><span class="label">Недоступная строка</span></button>
+    </div>
+    <h2 class="head">Магазин</h2>
+    <div style="display:flex;gap:var(--space-3)">
+      <button class="btn btn-price" style="flex:1">9,99 $</button>
+      <button class="btn btn-price" style="flex:1">500 <svg class="ico"><use href="icons.svg#i-coin"/></svg></button>
+    </div>
+    <article class="card card-reward"><div class="info"><div class="head">Награда</div><p class="small">С кнопкой действия</p><div class="foot"><span class="timer"><svg class="ico-s"><use href="icons.svg#i-timer"/></svg><time>00:00:00</time></span><button class="btn btn-primary">Забрать</button></div></div><div class="art"><svg class="ico"><use href="icons.svg#i-gift"/></svg></div></article>
+    <nav class="tabbar" style="margin:0">
+      <a class="tab" href="home.html"><svg class="ico"><use href="icons.svg#i-back"/></svg>Назад</a>
+      <a class="tab" href="shop.html" aria-current="page"><svg class="ico"><use href="icons.svg#i-cart"/></svg>Магазин</a>
+      <button class="tab"><svg class="ico"><use href="icons.svg#i-receipt"/></svg>Покупки</button>
+    </nav>
+  </div></div>
 </div>
 <script src="shell.js"></script>
 </body>

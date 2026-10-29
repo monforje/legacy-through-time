@@ -15,6 +15,7 @@ function initTabs(root) {
 function initPanel(button, panel) {
   const set = open => { panel.hidden = !open; button.setAttribute('aria-expanded', String(open)); };
   button.addEventListener('click', () => set(panel.hidden));
+  document.addEventListener('click', e => { if (!panel.hidden && !panel.contains(e.target) && !button.contains(e.target)) set(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') set(false); });
   set(!panel.hidden);
 }
@@ -71,22 +72,32 @@ function pick(prizes) {
   return prizes[prizes.length - 1].id;
 }
 
+const plural = (n, [one, few, many]) => n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many;
+
 function initWheel(root, prizes) {
   const disc = root.querySelector('.wheel-disc');
   const spin = root.querySelector('[data-spin]');
   const toast = root.querySelector('.toast');
+  const counter = root.querySelector('[data-attempts]');
   const seg = 360 / prizes.length;
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let turns = 0;
+  let turns = 0, attempts = Number(root.dataset.attempts ?? 1), hideTimer;
+  const draw = () => {
+    counter.textContent = `${attempts} ${plural(attempts, ['попытка', 'попытки', 'попыток'])}`;
+    spin.disabled = attempts === 0;
+  };
   const done = id => {
     toast.textContent = 'Выпало: ' + prizes.find(p => p.id === id).label;
-    toast.hidden = false; spin.disabled = false;
-    setTimeout(() => { toast.hidden = true; }, 2500);
+    toast.hidden = false; draw();
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => { toast.hidden = true; }, 2500);
   };
+  draw();
   spin.addEventListener('click', () => {
+    if (attempts === 0) return;
     const id = pick(prizes);
     const index = prizes.findIndex(p => p.id === id);
-    turns += 4;
+    turns += 4; attempts -= 1;
     const angle = turns * 360 - index * seg;
     spin.disabled = true;
     disc.style.transition = still ? 'none' : 'transform 3.6s cubic-bezier(.12,.7,.15,1)';
@@ -116,14 +127,14 @@ function shellAudit() {
     .map(selector);
   const overflow = $$('.device *').filter(visible).filter(el => {
     const o = getComputedStyle(el).overflowX;
-    return el.scrollWidth > el.clientWidth + 1 && o !== 'auto' && o !== 'scroll' && el.clientWidth > 0 && !(el instanceof SVGElement);
+    return el.scrollWidth > el.clientWidth + 1 && o !== 'auto' && o !== 'scroll' && el.clientWidth > 0 && !(el instanceof SVGElement) && !el.closest('[data-audit-skip]');   // вращающийся круг: рамка повёрнутого квадрата шире круга
   }).map(selector);
   return { smallTargets, overflow, hScroll: document.documentElement.scrollWidth > document.documentElement.clientWidth };
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   $$('.tabbar').forEach(initTabs);
-  $$('.chips').forEach(initChips);
+  $$('.chips').filter(c => !c.closest('.chat')).forEach(initChips);   // подсказки чата не фильтр, подсветка им не нужна
   $$('.segmented').forEach(initSegmented);
   $$('.timer[data-seconds]').forEach(t => initCountdown(t, Number(t.dataset.seconds)));
   initSwitches(document);
