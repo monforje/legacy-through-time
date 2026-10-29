@@ -30,6 +30,18 @@ namespace LegacyThroughTime.Prototype
             "village_lights", "village_house_night", "village_house_dawn", "kazan_gate", "kazan_panorama",
         };
 
+        /// How tall the character is next to the heroine (1): a child and a boy are shorter, the men a bit taller.
+        public static float Height(string id) => id switch
+        {
+            "suyumbike_child" => .7f,
+            "boy_dream" => .55f,
+            "woman_a" => .96f,
+            "safiya" => .98f,
+            "yusuf" => 1.03f,
+            "chura_timer" => 1.01f,
+            _ => 1f,
+        };
+
         /// The character of a speaker; null for a voice without a picture (a servant, "Голос").
         public static string Id(string speaker) => speaker != null && ids.TryGetValue(speaker, out var id) ? id : null;
 

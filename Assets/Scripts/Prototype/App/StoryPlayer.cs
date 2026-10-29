@@ -19,7 +19,6 @@ namespace LegacyThroughTime.Prototype
         ScreenHost host;
         BackdropTint tint;
         CastView cast;
-        string heroineId, heroineEmo, otherId, otherEmo;   // who stands on the screen now: the heroine (or her as a child) and the other
         StoryAudio audio;
         SettingsToast settings;
         MenuScreen menu;
@@ -240,14 +239,12 @@ namespace LegacyThroughTime.Prototype
             tint.Set(backgroundId); audio.Scene(backgroundId);
         }
 
-        void ResetCast()
-        {
-            heroineId = heroineEmo = otherId = otherEmo = null;
-            cast.Clear();
-        }
+        void ResetCast() => cast.Clear();
 
-        /// The characters of a line: the speaker comes on the screen (the heroine on one side, the other on the other),
-        /// the one who is silent dims; narration leaves them as they are. `# emo: sad` is the face, `# look: travel` the outfit.
+        /// The character of a line: one person stands on the screen, the one who speaks now (like in a romance visual
+        /// novel); the next speaker rides in and the previous one rides out. A line without a speaker (narration, a
+        /// sound, a system line) leaves whoever is there; a speaker without a picture too. `# char: id` shows that character
+        /// (`# char: none` nobody), `# emo: sad` is the face, `# look: travel` the outfit of the heroine.
         void UpdateCast(Beat beat)
         {
             var speaker = beat.Voice switch
@@ -256,16 +253,14 @@ namespace LegacyThroughTime.Prototype
                 Voice.Dialogue or Voice.Flashback => beat.Speaker,
                 _ => null,
             };
-            var id = Cast.Id(speaker);
+            var forced = beat.TagValue("char");
+            if (forced == "none") { cast.Clear(); return; }
+            var id = forced ?? Cast.Id(speaker);
             if (id == null) return;
-            var emotion = beat.TagValue("emo");
-            var isHeroine = id == Cast.Heroine || id == Cast.Child;
-            if (isHeroine) { heroineId = id; heroineEmo = emotion; } else { otherId = id; otherEmo = emotion; }
             var look = beat.TagValue("look");
             var travel = look != null ? look == "travel" : Cast.Travel(tintId);
-            cast.Show(heroineId == null ? null : Cast.Sprite(heroineId, heroineEmo, travel), heroineId == null ? null : Cast.Plain(heroineId, travel),
-                      otherId == null ? null : Cast.Sprite(otherId, otherEmo, travel), otherId == null ? null : Cast.Plain(otherId, travel),
-                      isHeroine ? 1 : -1);
+            var heroine = id == Cast.Heroine || id == Cast.Child;
+            cast.Show(Cast.Sprite(id, beat.TagValue("emo"), travel), Cast.Plain(id, travel), heroine, Cast.Height(id));
         }
 
         // ------------------------------------------------------------ flow
