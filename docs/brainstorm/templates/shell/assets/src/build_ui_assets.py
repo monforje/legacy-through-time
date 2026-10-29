@@ -167,13 +167,14 @@ def group(objs):
 
 
 # ---------------------------------------------------------------- кадр
-def frame_and_render(name, margin=1.16):
+def frame_and_render(name, margin=1.16, size=SIZE, outdir=OUT, direction=(0.42, -1.0, 0.55)):
     sc = bpy.context.scene
-    meshes = [o for o in bpy.data.objects if o.type == 'MESH']
+    sc.render.resolution_x = sc.render.resolution_y = size
+    meshes = [o for o in bpy.data.objects if o.type in ('MESH', 'CURVE')]
     bpy.context.view_layer.update()
     corners = [o.matrix_world @ Vector(c) for o in meshes for c in o.bound_box]
     center = sum(corners, Vector()) / len(corners)
-    direction = Vector((0.42, -1.0, 0.55)).normalized()
+    direction = Vector(direction).normalized()
     cam_data = bpy.data.cameras.new('cam')
     cam_data.type = 'ORTHO'
     cam = bpy.data.objects.new('cam', cam_data)
@@ -201,7 +202,8 @@ def frame_and_render(name, margin=1.16):
         lo = bpy.data.objects.new(name_, ld)
         bpy.context.scene.collection.objects.link(lo)
         lo.rotation_euler = [math.radians(r) for r in rot]
-    sc.render.filepath = os.path.join(OUT, name + '.png')
+    os.makedirs(outdir, exist_ok=True)
+    sc.render.filepath = os.path.join(outdir, name + '.png')
     bpy.ops.render.render(write_still=True)
 
 
@@ -469,16 +471,150 @@ def build_sparkle():
     stand([s], 0)
 
 
+def build_wheel():
+    base = finish(cylinder('base', 1.0, 0.3, 64), mat('wheel-base', PAL['deep'], rough=0.55, coat=0.1), bevel=0.05)
+    parts = [base]
+    tones = (PAL['accent'], PAL['art'])
+    for i in range(8):
+        pts = [(0, 0)] + [(0.9 * math.cos(math.radians(i * 45 + k * 45 / 6)), 0.9 * math.sin(math.radians(i * 45 + k * 45 / 6))) for k in range(7)]
+        w = poly_extrude('wedge', pts, 0.07)
+        finish(w, mat('wedge', tones[i % 2], rough=0.5, coat=0.12), bevel=0.012)
+        place(w, loc=(0, 0, 0.17))
+        parts.append(w)
+    rim = finish(torus('rim', 1.0, 0.09, 64, 14), mat('rim', PAL['paper'], rough=0.5))
+    place(rim, loc=(0, 0, 0.1))
+    hub = finish(sphere('hub', 0.28), mat('hub', PAL['paper'], rough=0.45, coat=0.2))
+    place(hub, loc=(0, 0, 0.24))
+    parts += [rim, hub]
+    stand(parts, 0)
+
+
+# ---------------------------------------------------------------- глифы: пухлые 3D-трубки (собственная графика)
+def arc_pts(cx, cy, r, a0, a1, n=20):
+    return [(cx + r * math.cos(math.radians(a0 + (a1 - a0) * i / n)), cy + r * math.sin(math.radians(a0 + (a1 - a0) * i / n))) for i in range(n + 1)]
+
+
+def circle_pts(cx, cy, r, n=36):
+    return arc_pts(cx, cy, r, 0, 360, n)[:-1]
+
+
+def rect_pts(x0, y0, x1, y1):
+    return [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+
+
+def line(*pts, joints=True):
+    return ('line', list(pts), joints)
+
+
+def loop(pts, joints=True):
+    return ('loop', list(pts), joints)
+
+
+def arc(cx, cy, r, a0, a1):
+    return ('line', arc_pts(cx, cy, r, a0, a1), False)
+
+
+def circ(cx, cy, r):
+    return ('loop', circle_pts(cx, cy, r), False)
+
+
+def dot(x, y, r=0.17):
+    return ('dot', x, y, r)
+
+
+GLYPHS = {
+    'plus': [line((-0.62, 0), (0.62, 0)), line((0, -0.62), (0, 0.62))],
+    'close': [line((-0.56, -0.56), (0.56, 0.56)), line((-0.56, 0.56), (0.56, -0.56))],
+    'check': [line((-0.64, 0.0), (-0.2, -0.46), (0.66, 0.5))],
+    'chevron-l': [line((0.34, 0.62), (-0.32, 0), (0.34, -0.62))],
+    'chevron-r': [line((-0.34, 0.62), (0.32, 0), (-0.34, -0.62))],
+    'arrow-right': [line((-0.66, 0), (0.62, 0)), line((0.06, 0.52), (0.64, 0), (0.06, -0.52))],
+    'back': [circ(0, 0, 0.78), line((0.34, 0), (-0.34, 0)), line((-0.02, 0.32), (-0.36, 0), (-0.02, -0.32))],
+    'search': [circ(-0.12, 0.12, 0.5), line((0.26, -0.26), (0.7, -0.7))],
+    'gear': [loop([(r * math.cos(math.radians(a)), r * math.sin(math.radians(a))) for i in range(8) for r, a in ((0.6, i * 45 - 17), (0.88, i * 45 - 10), (0.88, i * 45 + 10), (0.6, i * 45 + 17))], False), circ(0, 0, 0.24)],
+    'lock': [('solid', rect_pts(-0.55, -0.78, 0.55, 0.0), 0.3), line(*arc_pts(0, 0.0, 0.36, 0, 180), joints=False)],
+    'timer': [circ(0, -0.08, 0.66), line((0, 0.2), (0, -0.08), (0.26, -0.24)), line((-0.2, 0.9), (0.2, 0.9), joints=False)],
+    'flag': [line((-0.5, -0.82), (-0.5, 0.82)), loop([(-0.5, 0.8), (0.55, 0.52), (-0.5, 0.2)])],
+    'shuffle': [line((-0.74, 0.42), (-0.2, 0.42), (0.26, -0.42), (0.66, -0.42)), line((0.42, -0.66), (0.68, -0.42), (0.42, -0.18)),
+                line((-0.74, -0.42), (-0.2, -0.42), (0.26, 0.42), (0.66, 0.42)), line((0.42, 0.18), (0.68, 0.42), (0.42, 0.66))],
+    'bell': [loop(arc_pts(0, 0.12, 0.5, 180, 0) + [(0.62, -0.42), (-0.62, -0.42)], joints=False), dot(0, -0.72, 0.16)],
+    'sound': [loop([(-0.74, 0.24), (-0.42, 0.24), (0.0, 0.62), (0.0, -0.62), (-0.42, -0.24), (-0.74, -0.24)]), arc(0.06, 0, 0.36, -42, 42), arc(0.06, 0, 0.66, -42, 42)],
+    'globe': [circ(0, 0, 0.74), line((-0.74, 0), (0.74, 0), joints=False), loop([(0.34 * math.cos(math.radians(a)), 0.74 * math.sin(math.radians(a))) for a in range(0, 360, 15)], False)],
+    'user': [circ(0, 0.34, 0.32), line(*arc_pts(0, -0.78, 0.78, 28, 152), joints=False)],
+    'support': [arc(0, 0.0, 0.62, 0, 180), line((-0.62, 0), (-0.62, -0.28), joints=False), line((0.62, 0), (0.62, -0.28), joints=False), dot(-0.62, -0.38, 0.2), dot(0.62, -0.38, 0.2)],
+    'shield': [loop([(0, 0.82), (0.66, 0.56), (0.62, -0.1), (0, -0.82), (-0.62, -0.1), (-0.66, 0.56)])],
+    'doc': [loop([(-0.5, -0.78), (0.5, -0.78), (0.5, 0.36), (0.1, 0.78), (-0.5, 0.78)]), line((0.1, 0.78), (0.1, 0.36), (0.5, 0.36)), line((-0.24, -0.1), (0.24, -0.1), joints=False), line((-0.24, -0.4), (0.12, -0.4), joints=False)],
+    'tools': [line((-0.56, -0.56), (0.2, 0.2), joints=False), line(*arc_pts(0.4, 0.4, 0.34, 40, 320), joints=False)],
+    'receipt': [loop([(-0.5, 0.82), (0.5, 0.82), (0.5, -0.82), (0.25, -0.58), (0, -0.82), (-0.25, -0.58), (-0.5, -0.82)]), line((-0.22, 0.32), (0.22, 0.32), joints=False), line((-0.22, -0.06), (0.22, -0.06), joints=False)],
+    'ads': [loop([(-0.8, -0.58), (0.8, -0.58), (0.8, 0.58), (-0.8, 0.58)]), loop([(-0.14, 0.3), (-0.14, -0.3), (0.32, 0)])],
+}
+
+
+def glyph_builder(spec, color, r=0.13):
+    material = mat('glyph', color, rough=0.5, coat=0.08)
+    before = set(bpy.data.objects)
+    for item in spec:
+        kind = item[0]
+        if kind in ('line', 'loop'):
+            pts, joints = item[1], item[2]
+            cu = bpy.data.curves.new('g', 'CURVE')
+            cu.dimensions = '3D'
+            cu.bevel_depth = r
+            cu.bevel_resolution = 6
+            cu.use_fill_caps = True
+            cu.resolution_u = 4
+            sp = cu.splines.new('POLY')
+            sp.points.add(len(pts) - 1)
+            for i, (x, y) in enumerate(pts):
+                sp.points[i].co = (x, y, 0, 1)
+            sp.use_cyclic_u = kind == 'loop'
+            ob = bpy.data.objects.new('g', cu)
+            bpy.context.scene.collection.objects.link(ob)
+            ob.data.materials.append(material)
+            if kind == 'line':
+                ends = [pts[0], pts[-1]] if not joints else pts
+                for (x, y) in ends:
+                    s = sphere('cap', r)
+                    place(s, loc=(x, y, 0))
+                    finish(s, material)
+            elif joints:
+                for (x, y) in pts:
+                    s = sphere('cap', r)
+                    place(s, loc=(x, y, 0))
+                    finish(s, material)
+        elif kind == 'dot':
+            _, x, y, rr = item
+            if rr > 0:
+                s = sphere('dot', rr)
+                place(s, loc=(x, y, 0))
+                finish(s, material)
+        elif kind == 'solid':
+            _, pts, depth = item
+            ob = poly_extrude('solid', pts, depth)
+            finish(ob, material, bevel=0.1, segments=4)
+    stand([o for o in bpy.data.objects if o not in before and o.parent is None], 0)
+
+
+def build_glyphs(names=None, variants=(('', PAL['paper']), ('-ink', PAL['ink']))):
+    for name in names or list(GLYPHS):
+        for suffix, color in variants:
+            reset()
+            glyph_builder(GLYPHS[name], color)
+            frame_and_render(name + suffix, margin=1.18, size=192, outdir=os.path.join(OUT, 'g'), direction=(0.14, -1.0, 0.2))
+        print('glyph', name)
+
+
 BUILDERS = {
     'gem': build_gem, 'coin': build_coin, 'energy': build_energy,
     'gem-pack-s': build_gem_pack_s, 'gem-pack-l': build_gem_pack_l,
     'energy-pack-s': build_energy_pack_s, 'energy-pack-l': build_energy_pack_l,
     'gift': build_gift, 'gift-open': build_gift_open, 'calendar': build_calendar, 'star': build_star,
-    'play': build_play, 'chat': build_chat, 'book': build_book, 'cart': build_cart, 'sparkle': build_sparkle,
+    'wheel': build_wheel, 'play': build_play, 'chat': build_chat, 'book': build_book, 'cart': build_cart, 'sparkle': build_sparkle,
 }
 
 
 def build(names=None):
+    """Крупные 3D-картинки в assets/*.png."""
     for name in names or list(BUILDERS):
         reset()
         BUILDERS[name]()

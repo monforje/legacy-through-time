@@ -441,3 +441,15 @@ dialog.popup[open] { animation: pop-in var(--dur-slow) var(--ease-out); }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 @keyframes wiggle { 0%, 60%, 100% { transform: rotate(0); } 15% { transform: rotate(-7deg); } 30% { transform: rotate(6deg); } 45% { transform: rotate(-3deg); } }
 @keyframes burst { 0% { opacity: 0; transform: translate(0, 0) scale(.2) rotate(0); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1) rotate(60deg); } }
+
+/* иконки интерфейса: собственные 3D-картинки (assets/g, assets/*.png) вместо линейных SVG */
+img.ico, img.ico-s, img.ico-xl { object-fit: contain; flex: none; user-select: none; -webkit-user-drag: none; }
+img.g { opacity: .92; }
+img.nav3d { opacity: 1; }
+.tab .ico { width: 28px; height: 28px; }
+.tab:not([aria-current="page"]) .ico { filter: saturate(.35) brightness(.8); }
+.tab:not([aria-current="page"]):hover .ico { filter: saturate(.7) brightness(.95); }
+.search .ico, .row.muted .ico { opacity: .6; }
+.btn-icon .ico.nav3d { width: 26px; height: 26px; }
+.btn-icon .ico.g { width: 28px; height: 28px; }
+.pill-plus .ico.g { width: 22px; height: 22px; }
