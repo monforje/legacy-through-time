@@ -337,7 +337,7 @@ dialog.popup { background: var(--bg); }   /* тот же цвет, что был
 .btn.is-loading > * { opacity: 0; }
 .btn.is-loading::before { content: ""; position: absolute; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--text); border-right-color: transparent; animation: spin var(--dur-loop) linear infinite; }
 .btn-primary.is-loading::before, .btn-price.is-loading::before { border-color: var(--accent-ink); border-right-color: transparent; }
-/* готово к нажатию: мягкий пульс, например награда после таймера */
+/* готово к нажатию: мягкий пульс масштабом (без свечения), например награда после таймера */
 .btn.ready { animation: pulse var(--dur-pulse) var(--ease-in-out) infinite; }
 /* скелетон загрузки */
 .skeleton { border-radius: var(--radius-s); background: linear-gradient(90deg, var(--surface) 25%, var(--surface-2) 50%, var(--surface) 75%); background-size: 200% 100%; animation: shimmer var(--dur-shimmer) linear infinite; }
@@ -367,7 +367,7 @@ dialog.popup[open] { animation: pop-in var(--dur-slow) var(--ease-out); }
 @keyframes toast-out { to { opacity: 0; transform: translateY(8px); } }
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
-@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); } 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 0%, transparent); } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
 @keyframes bump { 40% { transform: scale(1.18); } }
 
@@ -449,14 +449,13 @@ img.nav3d { opacity: 1; }
 .token b, .tile b { position: absolute; right: -8px; bottom: -6px; min-width: 20px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); font: 800 var(--fs-micro)/18px var(--font); text-align: center; }
 .token b { top: -4px; bottom: auto; }
 .wheel { position: relative; width: 252px; height: 252px; margin: var(--space-3) auto; flex: none; }
-.wheel::before { content: ""; position: absolute; inset: -14px; border-radius: 50%; box-shadow: 0 0 0 1px var(--line), 0 0 32px color-mix(in srgb, var(--accent) 22%, transparent); }
+.wheel::before { content: ""; position: absolute; inset: -14px; border-radius: 50%; box-shadow: 0 0 0 1px var(--line), var(--shadow); }
 .wheel-disc { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 6px var(--surface-2), 0 0 0 7px var(--line);
   background: repeating-conic-gradient(from -18deg, var(--line) 0 .6deg, transparent .6deg 36deg), repeating-conic-gradient(from -18deg, var(--surface) 0 36deg, var(--surface-2) 36deg 72deg); }
 .wheel-disc .seg { position: absolute; left: 50%; top: 0; width: 0; height: 50%; transform-origin: 50% 100%; transform: rotate(calc(var(--i) * 36deg)); }
 .wheel-disc .seg .tile { position: absolute; top: 20px; left: -23px; }
 .wheel-active { position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
-  background: conic-gradient(from -18deg, var(--accent) 0 .8deg, transparent .8deg 35.2deg, var(--accent) 35.2deg 36deg, transparent 36deg);
-  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 55%, transparent)); }   /* подсвеченный сектор: приз, который выпадет */
+  background: conic-gradient(from -18deg, var(--accent) 0 .8deg, transparent .8deg 35.2deg, var(--accent) 35.2deg 36deg, transparent 36deg);; }   /* подсвеченный сектор: приз, который выпадет */
 .wheel-mark { position: absolute; left: 50%; top: 44px; width: 1px; height: 1px; }
 .wheel-hub { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 5px var(--accent), 0 0 0 7px var(--surface-2); display: grid; place-items: center; }
 .wheel-hub img { width: 36px; height: 36px; }
