@@ -120,6 +120,18 @@ function initWheel(root, prizes) {
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.querySelector('dialog.wheel-dialog[open]')) location.href = 'home.html'; });
 
+function initToastLinks() {
+  $$('[data-toast]').forEach(b => {
+    const toast = document.getElementById(b.dataset.toast);
+    let timer;
+    b.addEventListener('click', () => {
+      toast.hidden = false;
+      clearTimeout(timer);
+      timer = setTimeout(() => { toast.hidden = true; }, 4000);
+    });
+  });
+}
+
 function initChatStates(root) {
   const chat = root.querySelector('.chat');
   $$('[data-state-btn]', root).forEach(b => b.addEventListener('click', () => {
@@ -157,4 +169,5 @@ document.addEventListener('DOMContentLoaded', () => {
   $$('[data-sheet]').forEach(b => initPanel(b, document.getElementById(b.dataset.sheet)));
   $$('[data-wheel]').forEach(w => initWheel(w, JSON.parse(w.dataset.wheel)));
   $$('[data-chat-demo]').forEach(initChatStates);
+  initToastLinks();
 });

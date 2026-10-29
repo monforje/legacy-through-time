@@ -171,9 +171,7 @@ a.btn { text-decoration: none; }
 .row .ico { color: var(--accent); }
 .chev { transition: transform .15s; }
 details[open] > summary .chev { transform: rotate(90deg); }   /* раскрытая строка: стрелка вниз */
-.hint { flex: none; margin-top: var(--space-3); }
-.hint summary { list-style: none; cursor: pointer; }
-.hint summary::-webkit-details-marker { display: none; }
+.link { align-self: center; flex: none; min-height: var(--touch); padding: 0 var(--space-4); border: 0; background: none; color: var(--accent); font: 700 var(--fs-body) var(--font); text-decoration: underline; cursor: pointer; }
 .group { background: var(--surface); border-radius: var(--radius-m); padding: var(--space-1); display: flex; flex-direction: column; }
 .search { display: flex; align-items: center; gap: var(--space-3); min-height: var(--touch); padding: 0 var(--space-4); border-radius: 999px; background: var(--surface); color: var(--text-muted); }
 .search input { flex: 1; min-width: 0; min-height: var(--touch); background: none; border: 0; color: var(--text); font: 700 var(--fs-body) var(--font); }
@@ -251,6 +249,7 @@ dialog.wheel-dialog { background: var(--bg); }   /* тот же цвет, что
 .sheet[hidden] { display: none; }
 .toast { position: absolute; left: var(--space-4); right: var(--space-4); bottom: 96px; background: var(--text); color: var(--bg); font-weight: 800; padding: var(--space-3) var(--space-4); border-radius: var(--radius-m); text-align: center; }
 .toast[hidden] { display: none; }
+.toast.high { bottom: 148px; }   /* над ссылкой, которая его вызывает */
 
 /* чат */
 .chat { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--space-3); }

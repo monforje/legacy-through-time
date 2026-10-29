@@ -30,10 +30,8 @@
     </div>
   </div>
 
-  <details class="group hint">
-    <summary class="row"><svg class="ico"><use href="icons.svg#i-info"/></svg><span class="label">Что это?</span><svg class="ico chev"><use href="icons.svg#i-chevron-r"/></svg></summary>
-    <p class="small" style="padding:0 var(--space-3) var(--space-3) calc(var(--space-3) + 34px)">Слова и понятия, которые встречаются в историях. Они открываются по мере чтения: сейчас открыто 3 из 12.</p>
-  </details>
+  <button class="link" data-toast="what">Что это?</button>
+  <div class="toast high" id="what" role="status" hidden>Слова и понятия из историй. Открываются по мере чтения: сейчас 3 из 12.</div>
 
   <nav class="tabbar">
     <a class="tab" href="home.html"><svg class="ico"><use href="icons.svg#i-book"/></svg>Истории</a>
