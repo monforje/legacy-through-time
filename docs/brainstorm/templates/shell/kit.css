@@ -275,7 +275,7 @@ details[open] > summary .chev { transform: rotate(90deg); }   /* раскрыт�
 .modal-head .btn-icon { position: absolute; right: 0; top: 0; background: none; }
 dialog.modal { width: auto; height: auto; max-width: none; max-height: none; margin: 0; border: 0; color: var(--text); }
 dialog.modal:not([open]) { display: none; }
-dialog.popup { inset: 44px var(--space-4) 60px; padding: var(--space-3); }   /* сверху видны валюты и край карусели главной, снизу вся нижняя навигация */
+dialog.popup { inset: 44px var(--space-4) 36px; padding: var(--space-3); }   /* сверху видны валюты и край карусели главной, снизу вся нижняя навигация */
 .dim.soft { background: color-mix(in srgb, var(--scrim) 30%, transparent); }
 dialog.popup { background: var(--bg); }   /* тот же цвет, что был у экрана колеса, без обводки */
 .modal .toast { bottom: var(--space-4); }
@@ -394,3 +394,17 @@ dialog.popup[open] { animation: pop-in var(--dur-slow) var(--ease-out); }
 .sk-avatar { width: 48px; height: 48px; flex: none; border-radius: 50%; }
 .sk-line { display: block; height: 12px; }
 .sk-card { height: 132px; border-radius: var(--radius-m); }
+
+/* принудительные состояния: нужны каталогу, чтобы показать hover, нажатие и фокус без мыши */
+.is-pressed { transform: scale(.95); }
+.is-hover { filter: brightness(1.15); }
+.is-focus { outline: 3px solid var(--accent); outline-offset: 2px; }
+.row.is-pressed, .list-row.is-pressed { background: var(--surface-2); transform: none; }
+.row.is-hover, .list-row.is-hover { background: var(--surface-2); filter: none; }
+.tab.is-hover { color: var(--text); filter: none; }
+/* проигрывание анимаций по кнопке в каталоге */
+.play-pop { animation: pop-in var(--dur-slow) var(--ease-out); }
+.play-rise { animation: rise var(--dur-slow) var(--ease-out); }
+.play-bump { animation: bump var(--dur-slow) var(--ease-spring); }
+.play-spin { animation: spin var(--dur-slow) var(--ease-out); }
+.play-fade { animation: fade-in var(--dur-slow) var(--ease-out); }
