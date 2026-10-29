@@ -50,7 +50,7 @@
   --space-6: 32px;
   --touch: 44px;
   --buy-w: 126px;      /* ширина блока «количество + цена» во всех карточках магазина */
-  --art-size: 56px;    /* размер картинки во всех карточках магазина */
+  --art-size: 80px;    /* размер картинки во всех карточках магазина */
   --action-w: 108px;   /* ширина кнопки действия в наградах; картинка стоит над ней по центру */
   --shadow: 0 8px 24px color-mix(in srgb, var(--scrim) 50%, transparent);
 
@@ -73,6 +73,8 @@
   --dur-shimmer: 1400ms;   /* мерцание скелетонов */
   --dur-stagger: 40ms;     /* шаг между строками при появлении */
   --dur-net: 900ms;        /* имитация ожидания ответа магазина или ИИ в макете */
+  --dur-float: 3200ms;     /* парение 3D-картинок */
+  --dur-burst: 700ms;      /* вспышка искр */
   --dur-instant: 1ms;      /* при prefers-reduced-motion */
   --ease-out: cubic-bezier(.2, .8, .2, 1);
   --ease-in-out: cubic-bezier(.4, 0, .2, 1);
@@ -420,3 +422,22 @@ dialog.popup[open] { animation: pop-in var(--dur-slow) var(--ease-out); }
 /* наведение и нажатие всегда скруглённые */
 .segmented button { border-radius: 999px; }
 @media (hover: hover) { .segmented button:hover:not([aria-selected="true"]) { color: var(--text); } }
+
+/* 3D-картинки из Blender (assets/*.png): размеры по контексту и оживление */
+.ico-3d { width: 24px; height: 24px; flex: none; object-fit: contain; vertical-align: middle; user-select: none; -webkit-user-drag: none; }
+.pill .ico-3d { width: 32px; height: 32px; }
+.pill.compact .ico-3d { width: 20px; height: 20px; }
+.amount .ico-3d { width: 28px; height: 28px; }
+.prize .ico-3d { width: 20px; height: 20px; }
+.badge-flag .ico-3d { width: 16px; height: 16px; }
+.wheel-disc .seg .ico-3d { position: absolute; top: 14px; left: -16px; width: 32px; height: 32px; }
+.wheel-hub .ico-3d { width: 30px; height: 30px; }
+.card-reward .art .ico-3d { width: 88px; height: 88px; }
+.card-best .art .ico-3d, .card-product .art .ico-3d { width: var(--art-size); height: var(--art-size); }
+.state-box .ico-3d { width: 96px; height: 96px; }
+.float { animation: float var(--dur-float) var(--ease-in-out) infinite; animation-delay: calc(var(--n, 0) * var(--dur-stagger) * -15); }
+.wiggle { animation: wiggle var(--dur-pulse) var(--ease-in-out) infinite; transform-origin: 50% 80%; }
+.spark { position: absolute; width: 24px; height: 24px; margin: -12px 0 0 -12px; pointer-events: none; z-index: 5; animation: burst var(--dur-burst) var(--ease-out) forwards; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes wiggle { 0%, 60%, 100% { transform: rotate(0); } 15% { transform: rotate(-7deg); } 30% { transform: rotate(6deg); } 45% { transform: rotate(-3deg); } }
+@keyframes burst { 0% { opacity: 0; transform: translate(0, 0) scale(.2) rotate(0); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1) rotate(60deg); } }

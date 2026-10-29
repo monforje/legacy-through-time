@@ -56,6 +56,21 @@ function initRoute() {
   $$('[data-hero-label]').forEach(el => { el.setAttribute('aria-label', el.dataset.heroLabel.replace('{name}', hero.name)); });
 }
 
+// Вспышка искр вокруг элемента (получение награды, покупка, приз колеса, трата энергии).
+function burst(el, n = 5) {
+  const dev = el.closest('.device') || document.body, base = dev.getBoundingClientRect(), r = el.getBoundingClientRect();
+  const cx = r.left - base.left + r.width / 2, cy = r.top - base.top + r.height / 2;
+  for (let i = 0; i < n; i++) {
+    const a = (Math.PI * 2 * i) / n - Math.PI / 2, d = Math.max(r.width, r.height) * .55 + 18;
+    const img = document.createElement('img');
+    img.className = 'spark'; img.src = 'assets/sparkle.png'; img.alt = '';
+    img.style.left = cx + 'px'; img.style.top = cy + 'px';
+    img.style.setProperty('--dx', Math.cos(a) * d + 'px'); img.style.setProperty('--dy', Math.sin(a) * d + 'px');
+    img.addEventListener('animationend', () => img.remove(), { once: true });
+    dev.append(img);
+  }
+}
+
 // Тост с появлением и уходом; повторный вызов продлевает показ.
 const toastTimers = new WeakMap();
 function showToast(el, text, ms = 2500) {
@@ -125,7 +140,7 @@ function initCountdown(el, seconds) {
     left = Math.max(0, left - 1); draw();
     if (left === 0) {
       clearInterval(id);
-      if (action) { action.disabled = false; action.classList.add('ready'); el.closest('.foot').querySelector('.btn-icon')?.setAttribute('hidden', ''); }
+      if (action) { action.disabled = false; action.classList.add('ready'); el.closest('.card')?.querySelector('.art .ico-3d')?.classList.add('wiggle'); el.closest('.foot').querySelector('.btn-icon')?.setAttribute('hidden', ''); }
     }
   }, 1000);
 }
@@ -171,6 +186,7 @@ function initWheel(root, prizes) {
   };
   const done = id => {
     showToast(toast, 'Выпало: ' + prizes.find(p => p.id === id).label); draw();
+    burst(root.querySelector('.wheel-pointer'), 6);
   };
   draw();
   spin.addEventListener('click', () => {
@@ -202,6 +218,7 @@ function initClaim() {
     b.classList.remove('ready'); b.classList.add('is-loading');
     setTimeout(() => {
       b.classList.remove('is-loading'); b.textContent = 'Получено'; b.disabled = true;
+      const art = b.closest('.card')?.querySelector('.art .ico-3d'); art?.classList.remove('wiggle'); burst(art || b);
       showToast(toast, b.dataset.claim);
     }, still() ? 0 : token('--dur-net') * .7);
   }));
@@ -222,6 +239,9 @@ function initPurchase() {
         countTo(value, readNum(value) + Number(n));
         pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump');
       });
+      const card = b.closest('.card'), open = card?.querySelector('.art .ico-3d[data-open]');
+      if (open) open.src = open.dataset.open;
+      burst(card?.querySelector('.art .ico-3d') || b);
       showToast(toast, 'Зачислено: ' + gains.map(([kind, n]) => `${n} ${word(kind, Number(n))}`).join(', '));
     }, still() ? 0 : token('--dur-net'));
   }));
@@ -243,6 +263,7 @@ function initChat() {
       if (energy) {
         const left = readNum(energy) - 1;
         countTo(energy, left);
+        burst(energy.parentElement, 3);
         energy.parentElement.classList.remove('bump'); void energy.parentElement.offsetWidth; energy.parentElement.classList.add('bump');
         if (left <= 0) setTimeout(() => { chat.dataset.state = 'limit'; $$('[data-state-btn]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.stateBtn === 'limit'))); }, still() ? 0 : token('--dur-net') * 1.6);
       }
