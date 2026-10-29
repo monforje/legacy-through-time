@@ -448,14 +448,14 @@ img.nav3d { opacity: 1; }
 .token b { position: absolute; right: -8px; bottom: -6px; min-width: 20px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); font: 800 var(--fs-micro)/18px var(--font); text-align: center; }
 .token b { top: -6px; right: -2px; bottom: auto; }
 .wheel { position: relative; width: 252px; height: 252px; margin: var(--space-2) auto; flex: none; }
-.wheel::before { content: ""; position: absolute; inset: -14px; border-radius: 50%; box-shadow: 0 0 0 1px var(--line), var(--shadow); }
+.wheel::before { content: ""; position: absolute; inset: -14px; border-radius: 50%; box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 55%, var(--line)), 0 0 34px color-mix(in srgb, var(--accent) 40%, transparent), inset 0 0 26px color-mix(in srgb, var(--accent) 20%, transparent); }   /* свечение кольца, как на референсе */
 .wheel-disc { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 6px var(--surface-2), 0 0 0 7px var(--line);
-  background: repeating-conic-gradient(from -18deg, var(--line) 0 .6deg, transparent .6deg 36deg), repeating-conic-gradient(from -18deg, var(--surface) 0 36deg, var(--surface-2) 36deg 72deg); }
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent) 0, transparent 72%), repeating-conic-gradient(from -18deg, var(--line) 0 .6deg, transparent .6deg 36deg), repeating-conic-gradient(from -18deg, var(--surface) 0 36deg, var(--surface-2) 36deg 72deg); }
 .wheel-disc .seg { position: absolute; left: 50%; top: 0; width: 0; height: 50%; transform-origin: 50% 100%; transform: rotate(calc(var(--i) * 36deg)); }
 .wheel-disc .seg .tile { position: absolute; top: 18px; left: -23px; }
 .wheel-active { position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
-  background: conic-gradient(from -18deg, color-mix(in srgb, var(--text) 32%, transparent) 0 36deg, transparent 36deg), conic-gradient(from -18deg, color-mix(in srgb, var(--text) 45%, transparent) 0 .7deg, transparent .7deg 35.3deg, color-mix(in srgb, var(--text) 45%, transparent) 35.3deg 36deg, transparent 36deg);
+  background: conic-gradient(from -18deg, color-mix(in srgb, var(--text) 42%, transparent) 0 36deg, transparent 36deg), conic-gradient(from -18deg, color-mix(in srgb, var(--accent) 60%, var(--text)) 0 1deg, transparent 1deg 35deg, color-mix(in srgb, var(--accent) 60%, var(--text)) 35deg 36deg, transparent 36deg);
   clip-path: circle(49.5% at 50% 50%); -webkit-mask-image: radial-gradient(circle closest-side, transparent 12%, var(--scrim) 100%); mask-image: radial-gradient(circle closest-side, transparent 12%, var(--scrim) 100%); }   /* свет падает на выпадающий сектор: ярче у края, затухает к центру, строго внутри круга */
 .wheel-mark { position: absolute; left: 50%; top: 44px; width: 1px; height: 1px; }
-.wheel-hub { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 5px var(--accent), 0 0 0 7px var(--surface-2); display: grid; place-items: center; }
+.wheel-hub { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 5px var(--accent), 0 0 0 7px var(--surface-2), 0 0 24px color-mix(in srgb, var(--accent) 55%, transparent); display: grid; place-items: center; }
 .wheel-hub img { width: 36px; height: 36px; }

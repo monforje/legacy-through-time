@@ -218,6 +218,132 @@
         ],
         "createdAt": "2026-10-29T18:49:49.075Z",
         "reason": "false positive: the only pulsing dots are the typing indicator, tied to a real wait for the hero's reply (rule comes from shared kit.css); assistant decision, not user confirmed"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/chapters.html"
+        ],
+        "createdAt": "2026-10-29T19:27:07.681Z",
+        "reason": "sanctioned exception: the user showed the glowing reference wheel and asked for the same look (2026-10-30); glow is limited to the wheel (shared kit.css)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/chat.html"
+        ],
+        "createdAt": "2026-10-29T19:27:07.690Z",
+        "reason": "sanctioned exception: the user showed the glowing reference wheel and asked for the same look (2026-10-30); glow is limited to the wheel (shared kit.css)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/chats.html"
+        ],
+        "createdAt": "2026-10-29T19:27:07.698Z",
+        "reason": "sanctioned exception: the user showed the glowing reference wheel and asked for the same look (2026-10-30); glow is limited to the wheel (shared kit.css)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/home.html"
+        ],
+        "createdAt": "2026-10-29T19:27:07.706Z",
+        "reason": "sanctioned exception: the user showed the glowing reference wheel and asked for the same look (2026-10-30); glow is limited to the wheel (shared kit.css)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/home-panel.html"
+        ],
+        "createdAt": "2026-10-29T19:27:07.714Z",
+        "reason": "sanctioned exception: the user showed the glowing reference wheel and asked for the same look (2026-10-30); glow is limited to the wheel (shared kit.css)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/index.html"
+        ],
+        "createdAt": "2026-10-29T19:27:07.723Z",
+        "reason": "sanctioned exception: the user showed the glowing reference wheel and asked for the same look (2026-10-30); glow is limited to the wheel (shared kit.css)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/kit.html"
+        ],
+        "createdAt": "2026-10-29T19:27:07.731Z",
+        "reason": "sanctioned exception: the user showed the glowing reference wheel and asked for the same look (2026-10-30); glow is limited to the wheel (shared kit.css)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/library.html"
+        ],
+        "createdAt": "2026-10-29T19:27:07.741Z",
+        "reason": "sanctioned exception: the user showed the glowing reference wheel and asked for the same look (2026-10-30); glow is limited to the wheel (shared kit.css)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/rewards.html"
+        ],
+        "createdAt": "2026-10-29T19:27:07.749Z",
+        "reason": "sanctioned exception: the user showed the glowing reference wheel and asked for the same look (2026-10-30); glow is limited to the wheel (shared kit.css)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/settings.html"
+        ],
+        "createdAt": "2026-10-29T19:27:07.758Z",
+        "reason": "sanctioned exception: the user showed the glowing reference wheel and asked for the same look (2026-10-30); glow is limited to the wheel (shared kit.css)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/shop.html"
+        ],
+        "createdAt": "2026-10-29T19:27:07.767Z",
+        "reason": "sanctioned exception: the user showed the glowing reference wheel and asked for the same look (2026-10-30); glow is limited to the wheel (shared kit.css)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/states.html"
+        ],
+        "createdAt": "2026-10-29T19:27:07.777Z",
+        "reason": "sanctioned exception: the user showed the glowing reference wheel and asked for the same look (2026-10-30); glow is limited to the wheel (shared kit.css)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/wheel.html"
+        ],
+        "createdAt": "2026-10-29T19:27:07.785Z",
+        "reason": "sanctioned exception: the user showed the glowing reference wheel and asked for the same look (2026-10-30); glow is limited to the wheel (shared kit.css)"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "docs/brainstorm/templates/shell/words.html"
+        ],
+        "createdAt": "2026-10-29T19:27:07.794Z",
+        "reason": "sanctioned exception: the user showed the glowing reference wheel and asked for the same look (2026-10-30); glow is limited to the wheel (shared kit.css)"
       }
     ]
   }
