@@ -42,13 +42,14 @@
     </div>
     <div class="dots" aria-hidden="true"><i></i><i class="on"></i><i></i></div>
 
-    <label class="search"><svg class="ico"><use href="icons.svg#i-search"/></svg><input placeholder="Истории, авторы…" aria-label="Поиск историй"></label>
+    <label class="search" data-filter=".mini" data-empty="home-empty"><svg class="ico"><use href="icons.svg#i-search"/></svg><input placeholder="Истории, авторы…" aria-label="Поиск историй"><button class="clear" aria-label="Очистить поиск" type="button" hidden><svg class="ico"><use href="icons.svg#i-close"/></svg></button></label>
     <div class="chips">
       <button class="chip" aria-pressed="true">Для начала</button>
       <button class="chip" aria-pressed="false">Новые</button>
       <button class="chip" aria-pressed="false">Популярные</button>
       <button class="chip" aria-pressed="false">По жанрам</button>
     </div>
+    <p class="empty-note" id="home-empty" hidden>Ничего не найдено</p>
     <div class="grid2">
       <div class="mini"><div class="cover" style="background:var(--art-6)"></div><span class="head">Сага о грозах</span><span class="small">Фэнтези</span></div>
       <div class="mini"><div class="cover" style="background:var(--art-3)"></div><span class="head">Письма из лета</span><span class="small">Романтика</span></div>

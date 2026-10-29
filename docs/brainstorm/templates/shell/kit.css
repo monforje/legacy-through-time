@@ -72,6 +72,7 @@
   --dur-pulse: 1600ms;     /* пульс готовой награды, точки «печатает» */
   --dur-shimmer: 1400ms;   /* мерцание скелетонов */
   --dur-stagger: 40ms;     /* шаг между строками при появлении */
+  --dur-net: 900ms;        /* имитация ожидания ответа магазина или ИИ в макете */
   --dur-instant: 1ms;      /* при prefers-reduced-motion */
   --ease-out: cubic-bezier(.2, .8, .2, 1);
   --ease-in-out: cubic-bezier(.4, 0, .2, 1);
@@ -364,6 +365,11 @@ dialog.popup[open] { animation: pop-in var(--dur-slow) var(--ease-out); }
 .bubble { animation: rise var(--dur) var(--ease-out); }
 [data-stagger] > * { animation: rise var(--dur-slow) var(--ease-out) both; animation-delay: calc(var(--n, 0) * var(--dur-stagger)); }
 .bump { animation: bump var(--dur-slow) var(--ease-spring); }
+.spun .ico { animation: spin var(--dur-slow) var(--ease-out); }
+.search .clear { position: relative; width: 28px; height: 28px; flex: none; border: 0; background: none; color: var(--text-muted); display: grid; place-items: center; padding: 0; cursor: pointer; }
+.search .clear::after { content: ""; position: absolute; inset: -8px; }   /* зона нажатия 44 */
+.search .clear .ico { width: 16px; height: 16px; }
+.empty-note { padding: var(--space-5) var(--space-4); text-align: center; color: var(--text-muted); font-size: var(--fs-small); }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes pop-in { from { opacity: 0; transform: translateY(16px) scale(.97); } to { opacity: 1; transform: none; } }

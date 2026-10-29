@@ -17,7 +17,7 @@
     <a class="btn btn-icon" href="home.html" aria-label="Закрыть"><svg class="ico"><use href="icons.svg#i-close"/></svg></a>
   </div>
 
-  <div class="scroll">
+  <div class="scroll" data-stagger>
     <div class="band">Ежедневные награды</div>
 
     <article class="card card-reward"><div class="info"><div class="head">Бесплатная энергия</div>
@@ -26,17 +26,18 @@
 
     <article class="card card-reward"><div class="info"><div class="head">Бесплатные алмазы</div>
         <p class="small">Получайте 3 алмаза каждые полчаса</p></div><div class="art"><svg class="ico"><use href="icons.svg#i-gem"/></svg></div><div class="foot"><span class="timer" data-seconds="535"><svg class="ico-s"><use href="icons.svg#i-timer"/></svg><time>00:08:55</time></span>
-          <span class="actions"><button class="btn btn-icon btn-sq" disabled aria-label="Заблокировано"><svg class="ico"><use href="icons.svg#i-lock"/></svg></button><button class="btn btn-primary two-line" data-after-timer disabled>Смотреть рекламу</button></span></div></article>
+          <span class="actions"><button class="btn btn-icon btn-sq" disabled aria-label="Заблокировано"><svg class="ico"><use href="icons.svg#i-lock"/></svg></button><button class="btn btn-primary two-line" data-after-timer data-claim="Награда получена: 3 алмаза" disabled>Смотреть рекламу</button></span></div></article>
 
     <article class="card card-reward"><div class="info"><div class="head">Ежедневный вход</div>
         <p class="small">Заходите каждый день и получайте больше наград: до 10 алмазов в день</p></div><div class="art"><svg class="ico"><use href="icons.svg#i-calendar"/></svg></div><div class="foot"><span class="timer" data-seconds="28845"><svg class="ico-s"><use href="icons.svg#i-timer"/></svg><time>08:00:45</time></span>
-          <span class="actions"><button class="btn btn-icon btn-sq" disabled aria-label="Заблокировано"><svg class="ico"><use href="icons.svg#i-lock"/></svg></button><button class="btn btn-primary" data-after-timer disabled>Получить</button></span></div></article>
+          <span class="actions"><button class="btn btn-icon btn-sq" disabled aria-label="Заблокировано"><svg class="ico"><use href="icons.svg#i-lock"/></svg></button><button class="btn btn-primary" data-after-timer data-claim="Награда получена: 10 алмазов" disabled>Получить</button></span></div></article>
 
     <article class="card card-reward"><div class="info"><div class="head">Награда за главу</div>
         <p class="small">Дочитайте любую главу до конца и заберите 5 алмазов</p></div><div class="art"><svg class="ico"><use href="icons.svg#i-star"/></svg></div><div class="foot"><span class="timer"><svg class="ico-s"><use href="icons.svg#i-book"/></svg>0 из 1</span>
           <span class="actions"><button class="btn btn-primary" disabled>Не готово</button></span></div></article>
   </div>
 
+  <div class="toast" id="claim-toast" role="status" hidden></div>
 </dialog>
 </div>
 <script src="shell.js"></script>

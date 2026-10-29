@@ -4,6 +4,24 @@
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 if (self !== top) document.documentElement.classList.add('embed');   // в индексе рамки без полей
 
+const token = name => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));   // токены длительности в мс
+const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const readNum = el => Number(el.textContent.replace(/\s/g, '')) || 0;
+const fmt = n => n.toLocaleString('ru-RU');
+
+// Число плавно меняется до нового значения (баланс валюты).
+function countTo(el, to, ms = token('--dur-slow')) {
+  const from = readNum(el);
+  if (still() || from === to) { el.textContent = fmt(to); return; }
+  const t0 = performance.now();
+  const step = now => {
+    const p = Math.min(1, (now - t0) / ms);
+    el.textContent = fmt(Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3))));
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
 // Тост с появлением и уходом; повторный вызов продлевает показ.
 const toastTimers = new WeakMap();
 function showToast(el, text, ms = 2500) {
@@ -65,19 +83,24 @@ function initSegmented(root) {
 function initCountdown(el, seconds) {
   const label = el.querySelector('time');
   const action = el.closest('.foot')?.querySelector('[data-after-timer]');
-  let left = seconds;
+  let left = location.search.includes('fast') ? Math.min(seconds, 5) : seconds;   // ?fast: таймеры по 5 секунд для показа
   const pad = n => String(n).padStart(2, '0');
   const draw = () => { label.textContent = `${pad(Math.floor(left / 3600))}:${pad(Math.floor(left % 3600 / 60))}:${pad(left % 60)}`; };
   draw();
   const id = setInterval(() => {
     left = Math.max(0, left - 1); draw();
-    if (left === 0) { clearInterval(id); if (action) action.disabled = false; }
+    if (left === 0) {
+      clearInterval(id);
+      if (action) { action.disabled = false; action.classList.add('ready'); el.closest('.foot').querySelector('.btn-icon')?.setAttribute('hidden', ''); }
+    }
   }, 1000);
 }
 
+function saved() { const t = document.getElementById('saved'); if (t) showToast(t, 'Сохранено', 1500); }
+
 function initSwitches(root) {
   $$('.switch', root).forEach(s => {
-    const flip = () => s.setAttribute('aria-checked', String(s.getAttribute('aria-checked') !== 'true'));
+    const flip = () => { s.setAttribute('aria-checked', String(s.getAttribute('aria-checked') !== 'true')); saved(); };
     s.addEventListener('click', flip);
   });
 }
@@ -88,7 +111,7 @@ function initSteppers(root) {
     const out = st.querySelector('output');
     let i = Math.max(0, values.indexOf(out.textContent));
     const [prev, next] = $$('button', st);
-    const move = d => { i = (i + d + values.length) % values.length; out.textContent = values[i]; };
+    const move = d => { i = (i + d + values.length) % values.length; out.textContent = values[i]; saved(); };
     prev.addEventListener('click', () => move(-1));
     next.addEventListener('click', () => move(1));
   });
@@ -138,6 +161,99 @@ function initToastLinks() {
   });
 }
 
+// Награда: тап -> загрузка -> «Получено» и тост.
+function initClaim() {
+  const toast = document.getElementById('claim-toast');
+  $$('[data-claim]').forEach(b => b.addEventListener('click', () => {
+    b.classList.remove('ready'); b.classList.add('is-loading');
+    setTimeout(() => {
+      b.classList.remove('is-loading'); b.textContent = 'Получено'; b.disabled = true;
+      showToast(toast, b.dataset.claim);
+    }, still() ? 0 : token('--dur-net') * .7);
+  }));
+}
+
+// Магазин: тап по цене -> загрузка -> баланс растёт, тост.
+function initPurchase() {
+  const toast = document.getElementById('shop-toast');
+  const names = { gem: ['алмаз', 'алмаза', 'алмазов'], energy: ['энергия', 'энергии', 'энергии'] };
+  const word = (kind, n) => { const w = names[kind]; return n % 10 === 1 && n % 100 !== 11 ? w[0] : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) ? w[1] : w[2]; };
+  $$('.btn-price[data-gain]').forEach(b => b.addEventListener('click', () => {
+    b.classList.add('is-loading');
+    setTimeout(() => {
+      b.classList.remove('is-loading');
+      const gains = b.dataset.gain.split(' ').map(g => g.split(':'));
+      gains.forEach(([kind, n]) => {
+        const pill = document.querySelector('.pill-' + kind), value = pill.querySelector('span');
+        countTo(value, readNum(value) + Number(n));
+        pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump');
+      });
+      showToast(toast, 'Зачислено: ' + gains.map(([kind, n]) => `${n} ${word(kind, Number(n))}`).join(', '));
+    }, still() ? 0 : token('--dur-net'));
+  }));
+}
+
+// Чат: отправка активна только при тексте; ответ героя приходит после «печатает…».
+function initChat() {
+  const chat = document.querySelector('.chat'); if (!chat) return;
+  const msgs = chat.querySelector('.msgs');
+  const replies = ['Не знаю. Об этом я ещё никому не говорила.', 'Может быть. Но иногда страх сильнее слов.', 'Ты говоришь так, будто знаешь меня давно.'];
+  let n = 0;
+  const add = (cls, html) => { const d = document.createElement('div'); d.className = 'bubble ' + cls; d.innerHTML = html; msgs.append(d); msgs.scrollTop = msgs.scrollHeight; return d; };
+  $$('.chat-input', chat).forEach(form => {
+    const input = form.querySelector('input'), send = form.querySelector('.send');
+    const sync = () => { send.disabled = input.disabled || !input.value.trim(); };
+    const submit = () => {
+      const text = input.value.trim(); if (!text || send.disabled) return;
+      const me = add('me', ''); me.textContent = text;
+      input.value = ''; sync();
+      msgs.querySelectorAll('.typing-bubble').forEach(t => t.remove());
+      const typing = add('them typing-bubble', '<span class="typing" aria-label="Печатает"><i></i><i></i><i></i></span>');
+      setTimeout(() => { typing.classList.remove('typing-bubble'); typing.textContent = replies[n++ % replies.length]; msgs.scrollTop = msgs.scrollHeight; }, still() ? 0 : token('--dur-net') * 1.4);
+    };
+    sync();
+    input.addEventListener('input', sync);
+    send.addEventListener('click', submit);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+  });
+}
+
+// Поиск: крестик очистки, Esc, фильтр по списку и пустой результат.
+function initSearch() {
+  $$('.search').forEach(s => {
+    const input = s.querySelector('input'), clear = s.querySelector('.clear');
+    const empty = s.dataset.empty && document.getElementById(s.dataset.empty);
+    const apply = () => {
+      const q = input.value.trim().toLowerCase();
+      if (clear) clear.hidden = !q;
+      if (!s.dataset.filter) return;
+      let shown = 0;
+      $$(s.dataset.filter).forEach(el => { const hit = !q || el.textContent.toLowerCase().includes(q); el.hidden = !hit; if (hit) shown++; });
+      if (empty) empty.hidden = shown > 0;
+    };
+    input.addEventListener('input', apply);
+    input.addEventListener('keydown', e => { if (e.key === 'Escape') { input.value = ''; apply(); } });
+    clear?.addEventListener('click', () => { input.value = ''; apply(); input.focus(); });
+  });
+}
+
+// Карусель: «случайная история» крутит иконку и листает; тап по боковой карточке выводит её в центр.
+function initShuffle() {
+  const btn = document.querySelector('.shuffle'), c = document.querySelector('.carousel'); if (!btn || !c) return;
+  const slides = $$('.hero', c);
+  const go = i => c.scrollTo({ left: slides[i].offsetLeft - (c.clientWidth - slides[i].offsetWidth) / 2, behavior: still() ? 'auto' : 'smooth' });
+  btn.addEventListener('click', () => {
+    const cur = slides.findIndex(s => s.classList.contains('on'));
+    let next; do { next = Math.floor(Math.random() * slides.length); } while (next === cur);
+    go(next);
+    btn.classList.remove('spun'); void btn.offsetWidth; btn.classList.add('spun');
+  });
+  slides.forEach((s, i) => s.addEventListener('click', e => { if (!s.classList.contains('on')) { e.preventDefault(); go(i); } }));
+}
+
+// Списки появляются по очереди.
+function initStagger() { $$('[data-stagger]').forEach(p => [...p.children].slice(0, 8).forEach((ch, i) => ch.style.setProperty('--n', i))); }
+
 function initChatStates(root) {
   const chat = root.querySelector('.chat');
   $$('[data-state-btn]', root).forEach(b => b.addEventListener('click', () => {
@@ -155,7 +271,7 @@ function selector(el) {
 function shellAudit() {
   const visible = el => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
   const smallTargets = $$('.device button, .device a[href], .device input, .device [role=switch], .device [role=tab]')
-    .filter(visible).filter(el => { return !el.matches('.card-reward .foot .btn, .search input') && (el.offsetWidth < 43.5 || el.offsetHeight < 43.5); })   // кнопки наград и поиск: 36px видимых, зона нажатия 44 через ::after   // размеры раскладки, без учёта scale у боковых карточек
+    .filter(visible).filter(el => { return !el.matches('.card-reward .foot .btn, .search input, .search .clear') && (el.offsetWidth < 43.5 || el.offsetHeight < 43.5); })   // кнопки наград и поиск: 36px видимых, зона нажатия 44 через ::after   // размеры раскладки, без учёта scale у боковых карточек
     .map(selector);
   const overflow = $$('.device *').filter(visible).filter(el => {
     const o = getComputedStyle(el).overflowX;
@@ -175,5 +291,5 @@ document.addEventListener('DOMContentLoaded', () => {
   $$('[data-sheet]').forEach(b => initPanel(b, document.getElementById(b.dataset.sheet)));
   $$('[data-wheel]').forEach(w => initWheel(w, JSON.parse(w.dataset.wheel)));
   $$('[data-chat-demo]').forEach(initChatStates);
-  initToastLinks();
+  initToastLinks(); initClaim(); initPurchase(); initChat(); initSearch(); initShuffle(); initStagger();
 });
