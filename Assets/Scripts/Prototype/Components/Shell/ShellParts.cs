@@ -156,6 +156,8 @@ namespace LegacyThroughTime.Prototype
         public Color Ink;
         public CanvasGroup Group;
         public PressButton Press;
+        /// A ready button breathes (the owner runs it while this is true).
+        public bool Pulsing;
         bool loading;
         Image[] dots;
 
