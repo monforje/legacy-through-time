@@ -16,6 +16,16 @@ namespace LegacyThroughTime.PrototypeTests
     {
         static void Click(GameObject go) => ExecuteEvents.Execute(go, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
 
+        static readonly List<GameObject> made = new();     // the canvases of the tests; the scene's own (the story player's) stay
+
+        static RectTransform Canvas()
+        {
+            LegacyThroughTime.Prototype.Stage.Setup();
+            var canvas = LegacyThroughTime.Prototype.Stage.BuildCanvas();
+            made.Add(canvas.gameObject);
+            return canvas;
+        }
+
         sealed class Setup
         {
             public ChatScreen Screen;
@@ -32,8 +42,7 @@ namespace LegacyThroughTime.PrototypeTests
 
         static Setup Open(int energy)
         {
-            LegacyThroughTime.Prototype.Stage.Setup();
-            var s = new Setup { Canvas = LegacyThroughTime.Prototype.Stage.BuildCanvas() };
+            var s = new Setup { Canvas = Canvas() };
             var story = StoryCatalog.All[0];
             s.Chat = Chat.Begin(story.Id, story.Opening, 1);
             s.Energy = new Energy { value = energy };
@@ -44,7 +53,8 @@ namespace LegacyThroughTime.PrototypeTests
         [TearDown]
         public void Clean()
         {
-            foreach (var c in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None)) Object.Destroy(c.gameObject);
+            foreach (var go in made) if (go) Object.Destroy(go);
+            made.Clear();
             PlayerPrefs.DeleteKey("chat:" + StoryCatalog.All[0].Id);
             PlayerPrefs.DeleteKey("chat:energy");
         }
@@ -145,8 +155,7 @@ namespace LegacyThroughTime.PrototypeTests
         [UnityTest]
         public IEnumerator TheListOfChatsHoldsTheHeroOfAStartedStory()
         {
-            LegacyThroughTime.Prototype.Stage.Setup();
-            var canvas = LegacyThroughTime.Prototype.Stage.BuildCanvas();
+            var canvas = Canvas();
             var story = StoryCatalog.All[0];
             var rows = ChatList.Build(StoryCatalog.All, _ => true, _ => Chat.Begin(story.Id, "Привет.", 1));
             StoryEntry opened = null; var toStories = 0;
