@@ -23,7 +23,7 @@ namespace LegacyThroughTime.PrototypeTests
             LegacyThroughTime.Prototype.Stage.Setup();
             var canvas = LegacyThroughTime.Prototype.Stage.BuildCanvas();
             made.Add(canvas.gameObject);
-            return canvas;
+            return LegacyThroughTime.Prototype.Kit.Column(canvas);       // the screens live in the shell's column, as in the app
         }
 
         sealed class Setup
