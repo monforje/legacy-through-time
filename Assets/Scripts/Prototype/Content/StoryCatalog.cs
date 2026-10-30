@@ -12,6 +12,8 @@ namespace LegacyThroughTime.Prototype
         public string Night;       // the night of the heroine chat after it (chat server, content/stories/*/chat); null: none
         public string Heroine;     // who speaks in that night
         public bool Soon => Path == null;
+        /// The first chapter of a story is free; every next one costs energy (until it is paid for once).
+        public int EnergyCost => Number > 1 ? Energy.ChapterCost : 0;
     }
 
     /// One story of the menu: a card in the carousel; its chapters open when it is tapped.

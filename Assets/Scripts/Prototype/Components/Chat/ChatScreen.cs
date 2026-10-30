@@ -411,7 +411,7 @@ namespace LegacyThroughTime.Prototype
             if (!energy.CanSend && !busy) OutOfEnergy();
         }
 
-        const float CardHeight = 150;
+        const float CardHeight = 206;
 
         void OutOfEnergy()
         {
@@ -426,12 +426,28 @@ namespace LegacyThroughTime.Prototype
             Ui.TopRow(text.rectTransform, Pad + 4, Pad + 4, 44, 50);
             var button = Kit.Round(card.rectTransform, "Refill", Kit.Accent);
             button.raycastTarget = true;
-            Ui.BottomRow(button.rectTransform, Pad, Pad, 12, 44);
+            Ui.BottomRow(button.rectTransform, Pad, Pad, 64, 44);
             var label = Ui.Txt(button.rectTransform, "Text", "Пополнить энергию", Kit.F800, 16, Kit.AccentInk, TextAnchor.MiddleCenter);
             Ui.Stretch(label.rectTransform);
             PressButton.On(button.gameObject, () => { if (!leaving) openShop(); }, .97f);
+            var watch = Kit.Round(card.rectTransform, "Watch", Kit.Surface2);       // the stub of a clip for a reward
+            watch.raycastTarget = true;
+            Ui.BottomRow(watch.rectTransform, Pad, Pad, 12, 44);
+            var watchLabel = Ui.Txt(watch.rectTransform, "Text", $"Ролик: +{AdRules.RewardEnergy} энергии", Kit.F800, 16, Kit.Text, TextAnchor.MiddleCenter);
+            Ui.Stretch(watchLabel.rectTransform);
+            PressButton.On(watch.gameObject, () => { if (!leaving) Ads.Rewarded(Root, anim, ClipWatched); }, .97f);
             Relayout(); ScrollDown();
             if (anim.Enabled) SlideIn(row);
+        }
+
+        /// A clip was watched to the end: its energy goes into the purse of the chat and the field opens again.
+        void ClipWatched()
+        {
+            if (!Root || leaving) return;
+            energy.Add(AdRules.RewardEnergy);
+            ChatStore.Write(energy);
+            ShowEnergy(true);
+            Bottom();
         }
 
         // ------------------------------------------------------------ leaving

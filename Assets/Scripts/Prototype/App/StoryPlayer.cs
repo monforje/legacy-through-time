@@ -150,6 +150,7 @@ namespace LegacyThroughTime.Prototype
         {
             if (story == null || exiting) return;
             exiting = true;
+            Ads.Interstitial(host.Overlay, host.OverlayAnimator);      // the stub of the ad on leaving a story
             StartCoroutine(LeaveRoutine());
         }
 
@@ -331,7 +332,13 @@ namespace LegacyThroughTime.Prototype
         void Open(StoryEntry entry, ChapterEntry part, bool fresh)
         {
             if (part == null || part.Soon) return;
+            if (!ShellPurse.PayChapter(part))                          // a chapter after the first costs energy, once
+            {
+                ShellToast.Show(host.Shell, $"Глава стоит {part.EnergyCost} энергии. Возьмите награду или загляните в магазин", host.OverlayAnimator, 3f);
+                return;
+            }
             if (menu != null) { StartCoroutine(menu.Leave()); menu = null; }
+            Ads.Interstitial(host.Overlay, host.OverlayAnimator);      // the stub of the ad at the start of a chapter
             story = entry; chapter = part; Ended = false; lastPlate = null; hints.Clear();
             Cast.Use(entry.Id);
             Art.StoryKit = Cast.KitPrefix;

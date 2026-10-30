@@ -119,7 +119,8 @@ namespace LegacyThroughTime.Prototype
             var right = current ? 12 + 84 + 12 : 12;
             var head = MenuUi.Fit(Ui.Txt(rt, "Head", name, Kit.F700, Kit.FsBody, locked ? Kit.Muted : Kit.Text), 11);
             Ui.TopRow(head.rectTransform, 46, right, 6, 22);
-            var line = MenuUi.Fit(Ui.Txt(rt, "State", Line(state), Kit.F700, Kit.FsSmall, Kit.Muted), 10);
+            var price = !locked && !ShellPurse.ChapterOpen(chapter) ? $"За {chapter.EnergyCost} энергии" : null;     // a chapter after the first, not paid for yet
+            var line = MenuUi.Fit(Ui.Txt(rt, "State", price ?? Line(state), Kit.F700, Kit.FsSmall, Kit.Muted), 10);
             Ui.TopRow(line.rectTransform, 46, right, 28, 18);
 
             if (locked)

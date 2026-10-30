@@ -158,6 +158,7 @@ namespace LegacyThroughTime.Prototype
     sealed class Energy
     {
         public const int Max = 10, Cost = 1;
+        public const int ChapterCost = 5;       // a chapter after the first of its story (the financial model, sheet "Энергия")
 
         public int value = Max;
         public string day = "";         // "yyyy-MM-dd": the day the energy was last filled
@@ -173,10 +174,13 @@ namespace LegacyThroughTime.Prototype
 
         public bool CanSend => value >= Cost;
 
-        public bool TrySpend()
+        public bool TrySpend() => TrySpend(Cost);
+
+        public bool TrySpend(int amount)
         {
-            if (!CanSend) return false;
-            value -= Cost;
+            if (amount <= 0) return true;
+            if (value < amount) return false;
+            value -= amount;
             return true;
         }
 

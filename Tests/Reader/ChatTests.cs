@@ -155,6 +155,30 @@ namespace LegacyThroughTime.Prototype.Tests
         }
 
         [Test]
+        public void AChapterAfterTheFirstCostsEnergyAndTheFirstIsFree()
+        {
+            Assert.That(new ChapterEntry { Number = 1 }.EnergyCost, Is.EqualTo(0));
+            Assert.That(new ChapterEntry { Number = 2 }.EnergyCost, Is.EqualTo(Energy.ChapterCost));
+            var e = new Energy();
+            Assert.That(e.TrySpend(Energy.ChapterCost), Is.True);
+            Assert.That(e.value, Is.EqualTo(Energy.Max - Energy.ChapterCost));
+            Assert.That(e.TrySpend(Energy.ChapterCost), Is.True);
+            Assert.That(e.TrySpend(Energy.ChapterCost), Is.False, "not enough: nothing is taken");
+            Assert.That(e.value, Is.EqualTo(0));
+            Assert.That(e.TrySpend(0), Is.True, "a free thing costs nothing");
+        }
+
+        [Test]
+        public void AnInterstitialIsDueOnceInThirtyMinutesAndNeverForAPayingReader()
+        {
+            const long minute = 60_000;
+            Assert.That(AdRules.InterstitialDue(0, 1_000 * minute, false), Is.True, "the first one");
+            Assert.That(AdRules.InterstitialDue(1_000 * minute, 1_029 * minute, false), Is.False, "29 minutes later");
+            Assert.That(AdRules.InterstitialDue(1_000 * minute, 1_030 * minute, false), Is.True, "30 minutes later");
+            Assert.That(AdRules.InterstitialDue(0, 1_000 * minute, true), Is.False, "a reader who has paid");
+        }
+
+        [Test]
         public void ARefundNeverGoesOverTheMaxAndARefillFillsUp()
         {
             var e = new Energy();

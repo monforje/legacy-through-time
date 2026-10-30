@@ -24,8 +24,34 @@ namespace LegacyThroughTime.Prototype
             Changed?.Invoke();
         }
 
+        /// Takes energy for something that costs it (a chapter). False when there is not enough.
+        public static bool TrySpendEnergy(int amount)
+        {
+            var energy = ChatStore.Energy;
+            if (!energy.TrySpend(amount)) return false;
+            ChatStore.Write(energy);
+            Changed?.Invoke();
+            return true;
+        }
+
         /// Pays out an offer of the shop (a purchase confirmed by the store, or the editor's stand-in).
-        public static void Grant(ShopCatalog.Offer offer) { AddGems(offer.Gems); AddEnergy(offer.Energy); }
+        public static void Grant(ShopCatalog.Offer offer) { AddGems(offer.Gems); AddEnergy(offer.Energy); Ads.MarkPaid(); }
+
+        // ------------------------------------------------------------ chapters: the paid ones stay open
+        static string PaidKey(ChapterEntry chapter) => "chapter:paid:" + chapter.SaveId;
+
+        /// A chapter is open when it is free, was paid for, or has been started already (a save from before the price).
+        public static bool ChapterOpen(ChapterEntry chapter) =>
+            chapter.EnergyCost == 0 || PlayerPrefs.GetInt(PaidKey(chapter), 0) == 1 || SaveStore.Read(chapter.SaveId) != null;
+
+        /// Opens a chapter for its price, once. False when it costs more energy than the reader has.
+        public static bool PayChapter(ChapterEntry chapter)
+        {
+            if (ChapterOpen(chapter)) return true;
+            if (!TrySpendEnergy(chapter.EnergyCost)) return false;
+            PlayerPrefs.SetInt(PaidKey(chapter), 1); PlayerPrefs.Save();
+            return true;
+        }
 
         // ------------------------------------------------------------ rewards: when each was last taken
         static string AtKey(string id) => "reward:" + id + ":at";

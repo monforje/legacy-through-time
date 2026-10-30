@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "pitch/style.css"
+        ],
+        "createdAt": "2026-10-30T11:17:37.882Z",
+        "reason": "claude: L5 is the h1 underline (border-bottom only), h1 has no border-radius, so nothing rounded clashes with it"
+      }
+    ]
+  }
+}

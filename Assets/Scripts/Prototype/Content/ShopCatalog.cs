@@ -34,13 +34,13 @@ namespace LegacyThroughTime.Prototype
 
         public static readonly Offer[] Offers =
         {
-            new Offer { Id = "starter", Title = "Для начинающих", Section = SectionStarter, Pic = "gift", Gems = 100, Energy = 5, Placeholder = "6,99 $" },
-            new Offer { Id = "energy_30", Title = "Лучшая выгода", Section = SectionEnergy, Pic = "energy-pack-l", Energy = 30, Best = true, Placeholder = "19,99 $" },
-            new Offer { Id = "energy_15", Title = "15 энергии", Section = SectionEnergy, Pic = "energy-pack-s", Energy = 15, Placeholder = "10,99 $" },
-            new Offer { Id = "energy_5", Title = "5 энергии", Section = SectionEnergy, Pic = "energy-pack-s", Energy = 5, Placeholder = "3,99 $" },
-            new Offer { Id = "gems_270", Title = "Лучшая выгода", Section = SectionGems, Pic = "gem-pack-l", Gems = 270, Best = true, Placeholder = "19,99 $" },
-            new Offer { Id = "gems_130", Title = "130 алмазов", Section = SectionGems, Pic = "gem-pack-s", Gems = 130, Placeholder = "9,99 $" },
-            new Offer { Id = "gems_60", Title = "60 алмазов", Section = SectionGems, Pic = "gem-pack-s", Gems = 60, Placeholder = "4,99 $" },
+            new Offer { Id = "starter", Title = "Для начинающих", Section = SectionStarter, Pic = "gift", Gems = 100, Energy = 5, Placeholder = "199 ₽" },
+            new Offer { Id = "energy_30", Title = "Лучшая выгода", Section = SectionEnergy, Pic = "energy-pack-l", Energy = 30, Best = true, Placeholder = "249 ₽" },
+            new Offer { Id = "energy_15", Title = "15 энергии", Section = SectionEnergy, Pic = "energy-pack-s", Energy = 15, Placeholder = "149 ₽" },
+            new Offer { Id = "energy_5", Title = "5 энергии", Section = SectionEnergy, Pic = "energy-pack-s", Energy = 5, Placeholder = "59 ₽" },
+            new Offer { Id = "gems_270", Title = "Лучшая выгода", Section = SectionGems, Pic = "gem-pack-l", Gems = 270, Best = true, Placeholder = "399 ₽" },
+            new Offer { Id = "gems_130", Title = "130 алмазов", Section = SectionGems, Pic = "gem-pack-s", Gems = 130, Placeholder = "199 ₽" },
+            new Offer { Id = "gems_60", Title = "60 алмазов", Section = SectionGems, Pic = "gem-pack-s", Gems = 60, Placeholder = "99 ₽" },
         };
 
         /// "алмаз", "алмаза", "алмазов" by the number.

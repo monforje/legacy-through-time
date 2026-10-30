@@ -1,0 +1,17 @@
+@page { size: A4; margin: 13mm 14mm; }
+body { font-family: "Noto Sans", "DejaVu Sans", sans-serif; font-size: 9.6pt; line-height: 1.38; color: #1d2b24; max-width: none; }
+section.doc { page-break-before: always; }
+section.doc:first-of-type { page-break-before: auto; }
+h1 { color: #14664a; font-size: 22pt; border-bottom: 3px solid #d9453d; padding-bottom: 4pt; margin-top: 0; }
+h2 { color: #14664a; font-size: 14pt; margin-top: 10pt; margin-bottom: 4pt; }
+blockquote { border: 1px solid #efc9c3; background: #fbeeea; border-radius: 6pt; margin: 10pt 0; padding: 4pt 12pt; }
+table { border-collapse: collapse; width: 100%; margin: 8pt 0; font-size: 9.5pt; }
+th { background: #14664a; color: #fff; text-align: left; }
+th, td { border: 1px solid #c8d4cc; padding: 4pt 6pt; vertical-align: top; }
+tr:nth-child(even) td { background: #f3f7f4; }
+code { background: #eef2ef; padding: 0 3pt; border-radius: 3pt; }
+.shots { display: flex; gap: 8pt; margin: 10pt 0; }
+.shots img { width: 24%; border-radius: 6pt; border: 1px solid #c8d4cc; }
+.cover { text-align: center; padding-top: 80mm; page-break-after: always; }
+.cover h1 { font-size: 36pt; border: 0; }
+.cover p { font-size: 14pt; }

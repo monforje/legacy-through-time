@@ -176,25 +176,36 @@ namespace LegacyThroughTime.Prototype
             if (row.Claimed) return;
             var button = row.Action;
             button.Pulsing = false;
+            if (row.Kind.Id == "ad")                                    // the free gems are a clip: the stub plays, the reward comes after it
+            {
+                Ads.Rewarded(dialog.Root, anim, () => { if (dialog.IsOpen) Complete(row); });
+                return;
+            }
             button.SetLoading(true, anim);
             anim.Play(Tween.After(anim.Enabled ? Kit.Dur.Net * .7f : 0, () =>
             {
                 if (!dialog.IsOpen) return;
                 button.SetLoading(false, anim);
-                if (row.Kind.Id == "chapter")
-                {
-                    if (PlayerPrefs.GetInt(ChapterClaimed, 0) == 1 || chaptersRead() < 1) return;
-                    PlayerPrefs.SetInt(ChapterClaimed, 1); PlayerPrefs.Save();
-                    ShellPurse.AddGems(row.Kind.Gems);
-                }
-                else if (!ShellPurse.Take(row.Kind, DateTime.Now)) return;
-                row.Claimed = row.Kind.Id == "daily" || row.Kind.Id == "chapter";
-                if (row.Claimed) { button.SetLabel("Получено"); button.SetEnabled(false); }
-                var gives = row.Kind.Gems > 0 ? row.Kind.Gems + " " + ShopCatalog.Plural(row.Kind.Gems, "алмаз", "алмаза", "алмазов") : row.Kind.Energy + " энергии";
-                ShellToast.Show(dialog.Root, "Награда получена: " + gives, anim, 2.5f, 52);
-                var at = (Vector2)dialog.Root.InverseTransformPoint(row.Art.rectTransform.position) + dialog.Root.rect.size * dialog.Root.pivot;
-                ShellSparks.Burst(dialog.Root, at, anim, 6);
+                Complete(row);
             }));
+        }
+
+        void Complete(Row row)
+        {
+            var button = row.Action;
+            if (row.Kind.Id == "chapter")
+            {
+                if (PlayerPrefs.GetInt(ChapterClaimed, 0) == 1 || chaptersRead() < 1) return;
+                PlayerPrefs.SetInt(ChapterClaimed, 1); PlayerPrefs.Save();
+                ShellPurse.AddGems(row.Kind.Gems);
+            }
+            else if (!ShellPurse.Take(row.Kind, DateTime.Now)) return;
+            row.Claimed = row.Kind.Id == "daily" || row.Kind.Id == "chapter";
+            if (row.Claimed) { button.SetLabel("Получено"); button.SetEnabled(false); }
+            var gives = row.Kind.Gems > 0 ? row.Kind.Gems + " " + ShopCatalog.Plural(row.Kind.Gems, "алмаз", "алмаза", "алмазов") : row.Kind.Energy + " энергии";
+            ShellToast.Show(dialog.Root, "Награда получена: " + gives, anim, 2.5f, 52);
+            var at = (Vector2)dialog.Root.InverseTransformPoint(row.Art.rectTransform.position) + dialog.Root.rect.size * dialog.Root.pivot;
+            ShellSparks.Burst(dialog.Root, at, anim, 6);
         }
     }
 }
