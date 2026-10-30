@@ -39,6 +39,7 @@ namespace LegacyThroughTime.Prototype
         ChatsPanel chats;
         WheelDialog wheel;
         RewardsDialog rewards;
+        RewardsSheet sheet;
         RectTransform update;
         Tab tab;
         bool leaving;
@@ -78,7 +79,26 @@ namespace LegacyThroughTime.Prototype
             nav = new ShellNav(Root, new[] { ("book", "Истории"), ("chat", "Чат"), ("wheel", "Колесо"), ("star", "Слова"), ("gift", "Награды") },
                                0, i => Select(Bar[i]));
 
-            if (anim.Enabled) Entrance();
+            UpdateBadge();
+            if (anim.Enabled) { Entrance(); anim.Play(BadgeLoop()); }
+        }
+
+        /// The "+N" over the rewards: how many free rewards wait for a tap.
+        void UpdateBadge()
+        {
+            var ready = 0;
+            foreach (var kind in Rewards.All)
+                if (kind.NeedsTap && kind.Id != "chapter" && ShellPurse.Remaining(kind, DateTime.Now) == 0) ready++;
+            nav.SetBadge(Array.IndexOf(Bar, Tab.Rewards), ready > 0 ? "+" + ready : null);
+        }
+
+        IEnumerator BadgeLoop()
+        {
+            while (Root && !leaving)
+            {
+                yield return new WaitForSecondsRealtime(5f);
+                if (Root) UpdateBadge();
+            }
         }
 
         void OnPurse() { if (!Root) return; energyPill.Count(ShellPurse.Energy, anim); gemPill.Count(ShellPurse.Gems, anim); }
@@ -90,7 +110,8 @@ namespace LegacyThroughTime.Prototype
             if (leaving) return;
             // the wheel and the rewards are popups: the screen under them stays
             if (next == Tab.Wheel) { OpenWheel(); return; }
-            if (next == Tab.Rewards) { OpenRewards(); return; }
+            if (next == Tab.Rewards) { ToggleSheet(); return; }
+            CloseSheet();
             CloseChapters();
             library?.Close();
             if (next == tab && next != Tab.Stories) return;
@@ -117,7 +138,7 @@ namespace LegacyThroughTime.Prototype
         void OpenWheel()
         {
             if (wheel != null && wheel.IsOpen) return;
-            CloseRewards();
+            CloseRewards(); CloseSheet();
             wheel = new WheelDialog(Layer, anim, () => { wheel = null; nav.Show(Array.IndexOf(Bar, tab)); }, () => Select(Tab.Shop));
             nav.Show(Array.IndexOf(Bar, Tab.Wheel));
         }
@@ -129,6 +150,28 @@ namespace LegacyThroughTime.Prototype
             rewards = new RewardsDialog(Layer, anim, () => { rewards = null; nav.Show(Array.IndexOf(Bar, tab)); });
             nav.Show(Array.IndexOf(Bar, Tab.Rewards));
         }
+
+        /// The "Награды" tab opens the sheet over the bar (and closes it again); its "Награды" row opens the popup.
+        void ToggleSheet()
+        {
+            if (sheet != null && sheet.IsOpen) { CloseSheet(); return; }
+            CloseWheel(); CloseRewards();
+            sheet = new RewardsSheet(Root, anim, OpenRewards, () => { sheet = null; nav.Show(Array.IndexOf(Bar, tab)); });
+            nav.Root.SetAsLastSibling();                                   // the bar stays tappable over the closing catcher
+            nav.Show(Array.IndexOf(Bar, Tab.Rewards));
+        }
+
+        void CloseSheet()
+        {
+            if (sheet == null) return;
+            var closing = sheet;
+            sheet = null;
+            if (closing.IsOpen) closing.Close();
+            nav.Show(Array.IndexOf(Bar, tab));
+        }
+
+        /// For the tools: the popup with all the rewards.
+        public void ShowRewards() => OpenRewards();
 
         void CloseWheel() { if (wheel != null && wheel.IsOpen) wheel.Close(); wheel = null; }
         void CloseRewards() { if (rewards != null && rewards.IsOpen) rewards.Close(); rewards = null; }
@@ -184,6 +227,7 @@ namespace LegacyThroughTime.Prototype
         /// Android Back: true when the menu stepped back itself; false at the stories, where Back leaves the app.
         public bool Back()
         {
+            if (sheet != null && sheet.IsOpen) { CloseSheet(); return true; }
             if (wheel != null && wheel.IsOpen) { wheel.Close(); return true; }
             if (rewards != null && rewards.IsOpen) { rewards.Close(); return true; }
             if (library != null && library.DetailOpen) { library.Close(); return true; }

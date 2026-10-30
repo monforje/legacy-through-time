@@ -78,6 +78,54 @@ namespace LegacyThroughTime.Prototype
             return img;
         }
 
+        // ------------------------------------------------------------------ shadow
+        static readonly Dictionary<(int, int, int), Sprite> shadows = new();
+
+        /// `box-shadow: 0 dy blur scrim@alpha` under a rounded box: a blurred rounded rectangle (9-sliced) behind `target`, one
+        /// sibling below it, with the same anchors. The default is the kit's `--shadow` (0 8px 24px, scrim 50%).
+        public static Image Shadow(RectTransform target, int radius = RadiusL, float blur = 24, float alpha = .5f, float dy = 8)
+        {
+            var key = (radius, Mathf.RoundToInt(blur), Mathf.RoundToInt(alpha * 100));
+            var margin = Mathf.CeilToInt(blur * 1.5f);
+            if (!shadows.TryGetValue(key, out var sprite) || !sprite)
+            {
+                const int scale = 2;
+                var border = (radius + margin) * scale;
+                var n = 2 * border + 4;
+                var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+                var data = new Color32[n * n];
+                float c = n / 2f, half = c - margin * scale, r = radius * scale, sigma = blur * scale / 2f;
+                for (var y = 0; y < n; y++)
+                    for (var x = 0; x < n; x++)
+                    {
+                        float qx = Mathf.Abs(x + .5f - c) - (half - r), qy = Mathf.Abs(y + .5f - c) - (half - r);
+                        var d = new Vector2(Mathf.Max(qx, 0), Mathf.Max(qy, 0)).magnitude + Mathf.Min(Mathf.Max(qx, qy), 0) - r;
+                        var a = alpha * .5f * Erfc(d / (sigma * 1.41421356f));
+                        data[y * n + x] = new Color(1, 1, 1, Mathf.Clamp01(a));
+                    }
+                tex.SetPixels32(data); tex.Apply(false, true);
+                sprite = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(.5f, .5f), 100 * scale, 0, SpriteMeshType.FullRect, new Vector4(border, border, border, border));
+                shadows[key] = sprite;
+            }
+            var image = Ui.Img(target.parent, "Shadow", sprite, Image.Type.Sliced);
+            image.color = Scrim; image.raycastTarget = false;
+            var rt = image.rectTransform;
+            rt.anchorMin = target.anchorMin; rt.anchorMax = target.anchorMax; rt.pivot = target.pivot;
+            rt.sizeDelta = target.sizeDelta + new Vector2(2 * margin, 2 * margin);
+            rt.anchoredPosition = target.anchoredPosition + new Vector2(0, -dy);
+            rt.SetSiblingIndex(target.GetSiblingIndex());
+            return image;
+        }
+
+        static float Erfc(float x)
+        {
+            var z = Mathf.Abs(x);
+            var t = 1 / (1 + .5f * z);
+            var y = t * Mathf.Exp(-z * z - 1.26551223f + t * (1.00002368f + t * (.37409196f + t * (.09678418f + t * (-.18628806f + t * (.27886807f
+                  + t * (-1.13520398f + t * (1.48851587f + t * (-.82215223f + t * .17087277f)))))))));
+            return x >= 0 ? y : 2 - y;
+        }
+
         // ------------------------------------------------------------------ shapes and text
         public static Image Round(Transform parent, string name, Color colour, int radius = RadiusM)
         {

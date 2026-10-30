@@ -130,7 +130,7 @@ namespace LegacyThroughTime.Prototype
                 var left = row.Kind.Id == "chapter" ? 1 : ShellPurse.Remaining(row.Kind, now);
                 row.Timer.text = row.Kind.Id == "chapter" ? "0 из 1" : Rewards.Clock(left);
                 if (row.Kind.Id == "energy" && left == 0 && ShellPurse.Take(row.Kind, now))
-                    ShellToast.Show(dialog.Root, "Бесплатная энергия: +" + row.Kind.Energy, anim);
+                    ShellToast.Show(dialog.Root, "Бесплатная энергия: +" + row.Kind.Energy, anim, 2.5f, 52);
                 if (row.Action == null) continue;
                 var ready = row.Kind.Id != "chapter" && left == 0;
                 row.Action.SetEnabled(ready);
@@ -167,7 +167,7 @@ namespace LegacyThroughTime.Prototype
                 row.Claimed = row.Kind.Id == "daily" || row.Kind.Id == "chapter";
                 if (row.Claimed) { button.SetLabel("Получено"); button.SetEnabled(false); }
                 var gives = row.Kind.Gems > 0 ? row.Kind.Gems + " " + ShopCatalog.Plural(row.Kind.Gems, "алмаз", "алмаза", "алмазов") : row.Kind.Energy + " энергии";
-                ShellToast.Show(dialog.Root, "Награда получена: " + gives, anim);
+                ShellToast.Show(dialog.Root, "Награда получена: " + gives, anim, 2.5f, 52);
                 var at = (Vector2)dialog.Root.InverseTransformPoint(row.Art.rectTransform.position) + dialog.Root.rect.size * dialog.Root.pivot;
                 ShellSparks.Burst(dialog.Root, at, anim, 6);
             }));

@@ -70,7 +70,7 @@ namespace LegacyThroughTime.Prototype
 
             // "Удвоить шансы": the same row, secondary
             var boost = Parts.Button(c, "Удвоить шансы на редкие призы", ButtonStyle.Neutral,
-                                     () => ShellToast.Show(dialog.Root, "Скоро: удвоение шансов за 150 алмазов", anim), 52);
+                                     () => ShellToast.Show(dialog.Root, "Скоро: удвоение шансов за 150 алмазов", anim, 2.5f, 52), 52);
             Ui.TopRow(boost.Root, 0, 0, 564, 52);
             Split(boost, 205);
             var cost = Ui.Txt(boost.Root, "Cost", "150", Kit.F800, Kit.FsBody, Kit.Text, TextAnchor.MiddleRight);
@@ -133,7 +133,7 @@ namespace LegacyThroughTime.Prototype
 
         void Spin()
         {
-            if (spinning || !ShellPurse.TrySpin()) { if (!spinning) ShellToast.Show(dialog.Root, "Попытки закончились", anim); return; }
+            if (spinning || !ShellPurse.TrySpin()) { if (!spinning) ShellToast.Show(dialog.Root, "Попытки закончились", anim, 2.5f, 52); return; }
             spinning = true; Refresh();
             var sector = Wheel.Pick(random.NextDouble());
             turns += 4;
@@ -163,7 +163,7 @@ namespace LegacyThroughTime.Prototype
             var text = ShellPurse.Pay(prize);
             if (dialog.IsOpen)
             {
-                ShellToast.Show(dialog.Root, "Выпало: " + text, anim);
+                ShellToast.Show(dialog.Root, "Выпало: " + text, anim, 2.5f, 52);
                 var lit = (Vector2)dialog.Root.InverseTransformPoint(disc.position) + dialog.Root.rect.size * dialog.Root.pivot + new Vector2(0, IconRadius);
                 ShellSparks.Burst(dialog.Root, lit, anim, 6);
                 Refresh();

@@ -81,7 +81,7 @@ namespace LegacyThroughTime.Prototype
         public readonly RectTransform Root, Panel, Content;
         readonly IAnimator anim;
         readonly Action closed;
-        readonly Image dim;
+        readonly Image dim, shadow;
         bool closing;
 
         public bool IsOpen => Root && !closing;
@@ -99,6 +99,7 @@ namespace LegacyThroughTime.Prototype
             panel.raycastTarget = true;
             Panel = panel.rectTransform;
             Ui.Stretch(Panel, Kit.Side, 36 + Viewport.ExtraBottom, Kit.Side, 44 + Viewport.ExtraTop);
+            shadow = Kit.Shadow(Panel);
             Ui.Group(Panel);
 
             var head = Ui.Txt(Panel, "Title", title, Kit.F800, Kit.FsTitle, Kit.Text, TextAnchor.MiddleCenter);
@@ -112,14 +113,14 @@ namespace LegacyThroughTime.Prototype
             if (anim != null && anim.Enabled)
             {
                 var group = Ui.Group(Panel); group.alpha = 0;
-                dim.color = Kit.Scrim.WithAlpha(0);
+                dim.color = Kit.Scrim.WithAlpha(0); shadow.color = Kit.Scrim.WithAlpha(0);
                 anim.Play(Tween.To(Kit.Dur.Slow, e =>
                 {
                     if (!Panel) return;
                     group.alpha = e;
                     Panel.localScale = Vector3.one * (.97f + .03f * e);
                     Panel.anchoredPosition = new Vector2(0, -16 * (1 - e));
-                    dim.color = Kit.Scrim.WithAlpha(.3f * e);
+                    dim.color = Kit.Scrim.WithAlpha(.3f * e); shadow.color = Kit.Scrim.WithAlpha(e);
                 }));
             }
         }
@@ -133,7 +134,7 @@ namespace LegacyThroughTime.Prototype
             anim.Play(Tween.To(Kit.Dur.Fast, e =>
             {
                 if (!Root) return;
-                group.alpha = 1 - e; dim.color = Kit.Scrim.WithAlpha(.3f * (1 - e));
+                group.alpha = 1 - e; dim.color = Kit.Scrim.WithAlpha(.3f * (1 - e)); shadow.color = Kit.Scrim.WithAlpha(1 - e);
                 if (e >= 1) Finish();
             }, Easing.Linear));
         }
@@ -146,19 +147,28 @@ namespace LegacyThroughTime.Prototype
     {
         public static void Show(Transform parent, string text, IAnimator anim, float seconds = 2.5f, float bottom = 72)
         {
-            var box = Kit.Round(parent, "Toast", Kit.Surface2, Kit.RadiusM);
+            // 13 px / 700 on a 1.4 line, padding 12 x 16, wraps; its height is that of the text
+            var wrap = Ui.Rect(parent, "Toast");
+            var probe = Ui.Txt(wrap, "Probe", text, Kit.F700, Kit.FsSmall, Kit.Text, TextAnchor.MiddleCenter);
+            var lines = Mathf.Max(1, Mathf.Round(Ui.TextHeight(probe, Metrics.RefWidth - 4 * Kit.Side) / 18.2f));
+            UnityEngine.Object.Destroy(probe.gameObject);
+            Ui.BottomRow(wrap, Kit.Side, Kit.Side, bottom + Viewport.ExtraBottom, Mathf.Round(lines * 18.2f) + 2 * Kit.Space3);
+            var box = Kit.Round(wrap, "Box", Kit.Surface2, Kit.RadiusM);
             box.raycastTarget = false;
-            Ui.BottomRow(box.rectTransform, Kit.Side, Kit.Side, bottom + Viewport.ExtraBottom, 48);
-            var label = Ui.Txt(box.rectTransform, "Text", text, Kit.F800, Kit.FsSmall, Kit.Text, TextAnchor.MiddleCenter);
+            Ui.Stretch(box.rectTransform);
+            var label = Ui.Txt(box.rectTransform, "Text", text, Kit.F700, Kit.FsSmall, Kit.Text, TextAnchor.MiddleCenter);
             Ui.Stretch(label.rectTransform, Kit.Space4, 0, Kit.Space4, 0);
-            var group = Ui.Group(box.rectTransform);
+            Kit.Shadow(box.rectTransform, Kit.RadiusM, 24, .5f, 8);
+            wrap.SetAsLastSibling();
+            var group = Ui.Group(wrap);
+            group.blocksRaycasts = false;
             if (anim == null || !anim.Enabled)
             {
-                UnityEngine.Object.Destroy(box.gameObject, seconds);
+                UnityEngine.Object.Destroy(wrap.gameObject, seconds);
                 return;
             }
             group.alpha = 0;
-            var rt = box.rectTransform; var y0 = rt.anchoredPosition.y;
+            var rt = wrap; var y0 = rt.anchoredPosition.y;
             anim.Play(Tween.To(Kit.Dur.Normal, e => { if (rt) { group.alpha = e; rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, y0 - 12 * (1 - e)); } }));
             anim.Play(Tween.To(Kit.Dur.Fast, e =>
             {
