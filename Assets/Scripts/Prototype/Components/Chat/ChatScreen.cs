@@ -13,7 +13,7 @@ namespace LegacyThroughTime.Prototype
     /// hints, no mood: the chat is neutral, only the name and the avatar colour come from the story.
     sealed class ChatScreen
     {
-        const float BarHeight = 56, FieldHeight = 52, Gap = 8, Pad = 12, MaxShare = .82f;
+        const float BarHeight = 56, FieldHeight = 52, Gap = Kit.Space3, Pad = 12, BubbleX = Kit.Space4, BubbleY = Kit.Space3, MaxShare = .82f;
         const string Note = "Диалог вымышленный: героя играет ИИ по мотивам истории. Факты смотрите в эпизодах.";
 
         public readonly RectTransform Root;
@@ -60,39 +60,34 @@ namespace LegacyThroughTime.Prototype
             Ui.Stretch(Root);
             anim = animated ? Root.gameObject.AddComponent<CoroutineAnimator>() : NoAnimator.Instance;
             Kit.Ground(Root);
-            contentWidth = Metrics.RefWidth - 2 * Metrics.Side;
+            SettingsToast.ShowGear(false);                   // the flag takes the corner of the gear
+            contentWidth = Metrics.RefWidth - 2 * Kit.Side;
 
-            // ---- the top bar: back, hero, energy, flag
-            var top = Metrics.InsetTop + Viewport.ExtraTop;
+            // ---- the top bar (templates/shell/chat.html): back, hero, the energy pill and the flag
+            var top = Metrics.InsetTop + Kit.Space3 + Viewport.ExtraTop;
             var bar = Ui.Rect(Root, "Bar");
-            Ui.TopRow(bar, Metrics.Side - 8, Metrics.Side - 8, top, BarHeight);
-            var back = Kit.Icon(bar, "Back", Kit.Glyph("chevron-l"), 26, A.MidLeft, new Vector2(22, 0));
-            back.raycastTarget = true;
-            var hit = Ui.Img(bar, "BackHit", ProceduralArt.White);
-            hit.color = Color.clear; hit.raycastTarget = true;
-            Ui.Box(hit.rectTransform, A.MidLeft, A.MidLeft, Vector2.zero, new Vector2(44, 44));
-            PressButton.On(hit.gameObject, () => Leave(), .9f);
-            var avatar = Kit.Avatar(bar, story.Hero, story.Id, 36);
-            Ui.Box(avatar.rectTransform, A.MidLeft, A.MidLeft, new Vector2(48, 0), new Vector2(36, 36));
-            var name = MenuUi.Fit(Ui.Txt(bar, "Name", story.Hero, Kit.F800, 18, Kit.Text), 12);
-            Ui.Stretch(name.rectTransform, 94, 0, 118, 0);
+            Ui.TopRow(bar, Kit.Side, Kit.Side, top, Kit.Touch);
+            var back = Parts.IconButton(bar, "chevron-l", () => Leave(), Kit.Touch);
+            Ui.Box(back.Root, A.MidLeft, A.MidLeft, Vector2.zero, new Vector2(Kit.Touch, Kit.Touch));
+            var avatar = Kit.Avatar(bar, story.Hero, story.Id, 40);
+            Ui.Box(avatar.rectTransform, A.MidLeft, A.MidLeft, new Vector2(52, 0), new Vector2(40, 40));
+            var name = MenuUi.Fit(Ui.Txt(bar, "Name", story.Hero, Kit.F800, Kit.FsHead, Kit.Text), 12);
+            Ui.Stretch(name.rectTransform, 100, 0, 52 + 56 + 8, 0);
 
-            energyPill = Kit.Round(bar, "Energy", Kit.Surface, 14).rectTransform;
-            Ui.Box(energyPill, A.MidRight, A.MidRight, new Vector2(-48, 0), new Vector2(56, 28));
-            Kit.Icon(energyPill, "Bolt", Kit.Pic("energy"), 20, A.MidLeft, new Vector2(13, 0)).raycastTarget = false;
-            energyText = Ui.Txt(energyPill, "Value", energy.value.ToString(), Kit.F800, 15, Kit.Text, TextAnchor.MiddleCenter);
-            Ui.Stretch(energyText.rectTransform, 22, 0, 4, 0);
+            // the compact pill: 56 x 32, a 20 px picture, the number
+            energyPill = Kit.Round(bar, "Energy", Kit.Surface, 16).rectTransform;
+            Ui.Box(energyPill, A.MidRight, A.MidRight, new Vector2(-(Kit.Touch + 8), 0), new Vector2(56, 32));
+            Kit.Icon(energyPill, "Bolt", Kit.Pic("energy"), 20, A.MidLeft, new Vector2(Kit.Space3, 0)).raycastTarget = false;
+            energyText = Ui.Txt(energyPill, "Value", energy.value.ToString(), Kit.F800, Kit.FsSmall, Kit.Text, TextAnchor.MiddleLeft);
+            Ui.Stretch(energyText.rectTransform, Kit.Space3 + 20 + Kit.Space1, 0, Kit.Space3, 0);
 
-            var flag = Ui.Img(bar, "Report", ProceduralArt.White);
-            flag.color = Color.clear; flag.raycastTarget = true;
-            Ui.Box(flag.rectTransform, A.MidRight, A.MidRight, Vector2.zero, new Vector2(44, 44));
-            Kit.Icon(flag.rectTransform, "Flag", Kit.Glyph("flag"), 24).raycastTarget = false;
-            PressButton.On(flag.gameObject, Report, .9f);
+            var flag = Parts.IconButton(bar, "flag", Report, Kit.Touch);
+            Ui.Box(flag.Root, A.MidRight, A.MidRight, Vector2.zero, new Vector2(Kit.Touch, Kit.Touch));
 
             // ---- the feed and the bottom (no tab bar on this screen)
             var floor = Metrics.InsetBottom + Viewport.ExtraBottom;
-            var bottom = floor + FieldHeight + 20;
-            feed = MenuUi.List(Root, top + BarHeight, bottom);
+            var bottom = floor + FieldHeight + Gap;
+            feed = MenuUi.List(Root, top + BarHeight - Kit.Space3 + Kit.Space3, bottom, 0);
             viewport = (RectTransform)feed.parent;
             scroll = viewport.GetComponent<ScrollRect>();
 
@@ -105,7 +100,7 @@ namespace LegacyThroughTime.Prototype
 
             AddNote();
             foreach (var line in chat.lines) Add(line, false);
-            Field(floor + 10);
+            Field(floor);
             if (!energy.CanSend) OutOfEnergy();
             Relayout(); ScrollDown();
 
@@ -124,9 +119,9 @@ namespace LegacyThroughTime.Prototype
         {
             var row = new Row { Root = Ui.Rect(feed, "Note") };
             rows.Add(row);
-            var t = Ui.Txt(row.Root, "Text", Note, Kit.F600, 12, Kit.Muted, TextAnchor.MiddleCenter);
-            row.Height = Ui.TextHeight(t, contentWidth - 20) + 16;     // measured first: on a stretched rect sizeDelta adds to the width
-            Ui.Stretch(t.rectTransform, 10, 0, 10, 0);
+            var t = Ui.Txt(row.Root, "Text", Note, Kit.F600, Kit.FsSmall, Kit.Muted, TextAnchor.MiddleCenter);
+            row.Height = Ui.TextHeight(t, contentWidth - 26) + Gap;     // measured first: on a stretched rect sizeDelta adds to the width
+            Ui.Stretch(t.rectTransform, 13, Gap, 13, 0);
         }
 
         Row Add(ChatLine line, bool slide = true)
@@ -142,17 +137,44 @@ namespace LegacyThroughTime.Prototype
         void Bubble(Row row, string text, bool mine)
         {
             foreach (Transform child in row.Root) UnityEngine.Object.Destroy(child.gameObject);
-            var box = Kit.Round(row.Root, "Bubble", mine ? Kit.Accent : Kit.Surface);
-            var label = Ui.Txt(box.rectTransform, "Text", text, Kit.F600, 15, mine ? Kit.AccentInk : Kit.Text, TextAnchor.UpperLeft);
+            var box = Ui.Img(row.Root, "Bubble", Tail(mine), Image.Type.Sliced);
+            box.color = mine ? Kit.Accent : Kit.Surface;
+            var label = Ui.Txt(box.rectTransform, "Text", text, Kit.F600, Kit.FsBody, mine ? Kit.AccentInk : Kit.Text, TextAnchor.UpperLeft);
             label.supportRichText = false;
-            var max = contentWidth * MaxShare - 2 * Pad;
-            var width = Mathf.Min(max, Ui.TextWidth(label)) + 2 * Pad;
-            var textHeight = Ui.TextHeight(label, width - 2 * Pad);
-            var height = textHeight + 2 * Pad - 2;
+            var max = contentWidth * MaxShare - 2 * BubbleX;
+            var width = Mathf.Ceil(Mathf.Min(max, Ui.TextWidth(label))) + 2 * BubbleX;
+            var textHeight = Ui.TextHeight(label, width - 2 * BubbleX);
+            var height = Mathf.Ceil(textHeight) + 2 * BubbleY;
             var anchor = mine ? A.TopRight : A.TopLeft;
-            Ui.Box(box.rectTransform, anchor, anchor, new Vector2(0, -Gap / 2), new Vector2(width, height));
-            Ui.Stretch(label.rectTransform, Pad, Pad - 1, Pad, Pad - 1);
+            Ui.Box(box.rectTransform, anchor, anchor, Vector2.zero, new Vector2(width, height));
+            Ui.Stretch(label.rectTransform, BubbleX, BubbleY, BubbleX, BubbleY);
             row.Height = height + Gap;
+        }
+
+        static Sprite tailThem, tailMine;
+
+        /// A bubble: 16 on every corner and 4 on the one the speech comes from (the bottom left for the hero, the bottom right
+        /// for the reader), drawn 3 pixels to the unit as a 9-slice.
+        static Sprite Tail(bool mine)
+        {
+            if (mine ? tailMine : tailThem) return mine ? tailMine : tailThem;
+            const int n = 96, big = 48, small = 12;
+            var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+            var data = new Color32[n * n];
+            for (var y = 0; y < n; y++)
+                for (var x = 0; x < n; x++)
+                {
+                    float px = x + .5f, py = y + .5f;
+                    var right = px > n / 2f; var topHalf = py > n / 2f;
+                    var r = !topHalf && (mine ? right : !right) ? small : big;
+                    float qx = Mathf.Abs(px - n / 2f) - (n / 2f - r), qy = Mathf.Abs(py - n / 2f) - (n / 2f - r);
+                    var d = new Vector2(Mathf.Max(qx, 0), Mathf.Max(qy, 0)).magnitude + Mathf.Min(Mathf.Max(qx, qy), 0) - r;
+                    data[y * n + x] = new Color(1, 1, 1, Mathf.Clamp01(.5f - d));
+                }
+            tex.SetPixels32(data); tex.Apply(false, true);
+            var sprite = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(.5f, .5f), 300, 0, SpriteMeshType.FullRect, new Vector4(big, big, big, big));
+            if (mine) tailMine = sprite; else tailThem = sprite;
+            return sprite;
         }
 
         /// A new message comes a little from the side, with a fade.
@@ -171,29 +193,36 @@ namespace LegacyThroughTime.Prototype
         {
             typing = new Row { Root = Ui.Rect(feed, "Typing") };
             rows.Add(typing);
-            var box = Kit.Round(typing.Root, "Bubble", Kit.Surface);
-            Ui.Box(box.rectTransform, A.TopLeft, A.TopLeft, new Vector2(0, -Gap / 2), new Vector2(64, 38));
+            var box = Ui.Img(typing.Root, "Bubble", Tail(false), Image.Type.Sliced);
+            box.color = Kit.Surface;
+            Ui.Box(box.rectTransform, A.TopLeft, A.TopLeft, Vector2.zero, new Vector2(58, 40));
             var dots = new Graphic[3];
             for (var i = 0; i < 3; i++)
             {
                 dots[i] = Ui.Img(box.rectTransform, "Dot " + i, ProceduralArt.Disc);
                 dots[i].color = Kit.Muted;
-                Ui.Box(dots[i].rectTransform, A.Center, A.Center, new Vector2((i - 1) * 14, 0), new Vector2(8, 8));
+                Ui.Box(dots[i].rectTransform, A.Center, A.Center, new Vector2((i - 1) * 10, 0), new Vector2(6, 6));
             }
             box.gameObject.AddComponent<TypingDots>().Dots = dots;
-            typing.Height = 38 + Gap;
+            typing.Height = 40 + Gap;
             if (anim.Enabled) SlideIn(typing);
         }
 
+        /// The rows stand from the bottom of the feed (a messenger): with few of them the room is above, with many the feed scrolls.
         void Relayout()
         {
-            var y = 8f;
+            var total = 0f;
+            foreach (var r in rows) total += r.Height;
+            total -= Gap;                                              // no gap under the last row: the field has its own
+            Canvas.ForceUpdateCanvases();
+            var room = viewport.rect.height;
+            var y = Mathf.Max(0, room - total);
             foreach (var r in rows)
             {
-                Ui.TopRow(r.Root, 0, 0, y, r.Height);
+                Ui.TopRow(r.Root, Kit.Side, Kit.Side, y, r.Height - Gap);
                 y += r.Height;
             }
-            MenuUi.SetHeight(feed, y + 12);
+            MenuUi.SetHeight(feed, Mathf.Max(room, y - Gap));
         }
 
         void ScrollDown()
@@ -306,7 +335,7 @@ namespace LegacyThroughTime.Prototype
         {
             var box = Kit.Round(bottomRoot, "Field", Kit.Surface);
             box.raycastTarget = true;
-            Ui.BottomRow(box.rectTransform, Metrics.Side, Metrics.Side, bottom, FieldHeight);
+            Ui.BottomRow(box.rectTransform, Kit.Side, Kit.Side, bottom, FieldHeight);
             var out_ = !energy.CanSend;
 
             var text = Ui.Txt(box.rectTransform, "Text", "", Kit.F600, 15, Kit.Text, TextAnchor.MiddleLeft);
@@ -359,7 +388,7 @@ namespace LegacyThroughTime.Prototype
             var floor = Metrics.InsetBottom + Viewport.ExtraBottom;
             foreach (Transform child in bottomRoot) UnityEngine.Object.Destroy(child.gameObject);
             Drop(limit); limit = null;
-            Field(floor + 10);
+            Field(floor);
             Relayout(); ScrollDown();
             if (!energy.CanSend && !busy) OutOfEnergy();
         }
@@ -393,6 +422,7 @@ namespace LegacyThroughTime.Prototype
         {
             if (leaving) return;
             leaving = true;
+            SettingsToast.ShowGear(true);
             chat.MarkSeen();
             ChatStore.Write(chat);
             if (owner) owner.StartCoroutine(ChatStore.Remember(chat));

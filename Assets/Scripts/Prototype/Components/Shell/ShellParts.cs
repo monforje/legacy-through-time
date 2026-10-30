@@ -31,13 +31,14 @@ namespace LegacyThroughTime.Prototype
             return b;
         }
 
-        /// A round or rounded-square button with a glyph: the gear, close, back.
-        public static ShellButton IconButton(Transform parent, string glyph, Action click, float size = Kit.Touch, bool circle = true, bool accent = false)
+        /// A round or rounded-square button with a glyph (or a 3D picture): the gear, close, back, chat.
+        public static ShellButton IconButton(Transform parent, string glyph, Action click, float size = Kit.Touch, bool circle = true, bool accent = false, bool picture = false)
         {
             var face = Kit.Round(parent, "Icon button", accent ? Kit.Accent : Kit.Surface2, circle ? (int)(size / 2) : Kit.RadiusS);
             face.raycastTarget = true;
             face.rectTransform.sizeDelta = new Vector2(size, size);
-            var icon = Kit.Icon(face.rectTransform, "Glyph", Kit.Glyph(glyph, ink: accent), Mathf.Round(size * .64f));
+            var icon = picture ? Kit.Icon(face.rectTransform, "Glyph", Kit.Pic(glyph), 26)           // `.btn-icon .ico.nav3d`: a 3D picture, 26
+                               : Kit.Icon(face.rectTransform, "Glyph", Kit.Glyph(glyph, ink: accent), Mathf.Round(size * .64f));
             var b = new ShellButton { Root = face.rectTransform, Face = face, Glyph = icon };
             b.Group = Ui.Group(face);
             b.Press = PressButton.On(face.gameObject, click, .94f);

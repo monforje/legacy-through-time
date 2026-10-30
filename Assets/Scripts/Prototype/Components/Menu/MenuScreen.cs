@@ -100,9 +100,10 @@ namespace LegacyThroughTime.Prototype
             tab = next;
             home.Root.gameObject.SetActive(tab == Tab.Stories);
             if (tab == Tab.Chat) chats = new ChatsPanel(stage, ChatStore.Rows(stories, Started), s => { if (!leaving) openChat(s); }, () => Select(Tab.Stories), DateTime.Now, anim);
-            if (tab == Tab.Library) library = new LibraryPanel(stage, terms, anim);
+            if (tab == Tab.Library) library = new LibraryPanel(stage, stories, terms, anim, () => Select(Tab.Stories));
             if (tab == Tab.Shop) shop = new ShopScreen(Root, anim, () => Select(Tab.Stories));
             pills.gameObject.SetActive(tab == Tab.Stories);                    // the other sections have their own headers
+            SettingsToast.ShowGear(tab == Tab.Stories || tab == Tab.Shop);     // the lists have no gear in the mockups
             nav.Root.gameObject.SetActive(tab != Tab.Shop);                    // the shop has its own bar
             var panel = tab == Tab.Chat ? chats.Root : tab == Tab.Library ? library.Root : tab == Tab.Shop ? shop.Root : null;
             if (panel && anim.Enabled)
@@ -149,6 +150,7 @@ namespace LegacyThroughTime.Prototype
         /// Lets go of the purse and the store (the menu is destroyed without Leave).
         public void Dispose()
         {
+            SettingsToast.ShowGear(true);
             ShellPurse.Changed -= OnPurse;
             Wallet.Changed -= OnCoins;
             shop?.Dispose();
@@ -160,6 +162,7 @@ namespace LegacyThroughTime.Prototype
             chapters = new ChapterList(stage, story, progress, (chapter, fresh) => { if (!leaving) open(story, chapter, fresh); },
                                        () => { if (!leaving) openChat(story); }, CloseChapters, anim);
             Home(false);                                     // the list over the ground, not over the deck
+            SettingsToast.ShowGear(false);                   // the chat button takes the corner of the gear
         }
 
         void CloseChapters()
@@ -168,6 +171,7 @@ namespace LegacyThroughTime.Prototype
             UnityEngine.Object.Destroy(chapters.Root.gameObject);
             chapters = null;
             Home(true);
+            SettingsToast.ShowGear(true);
         }
 
         void Home(bool on)
@@ -251,6 +255,7 @@ namespace LegacyThroughTime.Prototype
         {
             if (leaving || !Root) yield break;
             leaving = true;
+            SettingsToast.ShowGear(true);
             ShellPurse.Changed -= OnPurse;
             Wallet.Changed -= OnCoins;
             shop?.Dispose();

@@ -31,6 +31,11 @@ namespace LegacyThroughTime.Prototype
             layer = overlay; this.anim = anim;
         }
 
+        static GameObject gearObject;
+
+        /// The gear is hidden where the screen has its own button in that corner (the chapters have the chat).
+        public static void ShowGear(bool on) { if (gearObject) gearObject.SetActive(on); }
+
         static float GearTop => Metrics.InsetTop + Kit.Space3 + Viewport.ExtraTop;
 
         /// The round gear of the kit in the top-right corner, on the line of the pills (the balance pill of a choice stands to its left).
@@ -39,6 +44,7 @@ namespace LegacyThroughTime.Prototype
             var button = Parts.IconButton(column, "gear", click, Kit.Touch, circle: true);
             Ui.Box(button.Root, A.TopRight, A.TopRight, new Vector2(-Kit.Side, -GearTop), new Vector2(Kit.Touch, Kit.Touch));
             button.Face.gameObject.name = "Gear";
+            gearObject = button.Root.gameObject;
             return button.Face;
         }
 

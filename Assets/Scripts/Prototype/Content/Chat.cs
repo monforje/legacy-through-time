@@ -240,6 +240,13 @@ namespace LegacyThroughTime.Prototype
         /// Which of the ten art colours a hero's avatar takes (stable: the same story, the same colour).
         public static int ArtIndex(string id)
         {
+            // the stories of the mockups keep the colours they have there (art-8, art-2, art-5)
+            switch (id)
+            {
+                case "golden-cage": return 7;
+                case "zilant": return 1;
+                case "shurale": return 4;
+            }
             var sum = 0;
             foreach (var c in id ?? "") sum = (sum * 31 + c) % 10007;
             return sum % 10;

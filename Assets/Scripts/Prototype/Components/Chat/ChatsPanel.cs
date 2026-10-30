@@ -10,8 +10,8 @@ namespace LegacyThroughTime.Prototype
     /// begun yet: a state with a way back to the stories.
     sealed class ChatsPanel
     {
-        public const float RowHeight = 72;
-        const float Gap = 6, Pad = 8, AvatarSize = 48;
+        public const float RowHeight = 73;
+        const float AvatarSize = 48;
 
         public readonly RectTransform Root;
         public readonly int Rows;
@@ -21,92 +21,58 @@ namespace LegacyThroughTime.Prototype
             Rows = rows.Count;
             Root = Ui.Rect(parent, "Chats");
             Ui.Stretch(Root);
-            Kit.Ground(Root);
+            var list = ShellList.Page(Root, "Чаты", "Герои историй, которые вы начали");
 
-            var top = Metrics.InsetTop + 16 + Viewport.ExtraTop;
-            var title = Ui.Txt(Root, "Title", "Чаты", Kit.F800, 24, Kit.Text, TextAnchor.MiddleCenter);
-            Ui.TopRow(title.rectTransform, Metrics.Side, Metrics.Side, top, 34);
-            var sub = Ui.Txt(Root, "Sub", "Герои историй, которые вы начали", Kit.F600, 13, Kit.Muted, TextAnchor.MiddleCenter);
-            Ui.TopRow(sub.rectTransform, Metrics.Side, Metrics.Side, top + 34, 20);
+            if (rows.Count == 0) { ShellList.Empty(Root, "chat", "Пока нет чатов", "Начните историю, и её герой появится здесь", toStories, anim); return; }
 
-            if (rows.Count == 0) { Empty(toStories); return; }
-
-            var list = MenuUi.List(Root, top + 66, 0);
             var y = 0f;
-            foreach (var row in rows)
+            var items = new List<RectTransform>();
+            for (var i = 0; i < rows.Count; i++)
             {
-                Row(list, row, y, open, now);
-                y += RowHeight + Gap;
+                items.Add(Row(list, rows[i], y, open, now, i == rows.Count - 1));
+                y += RowHeight;
             }
-            MenuUi.SetHeight(list, y + 12);
-
-            if (!anim.Enabled) return;
-            // the rows come one after another, a little from below
-            var k = 0;
-            foreach (Transform child in list)
-            {
-                var group = Ui.Group(child); group.alpha = 0;
-                var rt = (RectTransform)child; var y0 = rt.anchoredPosition.y;
-                anim.Play(Tween.To(.32f, e => { if (rt) { group.alpha = e; rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, y0 - 10 * (1 - e)); } }, null, .04f * k++));
-            }
+            MenuUi.SetHeight(list, y + Kit.Space3);
+            Parts.Stagger(anim, items);
         }
 
-        void Row(RectTransform list, ChatRow row, float top, Action<StoryEntry> open, DateTime now)
+        /// `.list-row`: the avatar at 8, the name, the last line and the story in a column, the time and the unread count on the right.
+        RectTransform Row(RectTransform list, ChatRow row, float top, Action<StoryEntry> open, DateTime now, bool last)
         {
-            var face = Kit.Round(list, "Chat " + row.Story.Id, Color.clear);
-            face.raycastTarget = true;
-            Ui.TopRow(face.rectTransform, 0, 0, top, RowHeight);
-            var rt = face.rectTransform;
+            var story_ = row.Story;
+            var rt = ShellList.Row(list, "Chat " + row.Story.Id, top, RowHeight, () => open(story_), last);
 
             var avatar = Kit.Avatar(rt, row.Hero, row.Story.Id, AvatarSize);
-            Ui.Box(avatar.rectTransform, A.MidLeft, A.MidLeft, new Vector2(Pad, 0), new Vector2(AvatarSize, AvatarSize));
+            Ui.Box(avatar.rectTransform, A.MidLeft, A.MidLeft, new Vector2(Kit.Space2, 0), new Vector2(AvatarSize, AvatarSize));
+            avatar.raycastTarget = false;
 
-            const float left = Pad + AvatarSize + 12, right = 64;
-            var width = Metrics.RefWidth - 2 * Metrics.Side - left - right;
-            var name = Ui.Txt(rt, "Name", row.Hero, Kit.F800, 15, Kit.Text);
-            Ui.TopRow(name.rectTransform, left, right, 12, 20);
-            MenuUi.Fit(name, 11);
-            var said = row.Preview != null;
-            var preview = Ui.Txt(rt, "Preview", "", Kit.F600, 13, said ? Kit.Muted : Kit.Muted.WithAlpha(.7f), TextAnchor.MiddleLeft,
-                                 said ? FontStyle.Normal : FontStyle.Italic);
-            Ui.TopRow(preview.rectTransform, left, right, 32, 18);
-            Kit.Clamp(preview, said ? row.Preview : "Начните разговор", width);
-            var story = Ui.Txt(rt, "Story", row.Story.Title, Kit.F800, 11, Kit.Accent);
-            Ui.TopRow(story.rectTransform, left, right, 50, 16);
-            MenuUi.Fit(story, 9);
-
-            var time = Ui.Txt(rt, "Time", ChatList.When(row.At, now), Kit.F600, 11, Kit.Muted, TextAnchor.MiddleRight);
-            Ui.Box(time.rectTransform, A.TopRight, A.TopRight, new Vector2(-Pad, -14), new Vector2(56, 16));
+            // the right column is as wide as the time or the badge, the text stops 12 before it
+            var time = Ui.Txt(rt, "Time", ChatList.When(row.At, now), Kit.F600, Kit.FsSmall, Kit.Muted, TextAnchor.MiddleRight);
+            var badgeWidth = row.Unread > 0 ? Mathf.Max(20, (row.Unread > 99 ? 3 : row.Unread > 9 ? 2 : 1) * 7 + 12) : 0;
+            var meta = Mathf.Ceil(Mathf.Max(time.preferredWidth, badgeWidth));
+            Ui.Box(time.rectTransform, A.TopRight, A.TopRight, new Vector2(-Kit.Space2, -12), new Vector2(meta, 18));
             if (row.Unread > 0)
             {
                 var badge = Kit.Round(rt, "Unread", Kit.Accent, 10);
-                Ui.Box(badge.rectTransform, A.TopRight, A.TopRight, new Vector2(-Pad, -36), new Vector2(row.Unread > 9 ? 28 : 20, 20));
-                var n = Ui.Txt(badge.rectTransform, "Count", row.Unread > 99 ? "99+" : row.Unread.ToString(), Kit.F800, 11, Kit.AccentInk, TextAnchor.MiddleCenter);
+                badge.raycastTarget = false;
+                Ui.Box(badge.rectTransform, A.BottomRight, A.BottomRight, new Vector2(-Kit.Space2, 12), new Vector2(badgeWidth, 20));
+                var n = Ui.Txt(badge.rectTransform, "Count", row.Unread > 99 ? "99+" : row.Unread.ToString(), Kit.F800, Kit.FsMicro, Kit.AccentInk, TextAnchor.MiddleCenter);
                 Ui.Stretch(n.rectTransform);
             }
 
-            var line = Ui.Img(rt, "Line", ProceduralArt.White);
-            line.color = Kit.Surface2;
-            Ui.BottomRow(line.rectTransform, Pad, Pad, 0, 1);
-
-            var story_ = row.Story;
-            PressButton.On(face.gameObject, () => open(story_), .985f, face);
-        }
-
-        void Empty(Action toStories)
-        {
-            var box = Ui.Rect(Root, "Empty");
-            Ui.Box(box, A.Center, A.Center, new Vector2(0, 20), new Vector2(Metrics.RefWidth - 2 * Metrics.Side - 24, 200));
-            var head = Ui.Txt(box, "Head", "Пока нет чатов", Kit.F800, 18, Kit.Text, TextAnchor.MiddleCenter);
-            Ui.TopRow(head.rectTransform, 0, 0, 40, 28);
-            var text = Ui.Txt(box, "Text", "Начните историю, и её герой появится здесь", Kit.F600, 13, Kit.Muted, TextAnchor.UpperCenter);
-            Ui.TopRow(text.rectTransform, 0, 0, 74, 40);
-            var button = Kit.Round(box, "ToStories", Kit.Accent);
-            button.raycastTarget = true;
-            Ui.Box(button.rectTransform, A.TopCenter, A.TopCenter, new Vector2(0, -126), new Vector2(160, 44));
-            var label = Ui.Txt(button.rectTransform, "Text", "К историям", Kit.F800, 16, Kit.AccentInk, TextAnchor.MiddleCenter);
-            Ui.Stretch(label.rectTransform);
-            PressButton.On(button.gameObject, toStories, .96f);
+            const float left = Kit.Space2 + AvatarSize + Kit.Space3;
+            var right = Kit.Space2 + meta + Kit.Space3;
+            var width = Metrics.RefWidth - 2 * ShellList.RowInset - left - right;
+            var name = Ui.Txt(rt, "Name", row.Hero, Kit.F800, Kit.FsBody, Kit.Text);
+            Ui.TopRow(name.rectTransform, left, right, 8, 20);
+            var said = row.Preview != null;
+            var preview = Ui.Txt(rt, "Preview", "", Kit.F600, Kit.FsSmall, said ? Kit.Muted : Kit.Muted.WithAlpha(.7f), TextAnchor.MiddleLeft,
+                                 said ? FontStyle.Normal : FontStyle.Italic);
+            Ui.TopRow(preview.rectTransform, left, right, 30, 18);
+            Kit.Clamp(preview, said ? row.Preview : "Начните разговор", width);
+            var story = Ui.Txt(rt, "Story", row.Story.Title, Kit.F700, Kit.FsMicro, Kit.Accent);
+            Ui.TopRow(story.rectTransform, left, right, 50, 15);
+            return rt;
         }
     }
 }

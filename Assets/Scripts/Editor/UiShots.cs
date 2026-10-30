@@ -205,8 +205,8 @@ namespace LegacyThroughTime.Editor
             };
             var chat = new Chat { story = story.Id };
             for (var i = 0; i < 1 + 2 * said && i < talk.Length; i++) chat.lines.Add(new ChatLine { role = talk[i].Item1, text = talk[i].Item2 });
+            SettingsToast.Gear(c, () => { });                              // as in the app: the gear exists, the chat hides it
             var view = new ChatScreen(c, null, story, chat, new Energy { value = energy }, null, () => { }, () => { }, (_, _) => { }, animated: false);
-            SettingsToast.Gear(c, () => { });
         }
 
         static void Page(RectTransform c, string background, Page page)
