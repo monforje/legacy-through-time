@@ -4,9 +4,9 @@ using UnityEngine.UI;
 
 namespace LegacyThroughTime.Prototype
 {
-    /// The gear in the top-right corner and the toast it drops under it: the sound switch, Google Play (where the
-    /// progress is kept), (in a story) "В меню" and "Выйти из игры". A tap outside the card closes it; nothing under
-    /// the shade gets the tap.
+    /// The gear in the top-right corner and the settings popup it opens (templates/shell/settings.html): a dialog of the
+    /// kit with the sound switch, Google Play (where the progress is kept), (in a story) "В меню" and "Выйти из игры".
+    /// Nothing under the dim gets the tap. The gear and the popup are the shell's, they look the same over a story.
     sealed class SettingsToast
     {
         /// The Google Play row: a line under its name (the reader's Play Games name, "Подключение…"), or, with
@@ -17,137 +17,76 @@ namespace LegacyThroughTime.Prototype
             public Action SignIn;
         }
 
-        const float Width = 300, Pad = 20, RowHeight = 48, Gap = 10, PadTop = 22, PadBottom = 26, TitleHeight = 28;
+        const float RowHeight = 52, Gap = Kit.Space2;
 
         readonly RectTransform layer;
         readonly IAnimator anim;
-        RectTransform root;
-        CanvasGroup group;
-        Image soundIcon, soundSwitch;
+        ShellDialog dialog;
 
-        public bool IsOpen => root;
+        public bool IsOpen => dialog != null && dialog.IsOpen;
 
         public SettingsToast(RectTransform overlay, IAnimator anim)
         {
             layer = overlay; this.anim = anim;
         }
 
-        static float GearTop => Metrics.InsetTop + 16 + Viewport.ExtraTop;
+        static float GearTop => Metrics.InsetTop + Kit.Space3 + Viewport.ExtraTop;
 
-        /// The round gear seal in the top-right corner (the balance pill of a choice stands to its left).
+        /// The round gear of the kit in the top-right corner, on the line of the pills (the balance pill of a choice stands to its left).
         public static Image Gear(Transform column, Action click)
         {
-            var gear = Ui.Icon(column, "Gear", "gear", A.TopRight, A.TopRight, new Vector2(-(Metrics.Side - 4), -GearTop), Metrics.GearSize);
-            gear.raycastTarget = true;
-            Ui.Lift(gear, 4, .3f);
-            PressButton.On(gear.gameObject, click, .9f);
-            return gear;
+            var button = Parts.IconButton(column, "gear", click, Kit.Touch, circle: true);
+            Ui.Box(button.Root, A.TopRight, A.TopRight, new Vector2(-Kit.Side, -GearTop), new Vector2(Kit.Touch, Kit.Touch));
+            button.Face.gameObject.name = "Gear";
+            return button.Face;
         }
 
         /// `toMenu`: the "В меню" row; null in the menu itself. `cloud`: the Google Play row; null without Play Games.
         public void Open(Action toMenu, Action quit, Cloud cloud = null)
         {
             if (IsOpen) return;
-            root = Ui.Rect(layer, "Settings");
-            Ui.Stretch(root);
-            group = root.gameObject.AddComponent<CanvasGroup>();
+            dialog = new ShellDialog(layer, "Настройки", anim, () => dialog = null);
+            var panel = dialog.Content;
+            var y = 0f;
 
-            var shade = Ui.Img(root, "Shade", ProceduralArt.White);
-            shade.color = new Color(0, 0, 0, .4f); shade.raycastTarget = true;
-            Ui.Stretch(shade.rectTransform);
-            shade.gameObject.AddComponent<Tap>().Click = Close;
-
-            // the card hangs under the gear, in the 360-wide column (the shade covers the whole canvas)
-            var column = Ui.Rect(root, "Column");
-            column.anchorMin = A.BottomCenter; column.anchorMax = A.TopCenter; column.pivot = A.Center;
-            column.offsetMin = new Vector2(-Metrics.RefWidth / 2, 0); column.offsetMax = new Vector2(Metrics.RefWidth / 2, 0);
-
-            var rows = 2 + (toMenu != null ? 1 : 0) + (cloud != null ? 1 : 0);
-            var height = PadTop + TitleHeight + rows * (Gap + RowHeight) + PadBottom;
-            var card = Ui.Sliced(column, "Card", "card");
-            card.raycastTarget = true;                         // a tap on the card itself does not close it
-            Ui.Box(card.rectTransform, A.TopRight, A.TopRight, new Vector2(-(Metrics.Side - 8), -(GearTop + Metrics.GearSize + 2)), new Vector2(Width, height));
-            var panel = card.rectTransform;
-
-            var title = Ui.Txt(panel, "Title", "Настройки", Art.Head, 20, Theme.Ink, TextAnchor.MiddleCenter);
-            Ui.TopRow(title.rectTransform, Pad, Pad, PadTop, TitleHeight);
-
-            var y = PadTop + TitleHeight + Gap;
-            BuildSoundRow(panel, y); y += RowHeight + Gap;
-            if (cloud?.SignIn != null) { BuildButtonRow(panel, y, "Cloud", "play", "Войти в Play Игры", "btn", cloud.SignIn); y += RowHeight + Gap; }
-            else if (cloud != null) { BuildCloudRow(panel, y, cloud.Line); y += RowHeight + Gap; }
-            if (toMenu != null) { BuildButtonRow(panel, y, "Menu", "home", "В меню", "btn", toMenu); y += RowHeight + Gap; }
-            BuildButtonRow(panel, y, "Quit", "exit", "Выйти из игры", "btn-chosen", quit);
-
-            if (!anim.Enabled) return;
-            group.alpha = 0;
-            var y0 = panel.anchoredPosition.y;
-            anim.Play(Tween.To(.32f, e =>
-            {
-                if (!panel) return;
-                group.alpha = Mathf.Clamp01(e * 1.6f);
-                panel.anchoredPosition = new Vector2(panel.anchoredPosition.x, y0 + 24 * (1 - e));
-            }, Easing.OutBack));
+            Sound(panel, y); y += RowHeight + Gap;
+            if (cloud?.SignIn != null) { Row(panel, y, "Войти в Play Игры", cloud.SignIn); y += RowHeight + Gap; }
+            else if (cloud != null) { CloudLine(panel, y, cloud.Line); y += RowHeight + Gap; }
+            if (toMenu != null) { Row(panel, y, "В меню", toMenu); y += RowHeight + Gap; }
+            Row(panel, y, "Выйти из игры", quit);
         }
 
-        public void Close()
-        {
-            if (!IsOpen) return;
-            var closing = root; var g = group;
-            root = null;
-            g.blocksRaycasts = false;
-            if (!anim.Enabled) { UnityEngine.Object.Destroy(closing.gameObject); return; }
-            anim.Play(Tween.To(.18f, e => { if (g) g.alpha = 1 - e; }, Easing.Linear));
-            anim.Play(Tween.After(.2f, () => { if (closing) UnityEngine.Object.Destroy(closing.gameObject); }));
-        }
+        public void Close() => dialog?.Close();
 
-        void BuildSoundRow(RectTransform panel, float top)
+        /// "Звук" with the switch of the kit; the settings are saved at once.
+        void Sound(RectTransform panel, float top)
         {
-            var row = Ui.Img(panel, "Sound", ProceduralArt.White);
-            row.color = Color.clear; row.raycastTarget = true;
-            Ui.TopRow(row.rectTransform, Pad, Pad, top, RowHeight);
-
-            soundIcon = Ui.Icon(row.rectTransform, "Icon", "sound", A.MidLeft, A.MidLeft, new Vector2(4, 0), 28, Theme.Ink);
-            var label = Ui.Txt(row.rectTransform, "Text", "Звук", Art.Action, Metrics.FsAction, Theme.Ink);
-            Ui.Box(label.rectTransform, A.MidLeft, A.MidLeft, new Vector2(42, 0), new Vector2(120, 30));
-            soundSwitch = Ui.Icon(row.rectTransform, "Switch", "switch-on", A.MidRight, A.MidRight, new Vector2(-2, -1), 60);
-            Sync();
-            PressButton.On(row.gameObject, () => { Settings.Sound = !Settings.Sound; Sync(); }, .98f);
+            var row = Kit.Round(panel, "Sound", Kit.Surface, Kit.RadiusM);
+            Ui.TopRow(row.rectTransform, 0, 0, top, RowHeight);
+            Kit.Icon(row.rectTransform, "Icon", Kit.Glyph("sound"), 24, A.MidLeft, new Vector2(24, 0)).raycastTarget = false;
+            var label = Ui.Txt(row.rectTransform, "Text", "Звук", Art.Action, Kit.FsBody, Kit.Text, TextAnchor.MiddleLeft);
+            Ui.Box(label.rectTransform, A.MidLeft, A.MidLeft, new Vector2(48, 0), new Vector2(160, 30));
+            var sw = Parts.Switch(row.rectTransform, Settings.Sound, on => { Settings.Sound = on; ShellToast.Show(layer, "Сохранено", anim, 1.5f, 96); }, anim);
+            Ui.Box(sw.Root, A.MidRight, A.MidRight, new Vector2(-8, 0), new Vector2(56, Kit.Touch));
         }
 
         /// "Google Play Игры" with a line under it: who is signed in, or that it is still connecting.
-        static void BuildCloudRow(RectTransform panel, float top, string line)
+        static void CloudLine(RectTransform panel, float top, string line)
         {
-            var row = Ui.Rect(panel, "Cloud");
-            Ui.TopRow(row, Pad, Pad, top, RowHeight);
-            Ui.Icon(row, "Icon", "check", A.MidLeft, A.MidLeft, new Vector2(6, 0), 24, Theme.Emerald);
-            var name = Ui.Txt(row, "Text", "Google Play Игры", Art.Action, Metrics.FsAction, Theme.Ink);
-            Ui.Box(name.rectTransform, A.MidLeft, A.MidLeft, new Vector2(42, 10), new Vector2(Width - 2 * Pad - 42, 24));
-            var sub = Ui.Txt(row, "Line", line ?? "", Art.Sub, 13, Theme.Ink.WithAlpha(.7f));
-            sub.horizontalOverflow = HorizontalWrapMode.Wrap;
-            Ui.Box(sub.rectTransform, A.MidLeft, A.MidLeft, new Vector2(42, -12), new Vector2(Width - 2 * Pad - 42, 18));
+            var row = Kit.Round(panel, "Cloud", Kit.Surface, Kit.RadiusM);
+            Ui.TopRow(row.rectTransform, 0, 0, top, RowHeight);
+            Kit.Icon(row.rectTransform, "Icon", Kit.Glyph("check"), 22, A.MidLeft, new Vector2(24, 0)).raycastTarget = false;
+            var name = Ui.Txt(row.rectTransform, "Text", "Google Play Игры", Art.Action, Kit.FsBody, Kit.Text, TextAnchor.MiddleLeft);
+            Ui.Box(name.rectTransform, A.MidLeft, A.MidLeft, new Vector2(48, 9), new Vector2(240, 22));
+            var sub = Ui.Txt(row.rectTransform, "Line", line ?? "", Art.Body, Kit.FsSmall, Kit.Muted, TextAnchor.MiddleLeft);
+            Ui.Box(sub.rectTransform, A.MidLeft, A.MidLeft, new Vector2(48, -11), new Vector2(240, 18));
         }
 
-        void Sync()
+        /// A full-width button of the kit: the popup closes first, then the action runs.
+        void Row(RectTransform panel, float top, string text, Action click)
         {
-            var on = Settings.Sound;
-            soundIcon.sprite = Art.Sprite(on ? "sound" : "sound-off");
-            soundSwitch.sprite = Art.Sprite(on ? "switch-on" : "switch-off");
-        }
-
-        /// A full-width button: emerald ("btn") or paper with ink text ("btn-chosen", the quieter one).
-        void BuildButtonRow(RectTransform panel, float top, string name, string icon, string text, string sprite, Action click)
-        {
-            var light = sprite == "btn-chosen";
-            var colour = light ? Theme.Ink : Theme.Parchment;
-            var button = Ui.Sliced(panel, name, sprite);
-            Ui.TopRow(button.rectTransform, Pad - 6, Pad - 6, top, RowHeight);
-            Ui.Icon(button.rectTransform, "Icon", icon, A.MidLeft, A.MidLeft, new Vector2(18, 1), 24, colour);
-            var label = Ui.Txt(button.rectTransform, "Text", text, Art.Action, Metrics.FsAction, colour);
-            if (!light) Ui.Emboss(label);
-            Ui.Box(label.rectTransform, A.MidLeft, A.MidLeft, new Vector2(52, 1), new Vector2(180, 30));
-            Ui.Icon(button.rectTransform, "Chevron", "chevron", A.MidRight, A.MidRight, new Vector2(-18, 0), 12, colour);
-            PressButton.On(button.gameObject, () => { Close(); click(); }, .97f, button, "btn-pressed");
+            var button = Parts.Button(panel, text, ButtonStyle.Neutral, () => { Close(); click?.Invoke(); }, RowHeight);
+            Ui.TopRow(button.Root, 0, 0, top, RowHeight);
         }
     }
 }
