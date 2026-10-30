@@ -125,8 +125,8 @@ namespace LegacyThroughTime.Prototype
             var row = new Row { Root = Ui.Rect(feed, "Note") };
             rows.Add(row);
             var t = Ui.Txt(row.Root, "Text", Note, Art.Body, 12, Kit.Muted, TextAnchor.MiddleCenter);
+            row.Height = Ui.TextHeight(t, contentWidth - 20) + 16;     // measured first: on a stretched rect sizeDelta adds to the width
             Ui.Stretch(t.rectTransform, 10, 0, 10, 0);
-            row.Height = Ui.TextHeight(t, contentWidth - 20) + 16;
         }
 
         Row Add(ChatLine line, bool slide = true)

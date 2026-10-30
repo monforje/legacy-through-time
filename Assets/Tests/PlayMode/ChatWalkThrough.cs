@@ -68,6 +68,9 @@ namespace LegacyThroughTime.PrototypeTests
             Assert.That(s.Send.Interactable, Is.False, "nothing to send");
             Assert.That(s.Has("Limit"), Is.False);
             Assert.That(s.Field.interactable, Is.True);
+            UnityEngine.Canvas.ForceUpdateCanvases();
+            var note = s.Screen.Root.GetComponentsInChildren<Text>().First(t => t.name == "Text" && t.text.StartsWith("Диалог вымышленный"));
+            Assert.That(note.rectTransform.rect.width, Is.LessThanOrEqualTo(Metrics.RefWidth), "the note wraps inside the screen");
         }
 
         [UnityTest]
