@@ -2,6 +2,7 @@
 source_id: wiki-yurt
 title: Юрта
 layer: setting
+story: golden-cage
 rights: cc
 cite: Википедия, «Юрта» (CC BY-SA 4.0), rev 155741094
 url: https://ru.wikipedia.org/wiki/%D0%AE%D1%80%D1%82%D0%B0

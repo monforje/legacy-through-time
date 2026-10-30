@@ -14,6 +14,7 @@ namespace LegacyThroughTime.Prototype
         public HashSet<string> Travel = new();             // backgrounds where the hero wears the travelling outfit
         public Dictionary<string, float> Heights = new();  // next to the hero (1): a child is shorter, a man a bit taller
         public string OutfitHero;                          // the hero that has an outfit in the name of the picture (`suyumbike_court`); null: none
+        public string KitPrefix;                           // the story's own UI sprites in Resources/Heritage3D (`sa-btn`); null: the main kit
     }
 
     /// Who stands on the screen and which picture of them: the speaker's name -> the character, the background -> the
@@ -56,6 +57,7 @@ namespace LegacyThroughTime.Prototype
         static readonly CastProfile sikhoteAlin = new()
         {
             HeroLabel = "Арсеньев",
+            KitPrefix = "sa-",
             HeroSpeakers = new[] { "Володя", "Арсеньев" },
             HeroIds = new[] { "volodya", "arsenyev" },
             Ids = new()
@@ -85,6 +87,9 @@ namespace LegacyThroughTime.Prototype
         {
             if (storyId != null && profiles.TryGetValue(storyId, out var p)) profile = p;
         }
+
+        /// The prefix of the story's own UI sprites (Art.StoryKit), null for the main kit.
+        public static string KitPrefix => profile.KitPrefix;
 
         /// The label of the hero's thoughts and the speaker that stands for the hero in them.
         public static string HeroLabel => profile.HeroLabel;

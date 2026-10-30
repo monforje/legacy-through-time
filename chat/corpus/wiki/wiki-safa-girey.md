@@ -2,6 +2,7 @@
 source_id: wiki-safa-girey
 title: Сафа-Гирей
 layer: fact
+story: golden-cage
 rights: cc
 cite: Википедия, «Сафа-Гирей» (CC BY-SA 4.0), rev 153989804
 url: https://ru.wikipedia.org/wiki/%D0%A1%D0%B0%D1%84%D0%B0-%D0%93%D0%B8%D1%80%D0%B5%D0%B9

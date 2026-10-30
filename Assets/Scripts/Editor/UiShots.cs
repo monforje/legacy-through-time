@@ -43,6 +43,12 @@ namespace LegacyThroughTime.Editor
             var scale = Viewport.ScaleFor(Width, Height, dpi, dpi <= 0);              // LTT_DPI=224 for a tablet: a unit is at most 1.35 dp
             Viewport.Set(Height / scale, 0, 0, Width / scale);
             Plan();
+            var only = Environment.GetEnvironmentVariable("LTT_ONLY");     // `sa-,menu-stories`: only the shots whose names start so, with the Blender kit only
+            if (!string.IsNullOrEmpty(only))
+            {
+                var prefixes = only.Split(',');
+                shots.RemoveAll(shot => Array.TrueForAll(prefixes, pre => !shot.Name.StartsWith(pre)));
+            }
             camera = new GameObject("ShotCamera").AddComponent<Camera>();
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = Theme.Backdrop;
@@ -60,8 +66,8 @@ namespace LegacyThroughTime.Editor
             scaler.scaleFactor = scale;
             canvas = (RectTransform)go.transform;
 
-            index = 0; kit = 0; wait = -1;
-            Art.BlenderKit = false;
+            index = 0; kit = string.IsNullOrEmpty(only) ? 0 : 1; wait = -1;
+            Art.BlenderKit = !string.IsNullOrEmpty(only);
             EditorApplication.update += Tick;
         }
 
@@ -184,10 +190,86 @@ namespace LegacyThroughTime.Editor
             CastShot("cast-khan", "khan_chamber", "jan_ali_sad", "jan_ali", "Джан-Али", "Не тогда, когда речь идёт о ханском дворе.");
             CastShot("cast-child", "flashback_katyk", "suyumbike_child_smile", "suyumbike_child", "Маленькая Сююмбике", "А люди умеют?");
             StoryScreens();
+            SikhoteShots();
             Add("story-settings", c =>
             {
                 Page(c, "khan_chamber", DemoFlow.Pages()[0]);
-                new SettingsToast(c, NoAnimator.Instance).Open(() => { }, () => { });
+                new StorySettings(c, NoAnimator.Instance).Open(() => { });
+            });
+        }
+
+        /// The screens of «По хребтам Сихотэ-Алиня» in the kit of the story (Blender kit only): the title, the plates, a choice, the
+        /// solid buttons, the settings modal, the stat banner.
+        static void SikhoteShots()
+        {
+            void Sa(string name, Action<RectTransform> build) => Add(name, c =>
+            {
+                Cast.Use("sikhote-alin"); Art.StoryKit = "sa-";
+                cleanup.Add(() => { Art.StoryKit = null; Cast.Use("golden-cage"); });
+                build(c);
+            });
+            void Line(RectTransform c, string bg, string sprite, string id, string label, PlateStyle style, string text, string info = null)
+            {
+                Backdrop(c, bg);
+                if (sprite != null)
+                {
+                    var cast = new CastView(c);
+                    cast.Show(sprite, null, Cast.IsHero(id), Cast.Height(id));
+                    cast.Tick(10);
+                }
+                var plate = new PlateSpec { Style = style, Label = label, Text = text, Instant = true };
+                var page = BeatMapper.LinePage(plate);
+                page.Info = info;
+                var view = new PageView(c, page, new Bank(), () => { }, animated: false);
+                cleanup.Add(view.Dispose);
+                new StoryHud(c, () => { }, _ => { }, () => { }, NoAnimator.Instance);
+            }
+            const string nursery = "sa_nursery_day";
+            Sa("sa-title", c =>
+            {
+                Backdrop(c, "sa_title");
+                var title = new Page { Id = "title", Title = new TitleSpec { Name = "По хребтам Сихотэ-Алиня", Scene = "Глава 1: Мальчик, который хотел увидеть весь мир · продолжение" } };
+                var view = new PageView(c, title, new Bank(), () => { }, animated: false);
+                cleanup.Add(view.Dispose);
+                new StoryHud(c, () => { }, _ => { }, () => { }, NoAnimator.Instance);
+            });
+            Sa("sa-line-hero", c => Line(c, nursery, "volodya_smile", "volodya", "Володя", PlateStyle.SpeechLeft, "Так… Это у нас море. Нет, погодите. Это ещё не море, это большое озеро."));
+            Sa("sa-line-mother", c => Line(c, nursery, "mother_angry", "mother", "Мать", PlateStyle.SpeechRight, "Володенька! Ты опять испачкал пол?"));
+            Sa("sa-narr", c => Line(c, nursery, null, null, "…", PlateStyle.Narr, "Маленький Володя лежит животом на ковре и болтает ногами. Перед ним расстелен большой лист бумаги."));
+            Sa("sa-fact", c => Line(c, "sa_vladivostok_pier", null, null, "Место", PlateStyle.Fact, "Владивосток. 1900 год. Морской порт."));
+            Sa("sa-hint", c => Line(c, nursery, null, null, "Подсказка", PlateStyle.Hint, "Скрытая метка: «Корабль на карте»."));
+            Sa("sa-thought", c => Line(c, "sa_vladivostok_pier", "arsenyev_thoughtful", "arsenyev", "Арсеньев", PlateStyle.Thought, "В детстве мне казалось, что достаточно нарисовать дорогу, и можно отправляться в путь."));
+            Sa("sa-thought-puff", c => Line(c, "sa_vladivostok_pier", "arsenyev_smile", "arsenyev", "Арсеньев", PlateStyle.ThoughtPuff, "Вот и Дальний Восток."));
+            Sa("sa-note", c => Line(c, nursery, "volodya_laugh", "volodya", "Володя", PlateStyle.SpeechLeft, "А здесь горы. Очень высокие. Выше <i>Исаакия</i>!", "Исаакий — Исаакиевский собор, самое высокое здание Петербурга того времени."));
+            Sa("sa-choice", c =>
+            {
+                Backdrop(c, "sa_ink_stain");
+                var plate = new PlateSpec { Style = PlateStyle.Narr, Label = "…", Text = "Синее пятно на паркете всё ещё блестит.", Instant = true };
+                var spec = new ChoiceSpec
+                {
+                    Items = new[] { new Option("Взять тряпку и убрать", 0, 0), new Option("Объявить пятно озером", 0, 1), new Option("Дорисовать у озера корабль", 5, 2) },
+                    Free = true, Coins = 20, Mirror = false,
+                };
+                var view = new PageView(c, new Page { Plate = plate, Choice = spec }, new Bank(), () => { }, animated: false);
+                cleanup.Add(view.Dispose);
+                new StoryHud(c, () => { }, _ => { }, () => { }, NoAnimator.Instance);
+            });
+            Sa("sa-banner", c =>
+            {
+                Line(c, nursery, "volodya", "volodya", "Володя", PlateStyle.SpeechLeft, "Только нельзя же нарисовать дом и никого туда не поселить. Это было бы глупо.");
+                new StatBanner(c, "ВООБРАЖЕНИЕ +1", NoAnimator.Instance);
+            });
+            Sa("sa-hud-collapsed", c =>
+            {
+                Backdrop(c, nursery);
+                var cast = new CastView(c);
+                cast.Show("volodya", null, true, Cast.Height("volodya")); cast.Tick(10);
+                var hud = new StoryHud(c, () => { }, _ => { }, () => { }, NoAnimator.Instance);
+            });
+            Sa("sa-settings", c =>
+            {
+                Line(c, nursery, "volodya_smile", "volodya", "Володя", PlateStyle.SpeechLeft, "Так… Это у нас море.");
+                new StorySettings(c, NoAnimator.Instance).Open(() => { });
             });
         }
 
@@ -246,7 +328,7 @@ namespace LegacyThroughTime.Editor
         {
             Backdrop(c, background);
             var view = new PageView(c, page, new Bank(), () => { }, animated: false);
-            SettingsToast.Gear(c, () => { });
+            new StoryHud(c, () => { }, _ => { }, () => { }, NoAnimator.Instance);      // the tools over every story
             cleanup.Add(view.Dispose);
         }
 

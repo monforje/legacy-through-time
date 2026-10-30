@@ -68,6 +68,24 @@ namespace LegacyThroughTime.Prototype.Tests
             }
         }
 
+        /// A story kit (`sa-btn` for `btn`, Art.StoryKit) is drawn into the layout of the main kit: the same size of the
+        /// borders, the same fill and tiling, or a plate would grow differently in that story.
+        [TestCase("sa-")]
+        public void AStoryKitHasTheBordersOfTheSpritesItReplaces(string prefix)
+        {
+            RequireBoth();
+            var all = Slices("Heritage3D");
+            var themed = all.Where(kv => kv.Key.StartsWith(prefix)).ToList();
+            Assert.That(themed, Is.Not.Empty);
+            foreach (var (name, b) in themed)
+            {
+                var plain = name.Substring(prefix.Length);
+                Assert.That(all.ContainsKey(plain), $"{name}: there is no {plain} to replace");
+                Assert.That(b, Is.EqualTo(all[plain]), $"{name}: borders, tiling and fill of {plain}");
+                Assert.That(File.Exists(Path.Combine(Dir("Heritage3D"), name + ".png")), name);
+            }
+        }
+
         [Test]
         public void TheCloudsTileAsTheirSkinsSay()
         {

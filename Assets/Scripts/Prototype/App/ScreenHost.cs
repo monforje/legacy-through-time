@@ -30,6 +30,7 @@ namespace LegacyThroughTime.Prototype
         public RectTransform Overlay => overlay;
         public IAnimator OverlayAnimator => overlayAnimator;
         StatBanner banner;
+        readonly CanvasGroup pagesGroup;
 
         public PageView Current { get; private set; }
 
@@ -37,6 +38,7 @@ namespace LegacyThroughTime.Prototype
         {
             this.owner = owner;
             pages = Column(canvas, "Pages");
+            pagesGroup = pages.gameObject.AddComponent<CanvasGroup>();
             shell = Column(canvas, "Shell", Viewport.ColumnWidth);
             Hud = Column(canvas, "Hud", Viewport.ColumnWidth);
             overlay = Ui.Rect(canvas, "Overlay"); Ui.Stretch(overlay);
@@ -50,6 +52,15 @@ namespace LegacyThroughTime.Prototype
             column.anchorMin = A.BottomCenter; column.anchorMax = A.TopCenter; column.pivot = A.Center;
             column.offsetMin = new Vector2(-width / 2, 0); column.offsetMax = new Vector2(width / 2, 0);
             return column;
+        }
+
+        /// The text and the options hide so that the picture can be seen (the collapse arrow of a story), and come back.
+        public void ShowPages(bool shown, bool animate = true)
+        {
+            pagesGroup.blocksRaycasts = shown;
+            var from = pagesGroup.alpha; var to = shown ? 1f : 0f;
+            if (!animate || !overlayAnimator.Enabled) { pagesGroup.alpha = to; return; }
+            overlayAnimator.Play(Tween.To(.22f, e => { if (pagesGroup) pagesGroup.alpha = Mathf.Lerp(from, to, e); }, Easing.InOut));
         }
 
         /// The current screen leaves (to the menu): nothing is shown in the column afterwards.

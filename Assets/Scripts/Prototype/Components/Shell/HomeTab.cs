@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -13,12 +14,13 @@ namespace LegacyThroughTime.Prototype
     {
         public const float Gap = 12, SideScale = .88f;
         readonly float cardWidth, cardHeight;
-        const float GridGap = Kit.Space3, TagHeight = 26;
+        const float GridGap = 20, RowGap = 30, TagHeight = 26, TagsHeight = 20;
 
         public readonly RectTransform Root;
         readonly IReadOnlyList<StoryEntry> stories;
         readonly Action<StoryEntry> openChapters;
         readonly IAnimator anim;
+        readonly Func<StoryEntry, bool> started;       // has this story a chapter in progress (the continue tile, the label of the button)
         readonly List<RectTransform> cards = new();
         readonly List<CanvasGroup> groups = new();
         readonly List<Image> dots = new();
@@ -31,12 +33,13 @@ namespace LegacyThroughTime.Prototype
 
         public StoryEntry Current => stories[current];
 
-        public HomeTab(RectTransform parent, IReadOnlyList<StoryEntry> stories, Action<StoryEntry> openChapters, IAnimator anim, float top)
+        public HomeTab(RectTransform parent, IReadOnlyList<StoryEntry> stories, Action<StoryEntry> openChapters, IAnimator anim, float top,
+                       Func<StoryEntry, bool> started = null)
         {
-            this.stories = stories; this.openChapters = openChapters; this.anim = anim;
-            // the cards follow the screen: 84% of the column (as in the mockup's carousel) and about a third of the height
+            this.stories = stories; this.openChapters = openChapters; this.anim = anim; this.started = started ?? (_ => false);
+            // the cards follow the screen: 84% of the column and tall (about 1 : 1.4, half of the height), as the covers of the stories are
             cardWidth = Mathf.Round((Kit.Width - 2 * Kit.Side) * .84f);
-            cardHeight = Mathf.Round(Mathf.Clamp(Viewport.Height * .385f, 236f, 340f));
+            cardHeight = Mathf.Round(Mathf.Clamp(Viewport.Height * .5f, 300f, 430f));
             Root = Ui.Rect(parent, "Home");
             Ui.Stretch(Root);
             content = MenuUi.List(Root, top, 0, 0);
@@ -243,39 +246,52 @@ namespace LegacyThroughTime.Prototype
         }
 
         // ------------------------------------------------------------------ lenses and the grid
+        /// The lenses: a round icon and a bold word each. The chosen one is lit (a soft pill behind it, the word in the accent)
+        /// and, if the row hides a part of it, the row slides so that the whole word is on the screen.
         void Chips(RectTransform row)
         {
-            var labels = new[] { "Для начала", "Новые", "Популярные", "По жанрам" };
+            var lenses = new[] { ("Вселенные", "sparkle"), ("Популярные", "star"), ("Новые", "book"), ("По жанрам", "wheel") };
             // a horizontal scroll block inside the column: it scrolls sideways, a vertical drag on it is the column's
             var hit = Ui.Img(row, "Hit", ProceduralArt.White);
             hit.color = Color.clear; hit.raycastTarget = true;
             Ui.Stretch(hit.rectTransform);
             var strip = Ui.Rect(row, "Strip");
             strip.anchorMin = new Vector2(0, 0); strip.anchorMax = new Vector2(0, 1); strip.pivot = new Vector2(0, .5f);
+            var viewWidth = Kit.Width - 2 * Kit.Side;
             var x = 0f;
-            var faces = new List<Image>(); var texts = new List<Text>();
-            for (var i = 0; i < labels.Length; i++)
+            var texts = new List<Text>(); var pills = new List<Image>(); var lefts = new List<float>(); var widths = new List<float>();
+            var scroll = row.gameObject.AddComponent<NestedScroll>();
+            for (var i = 0; i < lenses.Length; i++)
             {
                 var k = i;
-                var chip = Kit.Round(strip, "Chip " + labels[i], i == 0 ? Kit.Accent : Kit.Surface, 22);
-                chip.raycastTarget = true;
-                var t = Ui.Txt(chip.rectTransform, "Label", labels[i], Kit.F800, Kit.FsBody, i == 0 ? Kit.AccentInk : Kit.Muted, TextAnchor.MiddleCenter);
-                var w = t.preferredWidth + 2 * Kit.Space4;
-                Ui.Box(chip.rectTransform, A.MidLeft, A.MidLeft, new Vector2(x, 0), new Vector2(w, Kit.Touch));
-                Ui.Stretch(t.rectTransform);
-                faces.Add(chip); texts.Add(t);
+                var chip = Ui.Rect(strip, "Chip " + lenses[i].Item1);
+                var pill = Kit.Round(chip, "Chosen", new Color(Kit.Accent.r, Kit.Accent.g, Kit.Accent.b, .2f), 22);
+                pill.raycastTarget = false; pill.enabled = i == 0;
+                Ui.Stretch(pill.rectTransform);
+                var disc = Ui.Img(chip, "Disc", ProceduralArt.Disc);
+                disc.color = Kit.Surface; disc.raycastTarget = true;
+                Ui.Box(disc.rectTransform, A.MidLeft, A.MidLeft, Vector2.zero, new Vector2(Kit.Touch, Kit.Touch));
+                Kit.Icon(disc.transform, "Icon", Kit.Pic(lenses[i].Item2), 24).raycastTarget = false;
+                var t = Ui.Txt(chip, "Label", lenses[i].Item1, Kit.F800, Kit.FsHead + 2, i == 0 ? Kit.Accent : Kit.Muted, TextAnchor.MiddleLeft);
+                t.horizontalOverflow = HorizontalWrapMode.Overflow;
+                var w = Kit.Touch + Kit.Space2 + Mathf.Ceil(t.preferredWidth) + Kit.Space4;          // the pill has air at the end
+                Ui.Box(chip, A.MidLeft, A.MidLeft, new Vector2(x, 0), new Vector2(w, Kit.Touch));
+                Ui.Stretch(t.rectTransform, Kit.Touch + Kit.Space2, 0, 0, 0);
+                texts.Add(t); pills.Add(pill); lefts.Add(x); widths.Add(w);
+                var hold = chip.gameObject.AddComponent<Image>();                                 // the whole chip takes the tap
+                hold.color = Color.clear; hold.raycastTarget = true;
                 PressButton.On(chip.gameObject, () =>
                 {
-                    for (var j = 0; j < faces.Count; j++)
+                    for (var j = 0; j < texts.Count; j++)
                     {
-                        faces[j].color = j == k ? Kit.Accent : Kit.Surface;
-                        texts[j].color = j == k ? Kit.AccentInk : Kit.Muted;
+                        texts[j].color = j == k ? Kit.Accent : Kit.Muted;
+                        pills[j].enabled = j == k;
                     }
+                    Reveal(strip, scroll, lefts[k], widths[k], viewWidth);
                 }, .94f);
-                x += w + Kit.Space2;
+                x += w + Kit.Space3;
             }
-            strip.sizeDelta = new Vector2(x - Kit.Space2, 0);
-            var scroll = row.gameObject.AddComponent<NestedScroll>();
+            strip.sizeDelta = new Vector2(x - Kit.Space3, 0);
             scroll.horizontal = true; scroll.vertical = false;
             scroll.movementType = ScrollRect.MovementType.Elastic;
             scroll.decelerationRate = .12f;
@@ -283,25 +299,45 @@ namespace LegacyThroughTime.Prototype
             scroll.viewport = row; scroll.content = strip;
         }
 
+        /// Slides the strip of the lenses so that the chip at `left`..`left + width` is whole inside the view.
+        void Reveal(RectTransform strip, ScrollRect scroll, float left, float width, float viewWidth)
+        {
+            var min = Mathf.Min(0, viewWidth - strip.sizeDelta.x);
+            var at = strip.anchoredPosition.x;
+            var goal = at;
+            if (left + at < 0) goal = -left;
+            else if (left + width + at > viewWidth) goal = viewWidth - left - width;
+            goal = Mathf.Clamp(goal, min, 0);
+            if (Mathf.Approximately(goal, at)) return;
+            scroll.StopMovement();
+            if (!anim.Enabled) { strip.anchoredPosition = new Vector2(goal, 0); return; }
+            anim.Play(Tween.To(Kit.Dur.Slow, e => { if (strip) strip.anchoredPosition = new Vector2(Mathf.Lerp(at, goal, e), 0); }, Easing.InOut));
+        }
+
         void Filter(string query) => Grid(query);
 
-        /// Two columns of covers (16:9) with the title and the genre under them; the search keeps the stories whose title
-        /// has the text.
+        /// Two columns: first the "continue" tile when something is in progress, then the covers (tall, 1 : 1.43) with the
+        /// button and the tags on them and, under each, the title and up to three lines of its text. The search keeps the
+        /// stories whose title has the text.
         void Grid(string query)
         {
             for (var i = grid.childCount - 1; i >= 0; i--) UnityEngine.Object.Destroy(grid.GetChild(i).gameObject);
             var q = (query ?? "").Trim().ToLowerInvariant();
             var shown = 0;
             var w = Mathf.Floor((Kit.Width - 2 * Kit.Side - GridGap) / 2 * 2) / 2;
-            var coverH = Mathf.Round(w * 9 / 16);
-            const float headH = 24, smallH = 18;
-            var cellH = coverH + Kit.Space2 + headH + Kit.Space2 + smallH;
+            var coverH = Mathf.Round(w * 1.43f);
+            const float headH = 24, blurbH = 54;
+            var cellH = coverH + Kit.Space2 + headH + Kit.Space1 + blurbH;
+            Vector2 At(int n) => new Vector2(Kit.Side + (n % 2) * (w + GridGap), -((n / 2) * (cellH + RowGap)));
+
+            var running = stories.Where(story => started(story)).ToList();
+            if (q.Length == 0 && running.Count > 0) { ContinueTile(grid, running, At(shown), w, coverH); shown++; }
             foreach (var story in stories)
             {
                 if (q.Length > 0 && !story.Title.ToLowerInvariant().Contains(q)) continue;
-                var col = shown % 2; var row = shown / 2; shown++;
                 var cell = Ui.Rect(grid, "Mini " + story.Id);
-                Ui.Box(cell, A.TopLeft, A.TopLeft, new Vector2(Kit.Side + col * (w + GridGap), -(row * (cellH + GridGap))), new Vector2(w, cellH));
+                Ui.Box(cell, A.TopLeft, A.TopLeft, At(shown), new Vector2(w, cellH));
+                shown++;
                 var cover = Kit.Round(cell, "Cover", Kit.ArtColor(story.Id), Kit.RadiusS);
                 cover.raycastTarget = true;
                 Ui.TopRow(cover.rectTransform, 0, 0, 0, coverH);
@@ -314,11 +350,39 @@ namespace LegacyThroughTime.Prototype
                     picture.sprite = sprite; picture.enabled = true;
                     Ui.Cover(picture, new Vector2(w, coverH), .4f);
                 });
+                var shade = Ui.Img(cover.rectTransform, "Shade", Scrim());
+                shade.color = new Color(1, 1, 1, .75f); shade.raycastTarget = false;
+                Ui.Stretch(shade.rectTransform);
+
+                // the tags along the bottom edge: low, thin type, a light outline round them
+                var tx = Kit.Space2;
+                foreach (var tag in (story.Genre ?? "").Split(new[] { " · " }, StringSplitOptions.RemoveEmptyEntries).Take(2))
+                {
+                    var outline = Kit.Round(cover.rectTransform, "Tag", new Color(1, 1, 1, .8f), 10);
+                    outline.raycastTarget = false;
+                    var inner = Kit.Round(outline.rectTransform, "Fill", new Color(.09f, .09f, .2f, .95f), 9);
+                    inner.raycastTarget = false;
+                    Ui.Stretch(inner.rectTransform, 1.2f, 1.2f, 1.2f, 1.2f);
+                    var tagText = Ui.Txt(inner.rectTransform, "Text", tag, Art.Font("Nunito-Medium"), Kit.FsSmall - 2, Kit.Text, TextAnchor.MiddleCenter);
+                    var tw = tagText.preferredWidth + 2 * Kit.Space3;
+                    Ui.Box(outline.rectTransform, A.BottomLeft, A.BottomLeft, new Vector2(tx, Kit.Space2), new Vector2(tw, TagsHeight));
+                    Ui.Stretch(tagText.rectTransform);
+                    tx += tw + Kit.Space1;
+                }
+                var cta = story.Soon ? "Скоро" : started(story) ? "Продолжить" : "Читать";
+                var button = Kit.Round(cover.rectTransform, "Cta", story.Soon ? Kit.Surface2 : Kit.Accent, 15);
+                button.raycastTarget = false;
+                var ctaText = Ui.Txt(button.rectTransform, "Text", cta, Kit.F800, Kit.FsSmall, story.Soon ? Kit.Muted : Kit.AccentInk, TextAnchor.MiddleCenter);
+                Ui.Box(button.rectTransform, A.BottomRight, A.BottomRight, new Vector2(-Kit.Space2, Kit.Space2 + TagsHeight + Kit.Space2),
+                       new Vector2(ctaText.preferredWidth + 2 * Kit.Space4, 30));
+                Ui.Stretch(ctaText.rectTransform);
+
                 var title = Ui.Txt(cell, "Title", story.Title, Kit.F800, Kit.FsHead, Kit.Text);
                 Ui.TopRow(title.rectTransform, 0, 0, coverH + Kit.Space2, headH);
                 MenuUi.Fit(title, 12);
-                var line = Ui.Txt(cell, "Line", story.Genre ?? "", Kit.F600, Kit.FsSmall, Kit.Muted);
-                Ui.TopRow(line.rectTransform, 0, 0, coverH + Kit.Space2 + headH + Kit.Space2, smallH);
+                var blurb = Ui.Txt(cell, "Blurb", story.Blurb ?? "", Kit.F600, Kit.FsSmall, Kit.Muted, TextAnchor.UpperLeft);
+                Ellipsize(blurb, w, blurbH);                       // measures the text (sets the size of its box), so the row is laid after it
+                Ui.TopRow(blurb.rectTransform, 0, 0, coverH + Kit.Space2 + headH + Kit.Space1, blurbH);
                 var s = story;
                 PressButton.On(cover.gameObject, () => { if (!s.Soon) openChapters(s); }, .98f);
             }
@@ -329,10 +393,65 @@ namespace LegacyThroughTime.Prototype
                 Ui.TopRow(empty.rectTransform, Kit.Side, Kit.Side, 0, 40);
                 height = 40;
             }
-            else height = Mathf.Ceil(shown / 2f) * cellH + (Mathf.Ceil(shown / 2f) - 1) * GridGap;
+            else height = Mathf.Ceil(shown / 2f) * cellH + (Mathf.Ceil(shown / 2f) - 1) * RowGap;
             grid.sizeDelta = new Vector2(0, height);
             MenuUi.SetHeight(content, gridTop + height + Kit.Space4);
         }
+
+        /// The text cut to the box with "…" at the end of the last line that fits.
+        static void Ellipsize(Text t, float width, float height)
+        {
+            var full = t.text;
+            if (Ui.TextHeight(t, width) <= height) return;
+            var cut = full.Length;
+            while (cut > 1 && Ui.TextHeight(t, width) > height)
+            {
+                cut--;
+                t.text = full.Substring(0, cut).TrimEnd() + "…";
+            }
+        }
+
+        /// The first tile of the grid: the stories in progress, a tap opens the first of them.
+        void ContinueTile(RectTransform parent, List<StoryEntry> running, Vector2 at, float w, float h)
+        {
+            var cell = Ui.Rect(parent, "Continue");
+            Ui.Box(cell, A.TopLeft, A.TopLeft, at, new Vector2(w, h));
+            var face = Kit.Round(cell, "Face", Kit.Surface, Kit.RadiusS);
+            face.raycastTarget = true;
+            Ui.Stretch(face.rectTransform);
+            face.gameObject.AddComponent<Mask>().showMaskGraphic = true;
+            // a faint pattern of play marks over the whole tile, a bigger one at the top left
+            var mark = Kit.Pic("play");
+            const float step = 40;
+            for (var row = 0; row * step < h; row++)
+                for (var col = 0; col * step < w; col++)
+                {
+                    var m = Kit.Icon(face.rectTransform, "Mark", mark, 22, A.TopLeft, new Vector2(10 + col * step + (row % 2) * 12, -(10 + row * step)));
+                    m.color = new Color(1, 1, 1, .07f); m.raycastTarget = false;
+                }
+            var square = Kit.Round(face.rectTransform, "Icon", Kit.Surface2, 8);
+            square.raycastTarget = false;
+            Ui.Box(square.rectTransform, A.MidLeft, A.MidLeft, new Vector2(Kit.Space4, h * .15f), new Vector2(32, 32));
+            Kit.Icon(square.transform, "Play", Kit.Pic("play"), 20).raycastTarget = false;
+            var title = Ui.Txt(face.rectTransform, "Title", "Продолжить", Kit.F800, Kit.FsHead + 2, Kit.Text, TextAnchor.MiddleLeft);
+            Ui.Box(title.rectTransform, A.MidLeft, A.MidLeft, new Vector2(Kit.Space4, h * .02f), new Vector2(w - 2 * Kit.Space4, 26));
+            MenuUi.Fit(title, 14);
+            var n = running.Count;
+            var line = Ui.Txt(face.rectTransform, "Line", $"{n} {Plural(n)} в процессе", Kit.F700, Kit.FsSmall - 1, Kit.Accent, TextAnchor.MiddleLeft);
+            line.horizontalOverflow = HorizontalWrapMode.Overflow;                    // one line, whatever the width: the type shrinks to fit
+            Ui.Box(line.rectTransform, A.MidLeft, A.MidLeft, new Vector2(Kit.Space4, h * .02f - 24), new Vector2(w - 2 * Kit.Space4, 18));
+            if (line.preferredWidth > w - 2 * Kit.Space4) line.fontSize = Mathf.Max(9, Mathf.FloorToInt(line.fontSize * (w - 2 * Kit.Space4) / line.preferredWidth));
+            // the arrow: a thin line with a small head under the text, from its left edge (as in the mockup)
+            var shaft = Ui.Img(face.rectTransform, "Shaft", ProceduralArt.White);
+            shaft.color = Kit.Accent; shaft.raycastTarget = false;
+            Ui.Box(shaft.rectTransform, A.MidLeft, A.MidLeft, new Vector2(Kit.Space4, h * .02f - 46), new Vector2(40, 2));
+            var head = Kit.Icon(face.rectTransform, "Head", Kit.Glyph("chevron-r"), 16, A.MidLeft, new Vector2(Kit.Space4 + 32, h * .02f - 46));
+            head.color = Kit.Accent; head.raycastTarget = false;
+            var first = running[0];
+            PressButton.On(face.gameObject, () => openChapters(first), .98f);
+        }
+
+        static string Plural(int n) => n % 10 == 1 && n % 100 != 11 ? "история" : n % 10 is >= 2 and <= 4 && n % 100 is < 12 or > 14 ? "истории" : "историй";
 
         /// The drag of the deck: horizontal moves are its own (`Moved` with the units since the start, `Ended` with the speed in
         /// units a second); a vertical one belongs to the scroll of the column.

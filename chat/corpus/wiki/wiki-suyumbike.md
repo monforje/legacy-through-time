@@ -2,6 +2,7 @@
 source_id: wiki-suyumbike
 title: Сююмбике
 layer: fact
+story: golden-cage
 rights: cc
 cite: Википедия, «Сююмбике» (CC BY-SA 4.0), rev 155741448
 url: https://ru.wikipedia.org/wiki/%D0%A1%D1%8E%D1%8E%D0%BC%D0%B1%D0%B8%D0%BA%D0%B5

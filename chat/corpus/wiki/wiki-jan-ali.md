@@ -2,6 +2,7 @@
 source_id: wiki-jan-ali
 title: Джан-Али
 layer: fact
+story: golden-cage
 rights: cc
 cite: Википедия, «Джан-Али» (CC BY-SA 4.0), rev 146243698
 url: https://ru.wikipedia.org/wiki/%D0%94%D0%B6%D0%B0%D0%BD-%D0%90%D0%BB%D0%B8

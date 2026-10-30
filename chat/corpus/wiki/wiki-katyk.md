@@ -2,6 +2,7 @@
 source_id: wiki-katyk
 title: Катык
 layer: setting
+story: golden-cage
 rights: cc
 cite: Википедия, «Катык» (CC BY-SA 4.0), rev 155884387
 url: https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D1%82%D1%8B%D0%BA

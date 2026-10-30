@@ -2,6 +2,7 @@
 source_id: wiki-kobyz
 title: Кобыз
 layer: setting
+story: golden-cage
 rights: cc
 cite: Википедия, «Кобыз» (CC BY-SA 4.0), rev 151601049
 url: https://ru.wikipedia.org/wiki/%D0%9A%D0%BE%D0%B1%D1%8B%D0%B7

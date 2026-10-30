@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -63,7 +64,8 @@ namespace LegacyThroughTime.Prototype
             Ui.Stretch(stage, 0, Kit.NavHeight + Viewport.ExtraBottom, 0, 0);
 
             var top = Metrics.InsetTop + Kit.Space3 + Viewport.ExtraTop;
-            home = new HomeTab(stage, stories, OpenChapters, anim, top + Kit.Touch + Kit.Space3);
+            home = new HomeTab(stage, stories, OpenChapters, anim, top + Kit.Touch + Kit.Space3,
+                              story => story.Chapters.Any(c => !c.Soon && progress(c) == Progress.InProgress));
 
             // the pills of the top bar: two equal ones, the corner on the right is the gear of the HUD
             pills = Ui.Rect(Root, "Pills");

@@ -2,6 +2,7 @@
 source_id: wiki-nogai-horde
 title: Ногайская Орда
 layer: fact
+story: golden-cage
 rights: cc
 cite: Википедия, «Ногайская Орда» (CC BY-SA 4.0), rev 154846514
 url: https://ru.wikipedia.org/wiki/%D0%9D%D0%BE%D0%B3%D0%B0%D0%B9%D1%81%D0%BA%D0%B0%D1%8F_%D0%9E%D1%80%D0%B4%D0%B0

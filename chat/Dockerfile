@@ -9,6 +9,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY content/chat /app/content/chat
 # a story with a chat is one more line here and in `task chat:deploy`
 COPY content/stories/golden-cage/chat /app/content/stories/golden-cage/chat
+COPY content/stories/sikhote-alin/chat /app/content/stories/sikhote-alin/chat
 COPY Assets/Resources/Fonts /app/Assets/Resources/Fonts
 COPY docs /app/docs
 COPY chat/rag rag

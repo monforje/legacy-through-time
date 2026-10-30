@@ -55,6 +55,7 @@ class SearchIn(BaseModel):
     q: str = Field(max_length=2000)
     year: int | None = None
     layers: list[str] | None = None
+    story: str = Field(default="", pattern="^([a-z0-9-]{1,64})?$")
     k: int = Field(default=8, ge=1, le=30)
 
 
@@ -202,6 +203,7 @@ async def search(body: SearchIn):
         k=body.k,
         max_year=body.year,
         layers=tuple(body.layers) if body.layers else None,
+        story=body.story or None,
     )
     return [h.to_dict() for h in hits]
 
@@ -224,7 +226,7 @@ async def chat(body: ChatIn):
                 q = hero.query(history)
                 vec = (await llm.embed([q]))[0]
                 layers = tuple(body.layers) if body.layers else HERO_LAYERS
-                hits = ctx["index"].search(vec, q, k=body.k, max_year=hero.year, layers=layers)
+                hits = ctx["index"].search(vec, q, k=body.k, max_year=hero.year, layers=layers, story=hero.id)
             messages = hero.messages(history, state, hits, body.memory)
             yield _sse(
                 "sources",

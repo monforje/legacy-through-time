@@ -87,6 +87,20 @@ def test_search_filters_future_and_layers(tmp_path):
     assert len(everything) == 3
 
 
+def test_search_keeps_to_the_story_of_the_hero(tmp_path):
+    chunks = []
+    for source, story in (("kazan", "golden-cage"), ("port", "sikhote-alin"), ("both", "")):
+        path = write(tmp_path, f"Рассказ о порте и о Казани {source}.", source_id=source, **({"story": story} if story else {}))
+        chunks += chunk_document(path)
+    assert [c.story for c in chunks] == ["golden-cage", "sikhote-alin", ""]
+    index = Index(chunks, np.eye(3, dtype=np.float32), {})
+    query = np.ones(3, dtype=np.float32) / np.sqrt(3)
+    sources = lambda story: {h.chunk.source_id for h in index.search(query, "порт Казань", story=story)}
+    assert sources("sikhote-alin") == {"port", "both"}
+    assert sources("golden-cage") == {"kazan", "both"}
+    assert sources(None) == {"kazan", "port", "both"}
+
+
 def test_stems_match_word_forms():
     assert tokenize("Казани")[0] == tokenize("Казань")[0]
     assert tokenize("ханбике ёлка")[1] == tokenize("елка")[0]
@@ -246,3 +260,34 @@ def test_a_report_is_logged_with_its_story(api):
     assert client.post("/api/report", json=body).json() == {"ok": True}
     logged = json.loads((folder / "reports.jsonl").read_text(encoding="utf-8").splitlines()[0])
     assert logged["story"] == "golden-cage" and logged["message"] == "Плохой ответ."
+
+
+def arsenyev() -> Hero:
+    return Hero(STORIES / "sikhote-alin/chat", RULES)
+
+
+def test_arsenyev_is_loaded_and_lives_in_1900():
+    heroes = load_heroes(STORIES, RULES)
+    h = heroes["sikhote-alin"]
+    assert h.name == "Владимир Арсеньев" and h.year == 1900 and h.opening
+    prompt = h.static_prompt()
+    assert "1900 год" in prompt and "Арсеньев" in prompt and "Владивосток" in prompt
+
+
+def test_arsenyev_state_reads_the_choices_of_the_prologue():
+    h = arsenyev()
+    lines = h.state_lines({"arsenyev_pride": True, "asked_way": False, "drew_ship": True})
+    assert any("считает лучше" in s for s in lines)
+    assert any("ничего не спросил" in s for s in lines)
+    assert any("корабль" in s for s in lines)
+    asked = h.state_lines({"arsenyev_pride": True, "asked_way": True})
+    assert not any("ничего не спросил" in s for s in asked)
+
+
+def test_arsenyev_does_not_know_the_future_and_golden_cage_keeps_its_own_words():
+    kinds = lambda hero, t: {f["kind"] for f in hero.check_reply(t)}
+    assert "future" in kinds(arsenyev(), "Потом я встречу Дерсу.")
+    assert "future" in kinds(arsenyev(), "В 1906 году я пойду в горы.")
+    assert kinds(arsenyev(), "Посмотрим, кто кого, господа горы.") == set()
+    assert "future" in kinds(golden_cage(), "Утямыш ещё мал.")
+    assert "future" not in kinds(arsenyev(), "Утямыш ещё мал.")

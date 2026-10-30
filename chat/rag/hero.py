@@ -12,10 +12,6 @@ MAX_WORDS = 60
 
 _COND = re.compile(r"^\s*(not\s+)?([a-z_][a-z0-9_]*)\s*(?:(>=|<=|==|!=|>|<)\s*(-?\d+|true|false))?\s*$")
 _YEAR = re.compile(r"(?<!\d)(1[4-9]\d\d|20\d\d)(?!\d)")
-_FUTURE = re.compile(
-    r"утямыш|сафа-?гире\w* муж|касимов|грозн|взяти\w+ казан|пад\w+ казан|казан\w* пал|в плен\w* в москв",
-    re.IGNORECASE,
-)
 _OUT_OF_ROLE = re.compile(
     r"языков\w+ модел|нейросет|искусственн\w+ интеллект|я\s+(—\s+)?(ии|бот|программа)", re.IGNORECASE
 )
@@ -38,6 +34,9 @@ class Hero:
         self.year = int(self.card["year"])
         self.place = self.card["place"].strip()
         self.opening = self.card.get("opening") or []
+        # words that give away what the hero cannot know yet: `future_pattern` of the card, a regular expression
+        pattern = self.card.get("future_pattern")
+        self.future = re.compile(pattern, re.IGNORECASE) if pattern else None
         self.lore, self.vars, self.rules = self._load_chapters()
         for rule in self.rules:
             evaluate(rule["when"], {})  # fail at start on a broken condition, not mid-chat
@@ -181,7 +180,7 @@ class Hero:
         later = sorted({y for y in map(int, _YEAR.findall(text)) if y > self.year})
         if later:
             flags.append({"kind": "future", "detail": f"годы после {self.year}: {later}"})
-        if m := _FUTURE.search(text):
+        if self.future and (m := self.future.search(text)):
             flags.append({"kind": "future", "detail": f"похоже на будущее: «{m.group(0)}»"})
         low = text.lower()
         bad = [w for w in self.card["lexicon"]["never"] if re.search(rf"(?<!\w){re.escape(w)}(?!\w)", low)]

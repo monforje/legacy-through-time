@@ -73,12 +73,12 @@ namespace LegacyThroughTime.Prototype
                 if (data != null) next.Play();
             }
 
-            public void Tick(float dt)
+            public void Tick(float dt, float gain = 1)
             {
                 for (var i = 0; i < 2; i++)
                 {
                     var s = sources[i];
-                    var goal = i == active && s.clip != null ? volume : 0;
+                    var goal = i == active && s.clip != null ? volume * gain : 0;
                     s.volume = Mathf.MoveTowards(s.volume, goal, volume * dt / FadeSeconds);
                     if (s.isPlaying && s.volume <= 0 && goal <= 0) s.Stop();
                 }
@@ -119,14 +119,14 @@ namespace LegacyThroughTime.Prototype
         public void Sfx(string name)
         {
             var clip = Clip("Audio/sfx/" + name);
-            if (clip == null) return;
+            if (clip == null || !Settings.Effects) return;
             sfx.Stop(); sfx.clip = clip; sfx.volume = SfxVolume; sfx.Play();
         }
 
         public void Ui(string name, float volume = 1)
         {
             var clip = Clip("Audio/ui/" + name);
-            if (clip != null) ui.PlayOneShot(clip, UiVolume * volume);
+            if (clip != null && Settings.Effects) ui.PlayOneShot(clip, UiVolume * volume);
         }
 
         static readonly System.Collections.Generic.Dictionary<string, AudioClip> clips = new();
@@ -135,6 +135,10 @@ namespace LegacyThroughTime.Prototype
         static AudioClip Clip(string path) =>
             clips.TryGetValue(path, out var c) && c ? c : clips[path] = Resources.Load<AudioClip>(path);
 
-        public void Tick(float deltaTime) { music.Tick(deltaTime); ambience.Tick(deltaTime); }
+        public void Tick(float deltaTime)
+        {
+            music.Tick(deltaTime, Settings.Music ? 1 : 0);
+            ambience.Tick(deltaTime, Settings.Effects ? 1 : 0);
+        }
     }
 }

@@ -33,8 +33,22 @@ namespace LegacyThroughTime.Prototype
         static readonly Dictionary<string, Font> fonts = new();
         static HashSet<string> tiled;
 
+        /// The story kit of the chapter being read (`sa-`: the surveyor's notebook of «По хребтам Сихотэ-Алиня»), null
+        /// in the menu and in stories without one. A sprite of the kit is `<prefix><name>` in Resources/Heritage3D, with the
+        /// size and the borders of `<name>`; one it lacks comes from the main kit. Images already on screen keep theirs.
+        public static string StoryKit { get; set; }
+
+        /// The name a sprite has in the story kit, or the name itself when the story has no such sprite.
+        static string Themed(string name)
+        {
+            if (StoryKit == null || !blenderKit) return name;
+            var themed = StoryKit + name;
+            return Resources.Load<Sprite>("Heritage3D/" + themed) ? themed : name;
+        }
+
         public static Sprite Sprite(string name)
         {
+            name = Themed(name);
             if (sprites.TryGetValue(name, out var s) && s) return s;
             // the chosen kit first, then the other one: the menu's components exist only in the Blender kit
             var (first, second) = blenderKit ? ("Heritage3D/", "Heritage/") : ("Heritage/", "Heritage3D/");
@@ -55,6 +69,7 @@ namespace LegacyThroughTime.Prototype
         public static bool Tiled(string name)
         {
             if (!blenderKit) return false;
+            name = Themed(name);
             if (tiled == null)
             {
                 tiled = new HashSet<string>();

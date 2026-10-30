@@ -7,6 +7,7 @@ namespace LegacyThroughTime.Prototype
     sealed class TitleCard
     {
         const float TopShare = .24f, BottomShare = .56f;       // where the brackets stand, as a share of the screen height
+        const float Gap = 22, OrnRoom = 46;                    // between the name and the scene line; the room of the ornaments at the ends of the box
 
         public TitleCard(Transform parent, TitleSpec spec, IAnimator anim)
         {
@@ -15,7 +16,6 @@ namespace LegacyThroughTime.Prototype
 
             var box = Ui.Rect(parent, "Title");
             box.anchorMin = A.TopLeft; box.anchorMax = A.TopRight; box.pivot = A.TopCenter;
-            box.offsetMin = new Vector2(Metrics.Side, -Viewport.Height * BottomShare);
             box.offsetMax = new Vector2(-Metrics.Side, -Viewport.Height * TopShare);
             var frame = Ui.Sliced(box, "Brackets", "title-brackets", fillCenter: false);
             Ui.Stretch(frame.rectTransform);
@@ -25,10 +25,18 @@ namespace LegacyThroughTime.Prototype
             var ornBottom = Ui.Icon(box, "OrnBottom", "title-orn", A.BottomCenter, A.TopCenter, new Vector2(0, -2));
             ornBottom.rectTransform.localScale = new Vector3(1, -1, 1);
 
-            var name = Ui.Txt(box, "Name", spec.Name.ToUpperInvariant(), Art.Head, Metrics.FsTitle, Theme.Parchment, TextAnchor.MiddleCenter);
-            Ui.Box(name.rectTransform, A.Center, A.Center, new Vector2(0, 28), new Vector2(Metrics.PlateWidth - 24, 44));
-            var scene = Ui.Txt(box, "Scene", spec.Scene, Art.Sub, Metrics.FsValue, Theme.Parchment, TextAnchor.MiddleCenter);
-            Ui.Box(scene.rectTransform, A.Center, A.Center, new Vector2(0, -31), new Vector2(Metrics.PlateWidth - 24, 36));
+            // The name and the scene line stand one under the other with a gap, whatever number of lines each takes: a long
+            // title or a long chapter name pushes the other one down (and the brackets apart) instead of overlapping it.
+            var textWidth = Metrics.PlateWidth - 24;
+            var name = Ui.Txt(box, "Name", spec.Name.ToUpperInvariant(), Art.Head, Metrics.FsTitle, Theme.Parchment, TextAnchor.UpperCenter);
+            var scene = Ui.Txt(box, "Scene", spec.Scene, Art.Sub, Metrics.FsValue, Theme.Parchment, TextAnchor.UpperCenter);
+            var nameHeight = Ui.TextHeight(name, textWidth) + 4;
+            var sceneHeight = Ui.TextHeight(scene, textWidth) + 4;
+            var total = nameHeight + Gap + sceneHeight;
+            var boxHeight = Mathf.Max(Viewport.Height * (BottomShare - TopShare), total + 2 * OrnRoom);
+            box.offsetMin = new Vector2(Metrics.Side, box.offsetMax.y - boxHeight);
+            Ui.Box(name.rectTransform, A.Center, A.TopCenter, new Vector2(0, total / 2), new Vector2(textWidth, nameHeight));
+            Ui.Box(scene.rectTransform, A.Center, A.TopCenter, new Vector2(0, total / 2 - nameHeight - Gap), new Vector2(textWidth, sceneHeight));
             foreach (var t in new[] { name, scene })
             {
                 var shadow = t.gameObject.AddComponent<Shadow>();

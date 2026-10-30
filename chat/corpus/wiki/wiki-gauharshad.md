@@ -2,6 +2,7 @@
 source_id: wiki-gauharshad
 title: Гаухаршад
 layer: fact
+story: golden-cage
 rights: cc
 cite: Википедия, «Гаухаршад» (CC BY-SA 4.0), rev 154693530
 url: https://ru.wikipedia.org/wiki/%D0%93%D0%B0%D1%83%D1%85%D0%B0%D1%80%D1%88%D0%B0%D0%B4

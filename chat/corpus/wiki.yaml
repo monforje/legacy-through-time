@@ -10,16 +10,23 @@ skip_sections:
   - Галерея
   - Библиография
 articles:
-  - { id: wiki-suyumbike, title: Сююмбике }
-  - { id: wiki-yusuf, title: Юсуф-бий }
-  - { id: wiki-jan-ali, title: Джан-Али }
-  - { id: wiki-gauharshad, title: Гаухаршад }
-  - { id: wiki-safa-girey, title: Сафа-Гирей }
-  - { id: wiki-nogai-horde, title: Ногайская Орда }
-  - { id: wiki-mangyts, title: Мангыты }
-  - { id: wiki-kazan-khanate, title: Казанское ханство }
-  - { id: wiki-kazan-history, title: Казанская история, layer: interp }
-  - { id: wiki-kalfak, title: Калфак, layer: setting }
-  - { id: wiki-katyk, title: Катык, layer: setting }
-  - { id: wiki-kobyz, title: Кобыз, layer: setting }
-  - { id: wiki-yurt, title: Юрта, layer: setting }
+  - { id: wiki-suyumbike, title: Сююмбике, story: golden-cage }
+  - { id: wiki-yusuf, title: Юсуф-бий, story: golden-cage }
+  - { id: wiki-jan-ali, title: Джан-Али, story: golden-cage }
+  - { id: wiki-gauharshad, title: Гаухаршад, story: golden-cage }
+  - { id: wiki-safa-girey, title: Сафа-Гирей, story: golden-cage }
+  - { id: wiki-nogai-horde, title: Ногайская Орда, story: golden-cage }
+  - { id: wiki-mangyts, title: Мангыты, story: golden-cage }
+  - { id: wiki-kazan-khanate, title: Казанское ханство, story: golden-cage }
+  - { id: wiki-kazan-history, title: Казанская история, layer: interp, story: golden-cage }
+  - { id: wiki-kalfak, title: Калфак, layer: setting, story: golden-cage }
+  - { id: wiki-katyk, title: Катык, layer: setting, story: golden-cage }
+  - { id: wiki-kobyz, title: Кобыз, layer: setting, story: golden-cage }
+  - { id: wiki-yurt, title: Юрта, layer: setting, story: golden-cage }
+  - { id: wiki-arsenyev, title: "Арсеньев, Владимир Клавдиевич", story: sikhote-alin }
+  - { id: wiki-vladivostok, title: Владивосток, story: sikhote-alin }
+  - { id: wiki-sikhote-alin, title: Сихотэ-Алинь, story: sikhote-alin }
+  - { id: wiki-ussuri-krai, title: Уссурийский край, story: sikhote-alin }
+  - { id: wiki-taiga, title: Тайга, layer: setting, story: sikhote-alin }
+  - { id: wiki-compass, title: Компас, layer: setting, story: sikhote-alin }
+  - { id: wiki-kerosene-lamp, title: Керосиновая лампа, layer: setting, story: sikhote-alin }

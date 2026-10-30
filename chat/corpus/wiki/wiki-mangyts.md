@@ -2,6 +2,7 @@
 source_id: wiki-mangyts
 title: Мангуты
 layer: fact
+story: golden-cage
 rights: cc
 cite: Википедия, «Мангуты» (CC BY-SA 4.0), rev 155883861
 url: https://ru.wikipedia.org/wiki/%D0%9C%D0%B0%D0%BD%D0%B3%D1%83%D1%82%D1%8B

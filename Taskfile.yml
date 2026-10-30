@@ -88,7 +88,9 @@ tasks:
     desc: Lossless PNG recompression (oxipng, metadata stripped) for everything under Assets/ (or DIR=...)
     cmds:
       - docker image inspect {{.OXIPNG_IMAGE}} >/dev/null 2>&1 || docker build -t {{.OXIPNG_IMAGE}} docker/oxipng
-      - docker run --rm --user "$(id -u):$(id -g)" -v "{{.ROOT_DIR}}:/work" {{.OXIPNG_IMAGE}} -o 4 --strip safe -r {{.DIR | default "Assets"}}
+      - 'echo before $(du -sh {{.DIR | default "Assets"}} | cut -f1)'
+      - docker run --rm --user "$(id -u):$(id -g)" -v "{{.ROOT_DIR}}:/work" {{.OXIPNG_IMAGE}} -o 4 --strip safe -q -r {{.DIR | default "Assets"}}
+      - 'echo after  $(du -sh {{.DIR | default "Assets"}} | cut -f1)'
 
   assets:png:
     desc: Heritage UI - regenerate SVG (build.py) and export @4x PNG + manifest.json (9-slice borders) -> docs/brainstorm/templates/assets/heritage/png
@@ -114,7 +116,7 @@ tasks:
         vars: { DIR: Assets/Resources/Heritage }
 
   assets:blender:
-    desc: Heritage UI, Blender kit - render the sprites in Blender (blender/render.py, Cycles) -> heritage/png3d + slices.txt, copy into Assets/Resources/Heritage3D (`-- btn card` renders only those). Switch kits with Art.BlenderKit
+    desc: Heritage UI, Blender kit (and the story kit sa-*, blender/sikhote3d.py) - render the sprites in Blender (blender/render.py, Cycles) -> heritage/png3d + slices.txt, copy into Assets/Resources/Heritage3D (`-- btn card` renders only those). Switch kits with Art.BlenderKit
     preconditions:
       - sh: command -v {{.BLENDER}}
         msg: "Blender is not on PATH (or set BLENDER=/path/to/blender)"
@@ -127,14 +129,10 @@ tasks:
         vars: { DIR: Assets/Resources/Heritage3D }
 
   assets:brand:
-    desc: Brand art - launcher icon layers (adaptive, round, legacy) -> Assets/Art/Brand, loading-screen logo -> Assets/Resources/Brand
-    deps: [svg-image]
+    desc: Brand art from docs/brand (generated renders on magenta) - launcher icon layers -> Assets/Art/Brand, logo + loader ring/hourglass + glyphs -> Assets/Resources/Brand
     cmds:
-      - mkdir -p Assets/Art/Brand Assets/Resources/Brand
-      - |
-        docker run --rm --user "$(id -u):$(id -g)" -v "{{.ROOT_DIR}}:/work" -w /work/{{.HERITAGE_DIR}}/brand {{.SVG_IMAGE}} sh -c '
-          for n in icon-bg icon-fg icon-legacy icon-round; do rsvg-convert "$n.svg" -o "/work/Assets/Art/Brand/$n.png"; done'
-      - cp {{.HERITAGE_DIR}}/brand/logo.png Assets/Resources/Brand/logo.png
+      - uv run --with pillow --with numpy python -I tools/brand_cut.py
+      - uv run --with pillow --with numpy python -I tools/brand_build.py
 
   assets:test:
     desc: Heritage UI generator tests - SVGs well-formed, borders inside sprites, output reproducible, files up to date
@@ -276,7 +274,7 @@ tasks:
       - >-
         rsync -aR --exclude __pycache__ --exclude '*.meta'
         chat/Dockerfile chat/compose.yaml chat/pyproject.toml chat/uv.lock chat/rag chat/web
-        content/stories/golden-cage/chat content/chat Assets/Resources/Fonts
+        content/stories/golden-cage/chat content/stories/sikhote-alin/chat content/chat Assets/Resources/Fonts
         docs/brainstorm/templates/assets/heritage/png3d docs/art/legacy-scenes/heroine_room_night.jpeg
         chat/data/index
         {{.HOST}}:{{.REMOTE}}/

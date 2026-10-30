@@ -35,7 +35,8 @@ def hero_of(settings, story: str) -> Hero:
 def main() -> None:
     p = argparse.ArgumentParser(prog="python -m rag")
     sub = p.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("fetch-wiki")
+    w = sub.add_parser("fetch-wiki")
+    w.add_argument("--story", help="only the articles of this story (default: all)")
     sub.add_parser("ingest")
     sub.add_parser("chunks")
     s = sub.add_parser("search")
@@ -52,7 +53,7 @@ def main() -> None:
     settings = config.load()
     match args.cmd:
         case "fetch-wiki":
-            fetch_wiki(settings.corpus_dir)
+            fetch_wiki(settings.corpus_dir, args.story)
         case "chunks":
             for c in load_corpus(settings.corpus_dir):
                 print(f"{c.id:28} {c.layer:8} {c.event_year!s:5} {len(c.text):4}  {c.heading[:50]}")
@@ -64,7 +65,7 @@ def main() -> None:
             asyncio.run(ask(settings, args.line, args.story))
 
 
-def fetch_wiki(corpus_dir: Path) -> None:
+def fetch_wiki(corpus_dir: Path, story: str | None = None) -> None:
     """Articles as plain text, headings kept, `== X ==` turned into Markdown."""
     spec = yaml.safe_load((corpus_dir / "wiki.yaml").read_text(encoding="utf-8"))
     out_dir = corpus_dir / "wiki"
@@ -74,6 +75,8 @@ def fetch_wiki(corpus_dir: Path) -> None:
     ua = "legacy-through-time-rag/0.1 (https://github.com/monforje/legacy-through-time)"
     with httpx.Client(timeout=30, headers={"User-Agent": ua}) as http:
         for art in spec["articles"]:
+            if story and art.get("story") != story:
+                continue
             r = http.get(
                 WIKI_API,
                 params={
@@ -101,6 +104,8 @@ def fetch_wiki(corpus_dir: Path) -> None:
                 "cite": f"Википедия, «{page['title']}» (CC BY-SA 4.0), rev {page.get('lastrevid')}",
                 "url": page.get("fullurl", ""),
             }
+            if "story" in art:
+                front["story"] = art["story"]
             if "event_year" in art:
                 front["event_year"] = art["event_year"]
             text = "---\n" + yaml.safe_dump(front, allow_unicode=True, sort_keys=False) + "---\n\n" + body
@@ -160,6 +165,7 @@ async def search(settings, args) -> None:
         k=args.k,
         max_year=args.year or hero.year,
         layers=None if args.all_layers else HERO_LAYERS,
+        story=args.story,
     )
     for h in hits:
         c = h.chunk

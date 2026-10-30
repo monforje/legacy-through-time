@@ -144,14 +144,17 @@ class Index:
         k: int = 6,
         max_year: int | None = None,
         layers: tuple[str, ...] | None = None,
+        story: str | None = None,
         per_source: int = 3,
     ) -> list[Hit]:
-        """Top k chunks that pass the filters. `max_year` drops chunks about later events."""
+        """Top k chunks that pass the filters. `max_year` drops chunks about later events,
+        `story` those written for the hero of another story (a chunk without a story is for all)."""
         if not self.chunks:
             return []
         allowed = np.array(
             [
                 (layers is None or c.layer in layers)
+                and (story is None or not c.story or c.story == story)
                 and (max_year is None or c.event_year is None or c.event_year <= max_year)
                 for c in self.chunks
             ]

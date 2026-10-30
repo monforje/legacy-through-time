@@ -2,6 +2,7 @@
 source_id: wiki-kalfak
 title: Калфак
 layer: setting
+story: golden-cage
 rights: cc
 cite: Википедия, «Калфак» (CC BY-SA 4.0), rev 154927021
 url: https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D0%BB%D1%84%D0%B0%D0%BA

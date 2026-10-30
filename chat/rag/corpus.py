@@ -10,6 +10,7 @@ A document is a Markdown file in chat/corpus/ with YAML front matter:
     cite: "Википедия, «Сююмбике»"
     url: https://...
     event_year: 1533          # optional default for the whole document
+    story: golden-cage        # optional: only the hero of this story (a folder of content/stories) finds it
     ---
 
 A section (from one heading to the next) can override these with a comment line
@@ -55,6 +56,7 @@ class Chunk:
     cite: str
     url: str
     event_year: int | None
+    story: str = ""          # the story whose hero may read it; empty: every story
 
     def embed_text(self) -> str:
         """What goes to the embedding model: the place in the document, then the text."""
@@ -111,6 +113,7 @@ def chunk_document(path: Path) -> list[Chunk]:
                     cite=meta["cite"],
                     url=meta.get("url", ""),
                     event_year=year,
+                    story=meta.get("story") or "",
                 )
             )
     return chunks

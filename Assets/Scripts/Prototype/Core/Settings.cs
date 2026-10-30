@@ -11,6 +11,19 @@ namespace LegacyThroughTime.Prototype
             set { PlayerPrefs.SetInt("sound", value ? 1 : 0); PlayerPrefs.Save(); Apply(); }
         }
 
+        /// The music and the sounds of the story, each on its own (on top of the sound switch).
+        public static bool Music
+        {
+            get => PlayerPrefs.GetInt("music", 1) == 1;
+            set { PlayerPrefs.SetInt("music", value ? 1 : 0); PlayerPrefs.Save(); }
+        }
+
+        public static bool Effects
+        {
+            get => PlayerPrefs.GetInt("effects", 1) == 1;
+            set { PlayerPrefs.SetInt("effects", value ? 1 : 0); PlayerPrefs.Save(); }
+        }
+
         public static bool Notifications
         {
             get => PlayerPrefs.GetInt("notifications", 1) == 1;

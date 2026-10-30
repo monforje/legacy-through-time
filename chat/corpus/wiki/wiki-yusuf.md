@@ -2,6 +2,7 @@
 source_id: wiki-yusuf
 title: Юсуф-бий
 layer: fact
+story: golden-cage
 rights: cc
 cite: Википедия, «Юсуф-бий» (CC BY-SA 4.0), rev 155160622
 url: https://ru.wikipedia.org/wiki/%D0%AE%D1%81%D1%83%D1%84-%D0%B1%D0%B8%D0%B9

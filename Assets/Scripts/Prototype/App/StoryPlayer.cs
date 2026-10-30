@@ -21,6 +21,9 @@ namespace LegacyThroughTime.Prototype
         CastView cast;
         StoryAudio audio;
         SettingsToast settings;
+        StorySettings storySettings;           // the modal settings of a story that has its own kit (null in the others)
+        StoryHud hud;                          // the solid buttons over a story with its own kit
+        bool exiting;                          // the curtain of the way out of a story is down
         MenuScreen menu;
         ChatScreen chatScreen;                 // the talk with the hero of a story; null elsewhere
         StoryEntry story;                      // null in the menu
@@ -61,6 +64,7 @@ namespace LegacyThroughTime.Prototype
             audio = new StoryAudio(transform);
             host = new ScreenHost(this, canvas);
             settings = new SettingsToast(host.Overlay, host.OverlayAnimator);
+            storySettings = new StorySettings(host.Overlay, host.OverlayAnimator);
             SettingsToast.Gear(host.Hud, OpenSettings);
 
             audio.Ui("loading_logo");
@@ -125,7 +129,53 @@ namespace LegacyThroughTime.Prototype
         }
 
         // ------------------------------------------------------------ menu and settings
-        void OpenSettings() => settings.Open(story != null ? () => ShowMenu() : chatScreen != null ? () => chatScreen.Leave() : null, Quit, CloudRow());
+        void OpenSettings()
+        {
+            if (story != null && hud != null) { storySettings.Open(LeaveStory); return; }       // a story with its own kit has its own modal
+            settings.Open(story != null ? () => ShowMenu() : chatScreen != null ? () => chatScreen.Leave() : null, Quit, CloudRow());
+        }
+
+        /// The way out of a story: a dark curtain comes down with a note that the progress is kept, the menu is built under
+        /// it, and the curtain lifts. The picture of the story and the menu are never seen side by side.
+        void LeaveStory()
+        {
+            if (story == null || exiting) return;
+            exiting = true;
+            StartCoroutine(LeaveRoutine());
+        }
+
+        IEnumerator LeaveRoutine()
+        {
+            var overlay = host.Overlay; var anim = host.OverlayAnimator;
+            var curtain = Ui.Img(overlay, "Curtain", ProceduralArt.White);
+            curtain.color = new Color(.03f, .05f, .09f, 0); curtain.raycastTarget = true;
+            Ui.Stretch(curtain.rectTransform);
+            var column = Kit.Column(overlay, "ExitColumn");
+            var note = Ui.Sliced(column, "ExitNote", "plate-mint");
+            Ui.Box(note.rectTransform, A.Center, A.Center, Vector2.zero, new Vector2(Kit.Width - 4 * Kit.Side, 108));
+            var line = Ui.Txt(note.rectTransform, "Line", "Прогресс сохранён", Kit.F800, Kit.FsHead + 2, new Color32(28, 42, 58, 255), TextAnchor.MiddleCenter);
+            Ui.Stretch(line.rectTransform, 30, 22, 30, 0);
+            line.rectTransform.offsetMax = new Vector2(line.rectTransform.offsetMax.x, -34);
+            line.rectTransform.offsetMin = new Vector2(line.rectTransform.offsetMin.x, 40);
+            var sub = Ui.Txt(note.rectTransform, "Sub", "Возвращаемся в меню", Kit.F600, Kit.FsSmall, new Color32(28, 42, 58, 170), TextAnchor.MiddleCenter);
+            Ui.Box(sub.rectTransform, A.BottomCenter, A.BottomCenter, new Vector2(0, 34), new Vector2(Kit.Width - 4 * Kit.Side - 60, 20));
+            var group = Ui.Group(note);
+            group.alpha = 0;
+            if (anim.Enabled) anim.Play(Tween.To(.28f, e => { if (curtain) curtain.color = new Color(.03f, .05f, .09f, e); if (group) group.alpha = e; }, Easing.InOut));
+            else { curtain.color = new Color(.03f, .05f, .09f, 1); group.alpha = 1; }
+            yield return new WaitForSecondsRealtime(anim.Enabled ? .85f : 0);
+            storySettings.Close();
+            ShowMenu();
+            yield return null;
+            if (anim.Enabled) anim.Play(Tween.To(.4f, e => { if (curtain) curtain.color = new Color(.03f, .05f, .09f, 1 - e); if (group) group.alpha = 1 - e; }, Easing.InOut));
+            yield return new WaitForSecondsRealtime(anim.Enabled ? .45f : 0);
+            if (curtain) Destroy(curtain.gameObject);
+            if (column) Destroy(column.gameObject);
+            exiting = false;
+        }
+
+        /// The collapse arrow: the text and the options hide, the picture stays.
+        void CollapseText(bool on) => host.ShowPages(!on);
 
         /// The Google Play row of the settings: who is signed in, or the button that signs in; none without Play Games.
         SettingsToast.Cloud CloudRow() => CloudSave.Status switch
@@ -188,6 +238,7 @@ namespace LegacyThroughTime.Prototype
         void Back()
         {
             if (settings.IsOpen) settings.Close();
+            else if (storySettings.IsOpen) storySettings.Close();
             else if (chatScreen != null) chatScreen.Leave();
             else if (story != null) OpenSettings();
             else if (menu == null || !menu.Back()) Quit();
@@ -203,6 +254,9 @@ namespace LegacyThroughTime.Prototype
         {
             session++;
             story = null; chapter = null; machine = null; lastPlate = null; hints.Clear();
+            Art.StoryKit = null;
+            hud?.Destroy(); hud = null;
+            host.ShowPages(true, false);
             host.Clear();
             if (chatScreen != null) { StartCoroutine(chatScreen.Close()); chatScreen = null; }
             if (Persist) CloudSave.Sync();
@@ -271,6 +325,11 @@ namespace LegacyThroughTime.Prototype
             if (menu != null) { StartCoroutine(menu.Leave()); menu = null; }
             story = entry; chapter = part; Ended = false; lastPlate = null; hints.Clear();
             Cast.Use(entry.Id);
+            Art.StoryKit = Cast.KitPrefix;
+            hud?.Destroy(); hud = null;
+            SettingsToast.ShowGear(false);                             // every story has its own tools over it, not the gear of the shell
+            host.ShowPages(true, false);
+            hud = new StoryHud(host.Hud, LeaveStory, CollapseText, OpenSettings, host.OverlayAnimator);
             StartCoroutine(Load(entry, part, fresh, ++session));
         }
 
@@ -295,7 +354,7 @@ namespace LegacyThroughTime.Prototype
             if (save == null && Persist) ChapterStats.Before(entry, part, SaveStore.ReadStats)?.ApplyTo(machine);
             FillPurse();
 
-            Scenery("title"); audio.Ui("title_in");
+            Scenery(entry.Cover ?? "title"); audio.Ui("title_in");       // the title card stands on the cover of this story
             var scene = $"Глава {part.Number}: {part.Title}";
             var title = new TitleSpec { Name = entry.Title, Scene = save != null ? scene + " · продолжение" : scene };
             host.Show(new Page { Id = "title", Title = title }, new Bank(), () =>
@@ -317,6 +376,7 @@ namespace LegacyThroughTime.Prototype
         void Present()
         {
             TakePurse();
+            if (hud != null && hud.Collapsed) { hud.Reset(); host.ShowPages(true); }          // a new screen brings the text back
             while (true)
             {
                 var beat = machine.Current;
