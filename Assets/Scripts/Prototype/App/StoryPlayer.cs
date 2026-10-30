@@ -169,7 +169,7 @@ namespace LegacyThroughTime.Prototype
         void TellNews()
         {
             if (news == null) return;
-            host.Banner(news, newsIcon);
+            ShellToast.Show(host.Shell, news, host.OverlayAnimator);          // the shell's own toast, not the story's ribbon
             news = null;
         }
 
@@ -399,7 +399,7 @@ namespace LegacyThroughTime.Prototype
             foreach (var c in entry.Chapters) if (!c.Soon) read.Add(SaveStore.ReadStats(c.SaveId));
             chatScreen = new ChatScreen(host.Shell, this, entry, ChatStore.Open(entry), ChatStore.Energy, ChatList.Latest(read),
                                         () => ShowMenu(MenuScreen.Tab.Chat), () => chatScreen.Leave(() => ShowMenu(MenuScreen.Tab.Shop)),
-                                        (text, icon) => host.Banner(text, icon));
+                                        (text, icon) => ShellToast.Show(host.Shell, text, host.OverlayAnimator, 2.5f, 96));      // over the field of the chat
         }
 
         /// A line on its plate; a long one in parts, one screen each (the speaker says it in two taps), the hints of

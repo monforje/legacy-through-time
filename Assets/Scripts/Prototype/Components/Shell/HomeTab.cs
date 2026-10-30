@@ -25,7 +25,7 @@ namespace LegacyThroughTime.Prototype
         readonly RectTransform deck, content;
         readonly RectTransform grid;
         readonly float gridTop;
-        float pos;
+        float pos, dragFrom;
         int current;
         static Sprite scrim;
 
@@ -44,10 +44,14 @@ namespace LegacyThroughTime.Prototype
             deck = Ui.Rect(content, "Deck");
             Ui.TopRow(deck, Kit.Side, Kit.Side, 0, cardHeight);
             deck.gameObject.AddComponent<RectMask2D>();                  // the sides are cut by the box of the deck, as in the mockup
-            var swipe = Ui.Img(deck, "Swipe", ProceduralArt.White);
-            swipe.color = Color.clear; swipe.raycastTarget = true;
-            Ui.Stretch(swipe.rectTransform);
-            swipe.gameObject.AddComponent<Swipe>().Done = dx => Turn(dx < 0 ? 1 : -1);
+            // the deck is a scroll block of its own: the cards follow the finger and settle on the nearest one; the drags that
+            // start on a card come up to it (it is their parent). A vertical drag is the column's.
+            var deckBack = deck.gameObject.AddComponent<Image>();           // the gaps between the cards take the drag too
+            deckBack.color = Color.clear; deckBack.raycastTarget = true;
+            var swipe = deck.gameObject.AddComponent<Swipe>();
+            swipe.Began = () => dragFrom = pos;
+            swipe.Moved = dx => Follow(dx);
+            swipe.Ended = flick => Settle(flick);
             for (var i = 0; i < stories.Count; i++) cards.Add(Card(deck, stories[i]));
             current = 0;
             for (var i = 0; i < stories.Count; i++) if (stories[i].Recommended) current = i;
@@ -208,6 +212,22 @@ namespace LegacyThroughTime.Prototype
             Place(true);
         }
 
+        /// The cards follow the finger: `dx` units of the drag since it began.
+        void Follow(float dx)
+        {
+            var step = cardWidth * (1f + SideScale) / 2f + Gap;
+            pos = Mathf.Clamp(dragFrom - dx / step, -.3f, cards.Count - 1 + .3f);
+            Layout(pos);
+        }
+
+        /// The finger is up: the deck settles on the card it is nearest to, or the next one after a flick.
+        void Settle(float flick)
+        {
+            var target = Mathf.RoundToInt(pos + Mathf.Clamp(-flick / 400f, -.6f, .6f));
+            current = Mathf.Clamp(target, 0, cards.Count - 1);
+            Place(true);
+        }
+
         /// "Random story": any other card comes to the middle.
         void Shuffle()
         {
@@ -226,12 +246,18 @@ namespace LegacyThroughTime.Prototype
         void Chips(RectTransform row)
         {
             var labels = new[] { "Для начала", "Новые", "Популярные", "По жанрам" };
+            // a horizontal scroll block inside the column: it scrolls sideways, a vertical drag on it is the column's
+            var hit = Ui.Img(row, "Hit", ProceduralArt.White);
+            hit.color = Color.clear; hit.raycastTarget = true;
+            Ui.Stretch(hit.rectTransform);
+            var strip = Ui.Rect(row, "Strip");
+            strip.anchorMin = new Vector2(0, 0); strip.anchorMax = new Vector2(0, 1); strip.pivot = new Vector2(0, .5f);
             var x = 0f;
             var faces = new List<Image>(); var texts = new List<Text>();
             for (var i = 0; i < labels.Length; i++)
             {
                 var k = i;
-                var chip = Kit.Round(row, "Chip " + labels[i], i == 0 ? Kit.Accent : Kit.Surface, 22);
+                var chip = Kit.Round(strip, "Chip " + labels[i], i == 0 ? Kit.Accent : Kit.Surface, 22);
                 chip.raycastTarget = true;
                 var t = Ui.Txt(chip.rectTransform, "Label", labels[i], Kit.F800, Kit.FsBody, i == 0 ? Kit.AccentInk : Kit.Muted, TextAnchor.MiddleCenter);
                 var w = t.preferredWidth + 2 * Kit.Space4;
@@ -248,6 +274,13 @@ namespace LegacyThroughTime.Prototype
                 }, .94f);
                 x += w + Kit.Space2;
             }
+            strip.sizeDelta = new Vector2(x - Kit.Space2, 0);
+            var scroll = row.gameObject.AddComponent<NestedScroll>();
+            scroll.horizontal = true; scroll.vertical = false;
+            scroll.movementType = ScrollRect.MovementType.Elastic;
+            scroll.decelerationRate = .12f;
+            scroll.scrollSensitivity = 0;
+            scroll.viewport = row; scroll.content = strip;
         }
 
         void Filter(string query) => Grid(query);
@@ -301,33 +334,71 @@ namespace LegacyThroughTime.Prototype
             MenuUi.SetHeight(content, gridTop + height + Kit.Space4);
         }
 
-        /// A horizontal swipe turns the deck; a vertical one belongs to the scroll of the column.
+        /// The drag of the deck: horizontal moves are its own (`Moved` with the units since the start, `Ended` with the speed in
+        /// units a second); a vertical one belongs to the scroll of the column.
         sealed class Swipe : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
         {
-            public Action<float> Done;
+            public Action Began;
+            public Action<float> Moved, Ended;
             ScrollRect scroll;
             bool vertical;
-            float dx;
+            float dx, speed;
 
             public void OnBeginDrag(PointerEventData e)
             {
-                dx = 0;
-                scroll = GetComponentInParent<ScrollRect>();
+                dx = 0; speed = 0;
+                scroll = transform.parent ? transform.parent.GetComponentInParent<ScrollRect>() : null;
                 vertical = Mathf.Abs(e.delta.y) > Mathf.Abs(e.delta.x);
-                if (vertical && scroll) scroll.OnBeginDrag(e);
+                if (vertical) { if (scroll) scroll.OnBeginDrag(e); return; }
+                Began?.Invoke();
             }
 
             public void OnDrag(PointerEventData e)
             {
                 if (vertical) { if (scroll) scroll.OnDrag(e); return; }
-                dx += e.delta.x;
+                var k = 1f / Mathf.Max(.1f, Viewport.Scale);
+                dx += e.delta.x * k;
+                speed = Mathf.Lerp(speed, e.delta.x * k / Mathf.Max(Time.unscaledDeltaTime, .001f), .5f);
+                Moved?.Invoke(dx);
             }
 
             public void OnEndDrag(PointerEventData e)
             {
                 if (vertical) { if (scroll) scroll.OnEndDrag(e); return; }
-                if (Mathf.Abs(dx) > 40) Done?.Invoke(dx);
+                Ended?.Invoke(speed);
             }
+        }
+    }
+
+    /// A scroll block inside another scroll block: a drag along its own axis scrolls it, across it the parent.
+    sealed class NestedScroll : ScrollRect
+    {
+        ScrollRect parentScroll;
+        bool toParent;
+
+        ScrollRect Parent => parentScroll ? parentScroll : parentScroll = transform.parent ? transform.parent.GetComponentInParent<ScrollRect>() : null;
+
+        public override void OnInitializePotentialDrag(PointerEventData e)
+        {
+            Parent?.OnInitializePotentialDrag(e);
+            base.OnInitializePotentialDrag(e);
+        }
+
+        public override void OnBeginDrag(PointerEventData e)
+        {
+            toParent = horizontal ? Mathf.Abs(e.delta.y) > Mathf.Abs(e.delta.x) : Mathf.Abs(e.delta.x) > Mathf.Abs(e.delta.y);
+            if (toParent && Parent) Parent.OnBeginDrag(e); else base.OnBeginDrag(e);
+        }
+
+        public override void OnDrag(PointerEventData e)
+        {
+            if (toParent && Parent) Parent.OnDrag(e); else base.OnDrag(e);
+        }
+
+        public override void OnEndDrag(PointerEventData e)
+        {
+            if (toParent && Parent) Parent.OnEndDrag(e); else base.OnEndDrag(e);
+            toParent = false;
         }
     }
 }

@@ -51,6 +51,25 @@ namespace LegacyThroughTime.PrototypeTests
         }
 
         [UnityTest]
+        public IEnumerator TheDeckFollowsAHorizontalDragAndSettlesOnTheNextCard()
+        {
+            var menu = Open();
+            yield return null;
+            var deck = menu.Root.GetComponentsInChildren<Transform>().First(t => t.name == "Deck").gameObject;
+            var cards = StoryCatalog.All.Select(s => menu.Root.GetComponentsInChildren<Transform>().First(t => t.name == "Card " + s.Id)).ToList();
+            Assert.That(((RectTransform)cards[0]).anchoredPosition.x, Is.EqualTo(0).Within(.5f), "the first story is in the middle");
+
+            var ped = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current) { delta = new Vector2(-4 * Viewport.Scale, 0) };
+            UnityEngine.EventSystems.ExecuteEvents.Execute(deck, ped, UnityEngine.EventSystems.ExecuteEvents.beginDragHandler);
+            ped.delta = new Vector2(-200 * Viewport.Scale, 0);
+            UnityEngine.EventSystems.ExecuteEvents.Execute(deck, ped, UnityEngine.EventSystems.ExecuteEvents.dragHandler);
+            UnityEngine.EventSystems.ExecuteEvents.Execute(deck, ped, UnityEngine.EventSystems.ExecuteEvents.endDragHandler);
+            yield return null;
+            Assert.That(((RectTransform)cards[1]).anchoredPosition.x, Is.EqualTo(0).Within(.5f), "the next story came to the middle");
+            Assert.That(((RectTransform)cards[0]).anchoredPosition.x, Is.LessThan(-100), "the first one went to the left");
+        }
+
+        [UnityTest]
         public IEnumerator AnotherSectionClosesAnOpenPopup()
         {
             var menu = Open();
