@@ -128,6 +128,15 @@ namespace LegacyThroughTime.Prototype
             host.Show(BeatMapper.LinePage(plate), new Bank(), () => { });
         }
 
+        /// A story that cannot be read is no reason to stay on its picture: back to the menu with a note in the shell's toast.
+        void LoadFailed(string message, int id)
+        {
+            Debug.LogError(message);
+            if (id != session) return;
+            news = "Не удалось открыть историю"; newsIcon = null;
+            ShowMenu();
+        }
+
         // ------------------------------------------------------------ menu and settings
         void OpenSettings()
         {
@@ -336,7 +345,7 @@ namespace LegacyThroughTime.Prototype
         IEnumerator Load(StoryEntry entry, ChapterEntry part, bool fresh, int id)
         {
             if (!texts.TryGetValue(part.Path, out var json))
-                yield return StoryFile.Read(part.Path, t => json = texts[part.Path] = t, Fail);
+                yield return StoryFile.Read(part.Path, t => json = texts[part.Path] = t, m => LoadFailed(m, id));
             if (id != session || json == null) yield break;
 
             machine = StoryMachine.FromJson(json);
