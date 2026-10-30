@@ -11,8 +11,6 @@ namespace LegacyThroughTime.Prototype
     /// the button pulses, a tap loads, then "Получено", a toast and sparks.
     sealed class RewardsDialog
     {
-        const float CardHeight = 164;
-
         readonly ShellDialog dialog;
         readonly IAnimator anim;
         readonly List<Row> rows = new();
@@ -44,50 +42,73 @@ namespace LegacyThroughTime.Prototype
             foreach (var kind in Rewards.All)
             {
                 if (kind.Id == "energy" && ShellPurse.TakenAt("energy") == 0) ShellPurse.Start(kind);     // the first timer starts now
-                Card(list, kind, y);
-                y += CardHeight + Kit.Space3;
+                y += Card(list, kind, y) + Kit.Space3;
+            }
+            if (anim.Enabled)
+            {
+                var items = new List<RectTransform> { band.rectTransform };
+                foreach (var row in rows) items.Add((RectTransform)row.Art.rectTransform.parent);
+                Parts.Stagger(anim, items);
+                foreach (var row in rows) if (row.Kind.Id == "chapter") anim.Play(Parts.Float(row.Art.rectTransform));      // the star floats
             }
             MenuUi.SetHeight(list, y);
             Tick();
             if (anim.Enabled) anim.Play(Loop());
         }
 
-        void Card(RectTransform list, Rewards.Kind kind, float y)
+        /// `.card-reward`: padding 12; the title and the text on the left (134 wide), the picture over the action's column
+        /// (108 wide) on the right, then the foot with the timer and the action. Returns its height.
+        float Card(RectTransform list, Rewards.Kind kind, float y)
         {
+            const float pad = Kit.Space3, info = 134, art = 108, foot = 40;
             var row = new Row { Kind = kind };
-            var card = Kit.Round(list, "Reward " + kind.Id, Kit.Surface2, Kit.RadiusM);
-            Ui.TopRow(card.rectTransform, 0, 0, y, CardHeight);
+            var card = Kit.Round(list, "Reward " + kind.Id, Kit.Surface, Kit.RadiusM);
             var title = Ui.Txt(card.rectTransform, "Title", kind.Title, Kit.F800, Kit.FsHead, Kit.Text, TextAnchor.UpperLeft);
-            title.verticalOverflow = VerticalWrapMode.Truncate;
-            Ui.TopRow(title.rectTransform, 14, 14 + 108 + Kit.Space2, 12, 48);
             var text = Ui.Txt(card.rectTransform, "Text", kind.Text, Kit.F600, Kit.FsSmall, Kit.Muted, TextAnchor.UpperLeft);
-            text.verticalOverflow = VerticalWrapMode.Truncate;
-            Ui.TopRow(text.rectTransform, 14, 14 + 108 + Kit.Space2, 60, 56);
+            var titleHeight = Mathf.Ceil(Ui.TextHeight(title, info));
+            var textHeight = Mathf.Ceil(Ui.TextHeight(text, info));
+            var infoHeight = titleHeight + Kit.Space2 + textHeight;
+            var rowHeight = Mathf.Max(infoHeight, 88);
+            Ui.TopRow(title.rectTransform, pad, 304 - pad - info, pad, titleHeight);
+            Ui.TopRow(text.rectTransform, pad, 304 - pad - info, pad + titleHeight + Kit.Space2, textHeight);
 
-            // the picture stands over the action: the same width, so their centres meet
-            row.Art = Kit.Icon(card.rectTransform, "Art", Kit.Pic(kind.Pic), 88, A.TopRight, new Vector2(-12 - 54, -12 - 44));
+            // the picture is centred in its column, so its centre meets the centre of the action under it
+            row.Art = Kit.Icon(card.rectTransform, "Art", Kit.Pic(kind.Pic), 88, A.TopLeft, new Vector2(304 - pad - art / 2 - 44, -(pad + (rowHeight - 88) / 2)));
             row.Art.raycastTarget = false;
 
-            var timer = Kit.Round(card.rectTransform, "Timer", Kit.Surface, Kit.RadiusS);
-            Ui.Box(timer.rectTransform, A.BottomLeft, A.BottomLeft, new Vector2(12, 12), new Vector2(kind.Seconds > 0 || kind.Id == "daily" ? 96 : 78, 40));
-            var clock = Kit.Icon(timer.rectTransform, "Clock", Kit.Glyph(kind.Id == "chapter" ? "doc" : "timer"), 16, A.MidLeft, new Vector2(18, 0));
+            var footTop = pad + rowHeight + Kit.Space2;
+            var timer = Kit.Round(card.rectTransform, "Timer", Kit.Surface2, Kit.RadiusS);
+            row.Timer = Ui.Txt(timer.rectTransform, "Time", "00:00:00", Kit.F800, Kit.FsSmall, Kit.Text, TextAnchor.MiddleLeft);
+            var chapter = kind.Id == "chapter";
+            var timeWidth = chapter ? Ui.Txt(timer.rectTransform, "Probe", "0 из 1", Kit.F800, Kit.FsSmall, Kit.Text).preferredWidth : row.Timer.preferredWidth;
+            if (chapter) UnityEngine.Object.Destroy(timer.rectTransform.GetChild(timer.rectTransform.childCount - 1).gameObject);
+            Ui.Box(timer.rectTransform, A.TopLeft, A.TopLeft, new Vector2(pad, -footTop), new Vector2(Kit.Space2 + 16 + Kit.Space2 + Mathf.Ceil(timeWidth) + Kit.Space2, foot));
+            var clock = chapter ? Kit.Icon(timer.rectTransform, "Clock", Kit.Pic("book"), 16, A.MidLeft, new Vector2(Kit.Space2, 0))
+                                : Kit.Icon(timer.rectTransform, "Clock", Kit.Glyph("timer"), 16, A.MidLeft, new Vector2(Kit.Space2, 0));
             clock.raycastTarget = false;
-            row.Timer = Ui.Txt(timer.rectTransform, "Time", "", Kit.F800, Kit.FsSmall, Kit.Text, TextAnchor.MiddleCenter);
-            Ui.Stretch(row.Timer.rectTransform, 28, 0, 6, 0);
+            Ui.Box(row.Timer.rectTransform, A.MidLeft, A.MidLeft, new Vector2(Kit.Space2 + 16 + Kit.Space2, 0), new Vector2(Mathf.Ceil(timeWidth) + 2, 18));
 
             if (kind.NeedsTap)
             {
                 var two = kind.Id == "ad";
-                row.Action = Parts.Button(card.rectTransform, kind.Id == "ad" ? "Смотреть рекламу" : kind.Id == "chapter" ? "Не готово" : "Получить",
-                                          ButtonStyle.Primary, () => Claim(row), 40, Kit.RadiusM);
-                Ui.Box(row.Action.Root, A.BottomRight, A.BottomRight, new Vector2(-12, 12), new Vector2(108, 40));
+                row.Action = Parts.Button(card.rectTransform, two ? "Смотреть рекламу" : chapter ? "Не готово" : "Получить",
+                                          ButtonStyle.Primary, () => Claim(row), foot, Kit.RadiusM);
+                Ui.Box(row.Action.Root, A.TopLeft, A.TopLeft, new Vector2(304 - pad - art, -footTop), new Vector2(art, foot));
                 row.Action.Label.fontSize = two ? Kit.FsMicro : Kit.FsBody;
                 row.Action.Label.resizeTextForBestFit = false;
-                row.Lock = Parts.IconButton(card.rectTransform, "lock", null, 28, circle: false);
-                Ui.Box(row.Lock.Root, A.BottomRight, A.BottomRight, new Vector2(-12 - 108 - Kit.Space2, 12 + 6), new Vector2(28, 28));
-                row.Lock.SetEnabled(false);
+                if (two) { row.Action.Label.horizontalOverflow = HorizontalWrapMode.Wrap; row.Action.Label.lineSpacing = .9f; }
+                if (!chapter)
+                {
+                    row.Lock = Parts.IconButton(card.rectTransform, "lock", null, 28, circle: false);
+                    Ui.Box(row.Lock.Root, A.TopLeft, A.TopLeft, new Vector2(304 - pad - art - Kit.Space2 - 28, -(footTop + 6)), new Vector2(28, 28));
+                    row.Lock.Glyph.rectTransform.sizeDelta = new Vector2(16, 16);
+                    row.Lock.SetEnabled(false);
+                }
             }
+            var height = footTop + foot + pad;
+            Ui.Box(card.rectTransform, A.TopLeft, A.TopLeft, new Vector2(0, -y), new Vector2(304, height));
             rows.Add(row);
+            return height;
         }
 
         // ------------------------------------------------------------------ time

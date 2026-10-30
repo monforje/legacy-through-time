@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
 using UnityEngine.UI;
@@ -68,6 +70,36 @@ namespace LegacyThroughTime.Prototype
                 PressButton.On(hit.gameObject, plus, .92f);
             }
             return pill;
+        }
+
+        // ------------------------------------------------------------------ motion
+        /// `[data-stagger]`: the items rise 10 px and fade in, one after another, Kit.Dur.Stagger apart.
+        public static void Stagger(IAnimator anim, IReadOnlyList<RectTransform> items)
+        {
+            if (anim == null || !anim.Enabled) return;
+            for (var i = 0; i < items.Count; i++)
+            {
+                var rt = items[i];
+                var group = Ui.Group(rt); group.alpha = 0;
+                var y0 = rt.anchoredPosition.y;
+                anim.Play(Tween.To(Kit.Dur.Slow, e =>
+                {
+                    if (!rt) return;
+                    group.alpha = e;
+                    rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, y0 - 10 * (1 - e));
+                }, Easing.OutExpo, i * Kit.Dur.Stagger));
+            }
+        }
+
+        /// `.float`: a picture that rises 4 px and sinks back, Kit.Dur-float (3.2 s) a round, ease in and out.
+        public static IEnumerator Float(RectTransform rt)
+        {
+            var y0 = rt.anchoredPosition.y;
+            for (var t = 0f; rt; t += Time.unscaledDeltaTime)
+            {
+                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, y0 + 4 * (.5f - .5f * Mathf.Cos(t / 3.2f * Mathf.PI * 2)));
+                yield return null;
+            }
         }
 
         // ------------------------------------------------------------------ switch
