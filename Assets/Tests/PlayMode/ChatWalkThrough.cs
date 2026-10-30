@@ -70,7 +70,7 @@ namespace LegacyThroughTime.PrototypeTests
             Assert.That(s.Field.interactable, Is.True);
             UnityEngine.Canvas.ForceUpdateCanvases();
             var note = s.Screen.Root.GetComponentsInChildren<Text>().First(t => t.name == "Text" && t.text.StartsWith("Диалог вымышленный"));
-            Assert.That(note.rectTransform.rect.width, Is.LessThanOrEqualTo(Metrics.RefWidth), "the note wraps inside the screen");
+            Assert.That(note.rectTransform.rect.width, Is.LessThanOrEqualTo(Kit.Width), "the note wraps inside the shell column");
         }
 
         [UnityTest]
@@ -164,7 +164,7 @@ namespace LegacyThroughTime.PrototypeTests
             StoryEntry opened = null; var toStories = 0;
             var panel = new ChatsPanel(canvas, rows, e => opened = e, () => toStories++, System.DateTime.Now, NoAnimator.Instance);
             yield return null;
-            Assert.That(panel.Rows, Is.EqualTo(1), "announced stories have no chat");
+            Assert.That(panel.Rows, Is.EqualTo(StoryCatalog.All.Count(s => !s.Soon && !string.IsNullOrEmpty(s.Hero))), "announced stories have no chat");
             Click(panel.Root.GetComponentsInChildren<PressButton>().First(b => b.name.StartsWith("Chat ")).gameObject);
             Assert.That(opened, Is.SameAs(story));
 
