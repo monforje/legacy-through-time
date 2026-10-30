@@ -77,6 +77,13 @@ tasks:
       - docker run -d --rm --name ltt-mockups --user "$(id -u):$(id -g)" -p 8080:8080 -v "{{.ROOT_DIR}}/docs/brainstorm/templates:/www:ro" -w /www python:3.13-alpine python _serve.py >/dev/null
       - echo "http://localhost:8080/"
 
+  prototype:compile:
+    desc: Compile the game, the editor tools and the PlayMode tests without opening Unity (dotnet against the editor's DLLs)
+    cmds:
+      - python3 tools/compile_check.py
+      - python3 tools/compile_check.py editor
+      - python3 tools/compile_check.py tests
+
   png:optimize:
     desc: Lossless PNG recompression (oxipng, metadata stripped) for everything under Assets/ (or DIR=...)
     cmds:
