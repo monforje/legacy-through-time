@@ -119,6 +119,8 @@ namespace LegacyThroughTime.Editor
             Add("menu-library", c => Menu(c, terms).Select(MenuScreen.Tab.Library));
             Add("menu-term", c => Menu(c, terms).ShowTerm(terms[1]));
             Add("menu-shop", c => Menu(c, terms).Select(MenuScreen.Tab.Shop));
+            Add("menu-wheel", c => Menu(c, terms).Select(MenuScreen.Tab.Wheel));
+            Add("menu-rewards", c => Menu(c, terms).Select(MenuScreen.Tab.Rewards));
             Add("menu-settings", c =>
             {
                 Menu(c, terms);

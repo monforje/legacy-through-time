@@ -20,7 +20,7 @@ namespace LegacyThroughTime.Prototype
             var primary = style == ButtonStyle.Primary;
             var face = Kit.Round(parent, "Button", primary ? Kit.Accent : Kit.Surface2, radius);
             face.raycastTarget = true;
-            var text = Ui.Txt(face.rectTransform, "Label", label, Art.Action, Kit.FsBody, primary ? Kit.AccentInk : Kit.Text, TextAnchor.MiddleCenter);
+            var text = Ui.Txt(face.rectTransform, "Label", label, Kit.F800, Kit.FsBody, primary ? Kit.AccentInk : Kit.Text, TextAnchor.MiddleCenter);
             Ui.Stretch(text.rectTransform, 8, 0, 8, 0);
             var b = new ShellButton { Root = face.rectTransform, Face = face, Label = text, Ink = primary ? Kit.AccentInk : Kit.Text };
             b.Group = Ui.Group(face);
@@ -49,11 +49,11 @@ namespace LegacyThroughTime.Prototype
             var bg = Kit.Round(parent, "Pill " + pic, Kit.Surface, 22);
             bg.raycastTarget = true;
             var pill = new ShellPill { Root = bg.rectTransform, Shown = value };
-            var icon = Kit.Icon(bg.rectTransform, "Icon", Kit.Pic(pic), 32, A.MidLeft, new Vector2(18, 0));
+            var icon = Kit.Icon(bg.rectTransform, "Icon", Kit.Pic(pic), 32, A.MidLeft, new Vector2(Kit.Space3, 0));
             icon.raycastTarget = false;
             pill.Icon = icon;
-            pill.Value = Ui.Txt(bg.rectTransform, "Value", Number(value), Art.Sub, Kit.FsBody, Kit.Text, TextAnchor.MiddleCenter);
-            Ui.Stretch(pill.Value.rectTransform, 40, 0, 48, 0);
+            pill.Value = Ui.Txt(bg.rectTransform, "Value", Number(value), Kit.F800, Kit.FsBody, Kit.Text, TextAnchor.MiddleCenter);
+            Ui.Stretch(pill.Value.rectTransform, 52, 0, 52, 0);     // icon + gap on the left, gap + plus on the right
             if (plus != null)
             {
                 // the disc is the end cap of the pill minus 4 px: concentric, 36 px inside the 44 px tap target
@@ -107,7 +107,7 @@ namespace LegacyThroughTime.Prototype
                 cell.rectTransform.anchorMin = new Vector2((float)i / labels.Length, 0);
                 cell.rectTransform.anchorMax = new Vector2((float)(i + 1) / labels.Length, 1);
                 cell.rectTransform.offsetMin = cell.rectTransform.offsetMax = Vector2.zero;
-                seg.Labels[i] = Ui.Txt(cell.rectTransform, "Label", labels[i], Art.Action, Kit.FsBody, Kit.Muted, TextAnchor.MiddleCenter);
+                seg.Labels[i] = Ui.Txt(cell.rectTransform, "Label", labels[i], Kit.F800, Kit.FsBody, Kit.Muted, TextAnchor.MiddleCenter);
                 Ui.Stretch(seg.Labels[i].rectTransform);
                 PressButton.On(cell.gameObject, () => { seg.Select(k, true); changed?.Invoke(k); }, .97f);
             }
@@ -124,10 +124,10 @@ namespace LegacyThroughTime.Prototype
             box.rectTransform.sizeDelta = new Vector2(box.rectTransform.sizeDelta.x, 36);
             var glyph = Kit.Icon(box.rectTransform, "Glyph", Kit.Glyph("search"), 18, A.MidLeft, new Vector2(20, 0));
             glyph.raycastTarget = false; glyph.color = new Color(1, 1, 1, .6f);
-            var text = Ui.Txt(box.rectTransform, "Text", "", Art.Body, Kit.FsBody, Kit.Text, TextAnchor.MiddleLeft);
+            var text = Ui.Txt(box.rectTransform, "Text", "", Kit.F600, Kit.FsBody, Kit.Text, TextAnchor.MiddleLeft);
             text.supportRichText = false;
             Ui.Stretch(text.rectTransform, 40, 2, 40, 2);
-            var ph = Ui.Txt(box.rectTransform, "Placeholder", hint, Art.Body, Kit.FsBody, Kit.Muted, TextAnchor.MiddleLeft);
+            var ph = Ui.Txt(box.rectTransform, "Placeholder", hint, Kit.F600, Kit.FsBody, Kit.Muted, TextAnchor.MiddleLeft);
             Ui.Stretch(ph.rectTransform, 40, 2, 40, 2);
             var field = box.gameObject.AddComponent<InputField>();
             field.targetGraphic = box; field.textComponent = text; field.placeholder = ph;

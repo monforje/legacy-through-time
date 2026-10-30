@@ -65,7 +65,7 @@ namespace LegacyThroughTime.Prototype
 
         /// A vertical scroll list from `top` to `bottom` (distances from the edges of the parent); returns the content
         /// that grows down from its top (set its height with SetHeight).
-        public static RectTransform List(RectTransform parent, float top, float bottom)
+        public static RectTransform List(RectTransform parent, float top, float bottom, float inset = -1)
         {
             var viewport = Ui.Img(parent, "List", ProceduralArt.White);
             viewport.color = Color.clear; viewport.raycastTarget = true;
@@ -73,7 +73,8 @@ namespace LegacyThroughTime.Prototype
             viewport.gameObject.AddComponent<RectMask2D>();
             var content = Ui.Rect(viewport.rectTransform, "Content");
             content.anchorMin = A.TopLeft; content.anchorMax = A.TopRight; content.pivot = A.TopCenter;
-            content.offsetMin = new Vector2(Metrics.Side, 0); content.offsetMax = new Vector2(-Metrics.Side, 0);
+            if (inset < 0) inset = Metrics.Side;
+            content.offsetMin = new Vector2(inset, 0); content.offsetMax = new Vector2(-inset, 0);
             var scroll = viewport.gameObject.AddComponent<ScrollRect>();
             scroll.viewport = viewport.rectTransform; scroll.content = content;
             scroll.horizontal = false; scroll.movementType = ScrollRect.MovementType.Elastic;

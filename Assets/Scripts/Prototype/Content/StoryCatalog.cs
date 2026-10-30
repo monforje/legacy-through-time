@@ -23,6 +23,8 @@ namespace LegacyThroughTime.Prototype
         public string Blurb;
         public string Cover;       // background id shown on the card (Resources/Art/Backgrounds/<id>.png)
         public bool Soon;          // a story announced, not playable: a dark card with a lock
+        public string Genre;       // the line under the title on the cards ("История · 1533")
+        public bool Recommended;   // the card with the "Рекомендуем" flag, where the deck starts
         public string Hero;        // the main hero: who the reader talks to in the story's chat
         public string Opening;     // the hero's first line in an empty chat (the author's; the chat server takes over after it)
         public IReadOnlyList<ChapterEntry> Chapters = new ChapterEntry[0];
@@ -39,7 +41,7 @@ namespace LegacyThroughTime.Prototype
         {
             new StoryEntry
             {
-                Id = "golden-cage", Title = "Золотая клетка", Episode = "Эпизод 1",
+                Id = "golden-cage", Title = "Золотая клетка", Episode = "Эпизод 1", Genre = "История · 1533", Recommended = true,
                 Blurb = "Ногайская Орда, 1533 год. Юную Сююмбике везут в Казань — к хану, которого она никогда не видела.",
                 Cover = "title", Hero = "Сююмбике", Opening = "Привет. Я рада, что ты пришёл. О чём поговорим?",
                 Chapters = new[]
@@ -54,12 +56,12 @@ namespace LegacyThroughTime.Prototype
             },
             new StoryEntry
             {
-                Id = "zilant", Title = "Зилант", Episode = "Скоро",
+                Id = "zilant", Title = "Зилант", Episode = "Скоро", Genre = "Легенда · Казань",
                 Blurb = "Легенда о крылатом змее, хранителе холма, на котором встала Казань.", Cover = "kazan_panorama", Soon = true,
             },
             new StoryEntry
             {
-                Id = "shurale", Title = "Шурале", Episode = "Скоро",
+                Id = "shurale", Title = "Шурале", Episode = "Скоро", Genre = "Фэнтези · Легенда",
                 Blurb = "Лесной дух щекочет путников до смерти. Но однажды он встретил дровосека.", Cover = "road_evening", Soon = true,
             },
         };

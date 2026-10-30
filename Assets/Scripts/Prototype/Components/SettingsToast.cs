@@ -64,7 +64,7 @@ namespace LegacyThroughTime.Prototype
             var row = Kit.Round(panel, "Sound", Kit.Surface, Kit.RadiusM);
             Ui.TopRow(row.rectTransform, 0, 0, top, RowHeight);
             Kit.Icon(row.rectTransform, "Icon", Kit.Glyph("sound"), 24, A.MidLeft, new Vector2(24, 0)).raycastTarget = false;
-            var label = Ui.Txt(row.rectTransform, "Text", "Звук", Art.Action, Kit.FsBody, Kit.Text, TextAnchor.MiddleLeft);
+            var label = Ui.Txt(row.rectTransform, "Text", "Звук", Kit.F800, Kit.FsBody, Kit.Text, TextAnchor.MiddleLeft);
             Ui.Box(label.rectTransform, A.MidLeft, A.MidLeft, new Vector2(48, 0), new Vector2(160, 30));
             var sw = Parts.Switch(row.rectTransform, Settings.Sound, on => { Settings.Sound = on; ShellToast.Show(layer, "Сохранено", anim, 1.5f, 96); }, anim);
             Ui.Box(sw.Root, A.MidRight, A.MidRight, new Vector2(-8, 0), new Vector2(56, Kit.Touch));
@@ -76,9 +76,9 @@ namespace LegacyThroughTime.Prototype
             var row = Kit.Round(panel, "Cloud", Kit.Surface, Kit.RadiusM);
             Ui.TopRow(row.rectTransform, 0, 0, top, RowHeight);
             Kit.Icon(row.rectTransform, "Icon", Kit.Glyph("check"), 22, A.MidLeft, new Vector2(24, 0)).raycastTarget = false;
-            var name = Ui.Txt(row.rectTransform, "Text", "Google Play Игры", Art.Action, Kit.FsBody, Kit.Text, TextAnchor.MiddleLeft);
+            var name = Ui.Txt(row.rectTransform, "Text", "Google Play Игры", Kit.F800, Kit.FsBody, Kit.Text, TextAnchor.MiddleLeft);
             Ui.Box(name.rectTransform, A.MidLeft, A.MidLeft, new Vector2(48, 9), new Vector2(240, 22));
-            var sub = Ui.Txt(row.rectTransform, "Line", line ?? "", Art.Body, Kit.FsSmall, Kit.Muted, TextAnchor.MiddleLeft);
+            var sub = Ui.Txt(row.rectTransform, "Line", line ?? "", Kit.F600, Kit.FsSmall, Kit.Muted, TextAnchor.MiddleLeft);
             Ui.Box(sub.rectTransform, A.MidLeft, A.MidLeft, new Vector2(48, -11), new Vector2(240, 18));
         }
 

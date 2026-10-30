@@ -26,7 +26,7 @@ namespace LegacyThroughTime.Prototype
             var top = Metrics.InsetTop + Kit.Space3 + Viewport.ExtraTop;
             var back = Parts.IconButton(Root, "chevron-l", close, Kit.Touch);
             Ui.Box(back.Root, A.TopLeft, A.TopLeft, new Vector2(Kit.Side, -top), new Vector2(Kit.Touch, Kit.Touch));
-            var title = MenuUi.Fit(Ui.Txt(Root, "Title", story.Title, Art.Sub, Kit.FsHead, Kit.Text, TextAnchor.MiddleCenter), 12);
+            var title = MenuUi.Fit(Ui.Txt(Root, "Title", story.Title, Kit.F800, Kit.FsHead, Kit.Text, TextAnchor.MiddleCenter), 12);
             Ui.TopRow(title.rectTransform, Kit.Side + 56, Kit.Side + 56, top, Kit.Touch);
             if (!string.IsNullOrEmpty(story.Hero))
             {
@@ -34,7 +34,7 @@ namespace LegacyThroughTime.Prototype
                 Ui.Box(chat.Root, A.TopRight, A.TopRight, new Vector2(-Kit.Side, -top), new Vector2(Kit.Touch, Kit.Touch));
             }
 
-            var list = MenuUi.List(Root, top + Kit.Touch + Kit.Space3, 0);
+            var list = MenuUi.List(Root, top + Kit.Touch + Kit.Space3, 0, 0);
             var width = Metrics.RefWidth - 2 * Kit.Side;
             var y = 0f;
             Cover(list, story, y, width); y += CoverHeight + Kit.Space3;
@@ -76,7 +76,7 @@ namespace LegacyThroughTime.Prototype
 
         static void Progress(RectTransform list, float top, float width, int done, int all)
         {
-            var text = Ui.Txt(list, "Progress", $"Пройдено {done} из {all} глав", Art.Body, Kit.FsSmall, Kit.Muted);
+            var text = Ui.Txt(list, "Progress", $"Пройдено {done} из {all} глав", Kit.F600, Kit.FsSmall, Kit.Muted);
             Ui.Box(text.rectTransform, A.TopLeft, A.TopLeft, new Vector2(Kit.Side, -top), new Vector2(width, 18));
             var track = Kit.Round(list, "Track", Kit.Surface2, 4);
             Ui.Box(track.rectTransform, A.TopLeft, A.TopLeft, new Vector2(Kit.Side, -(top + 24)), new Vector2(width, 8));
@@ -106,9 +106,9 @@ namespace LegacyThroughTime.Prototype
             icon.raycastTarget = false;
             if (locked) icon.color = new Color(1, 1, 1, .6f);
 
-            var head = MenuUi.Fit(Ui.Txt(rt, "Head", $"Глава {chapter.Number}. {chapter.Title}", Art.Sub, Kit.FsBody, locked ? Kit.Muted : Kit.Text), 11);
+            var head = MenuUi.Fit(Ui.Txt(rt, "Head", $"Глава {chapter.Number}. {chapter.Title}", Kit.F800, Kit.FsBody, locked ? Kit.Muted : Kit.Text), 11);
             Ui.TopRow(head.rectTransform, 52, current ? 132 : 12, 10, 22);
-            var line = MenuUi.Fit(Ui.Txt(rt, "State", Line(state), Art.Body, Kit.FsSmall, Kit.Muted), 10);
+            var line = MenuUi.Fit(Ui.Txt(rt, "State", Line(state), Kit.F600, Kit.FsSmall, Kit.Muted), 10);
             Ui.TopRow(line.rectTransform, 52, current ? 132 : 12, 34, 20);
 
             if (locked)

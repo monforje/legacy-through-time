@@ -48,6 +48,11 @@ namespace LegacyThroughTime.Prototype
         // ------------------------------------------------------------------ icons
         static readonly Dictionary<string, Sprite> icons = new();
 
+        /// The weights of Nunito the mockups use: 800 (titles, buttons, values), 700 (tags, tab labels), 600 (text).
+        public static Font F800 => Art.Font("Nunito-ExtraBold");
+        public static Font F700 => Art.Font("Nunito-Bold");
+        public static Font F600 => Art.Font("Nunito-SemiBold");
+
         /// Number of icons that were not found (tests assert zero).
         public static int Missing { get; private set; }
 
@@ -87,7 +92,7 @@ namespace LegacyThroughTime.Prototype
             var disc = Ui.Img(parent, "Avatar", ProceduralArt.Disc);
             disc.color = ArtColor(storyId);
             var letter = Ui.Txt(disc.rectTransform, "Letter", string.IsNullOrEmpty(hero) ? "?" : hero.Substring(0, 1).ToUpperInvariant(),
-                                Art.Sub, Mathf.RoundToInt(size * .4f), Text, TextAnchor.MiddleCenter);
+                                Kit.F800, Mathf.RoundToInt(size * .4f), Text, TextAnchor.MiddleCenter);
             Ui.Stretch(letter.rectTransform);
             disc.rectTransform.sizeDelta = new Vector2(size, size);
             return disc;

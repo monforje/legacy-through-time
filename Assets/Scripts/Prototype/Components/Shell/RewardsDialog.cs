@@ -34,10 +34,10 @@ namespace LegacyThroughTime.Prototype
         {
             this.anim = anim;
             dialog = new ShellDialog(parent, "Награды", anim, closed);
-            var list = MenuUi.List(dialog.Content, 0, 0);
+            var list = MenuUi.List(dialog.Content, 0, 0, 0);
             var band = Kit.Round(list, "Band", Kit.Surface2, Kit.RadiusM);
             Ui.TopRow(band.rectTransform, 0, 0, 0, 56);
-            var bt = Ui.Txt(band.rectTransform, "Text", "Ежедневные награды", Art.Sub, Kit.FsHead, Kit.Text, TextAnchor.MiddleCenter);
+            var bt = Ui.Txt(band.rectTransform, "Text", "Ежедневные награды", Kit.F800, Kit.FsHead, Kit.Text, TextAnchor.MiddleCenter);
             Ui.Stretch(bt.rectTransform);
 
             var y = 56f + Kit.Space3;
@@ -57,10 +57,10 @@ namespace LegacyThroughTime.Prototype
             var row = new Row { Kind = kind };
             var card = Kit.Round(list, "Reward " + kind.Id, Kit.Surface2, Kit.RadiusM);
             Ui.TopRow(card.rectTransform, 0, 0, y, CardHeight);
-            var title = Ui.Txt(card.rectTransform, "Title", kind.Title, Art.Sub, Kit.FsHead, Kit.Text, TextAnchor.UpperLeft);
+            var title = Ui.Txt(card.rectTransform, "Title", kind.Title, Kit.F800, Kit.FsHead, Kit.Text, TextAnchor.UpperLeft);
             title.verticalOverflow = VerticalWrapMode.Truncate;
             Ui.TopRow(title.rectTransform, 14, 14 + 108 + Kit.Space2, 12, 48);
-            var text = Ui.Txt(card.rectTransform, "Text", kind.Text, Art.Body, Kit.FsSmall, Kit.Muted, TextAnchor.UpperLeft);
+            var text = Ui.Txt(card.rectTransform, "Text", kind.Text, Kit.F600, Kit.FsSmall, Kit.Muted, TextAnchor.UpperLeft);
             text.verticalOverflow = VerticalWrapMode.Truncate;
             Ui.TopRow(text.rectTransform, 14, 14 + 108 + Kit.Space2, 60, 56);
 
@@ -72,7 +72,7 @@ namespace LegacyThroughTime.Prototype
             Ui.Box(timer.rectTransform, A.BottomLeft, A.BottomLeft, new Vector2(12, 12), new Vector2(kind.Seconds > 0 || kind.Id == "daily" ? 96 : 78, 40));
             var clock = Kit.Icon(timer.rectTransform, "Clock", Kit.Glyph(kind.Id == "chapter" ? "doc" : "timer"), 16, A.MidLeft, new Vector2(18, 0));
             clock.raycastTarget = false;
-            row.Timer = Ui.Txt(timer.rectTransform, "Time", "", Art.Sub, Kit.FsSmall, Kit.Text, TextAnchor.MiddleCenter);
+            row.Timer = Ui.Txt(timer.rectTransform, "Time", "", Kit.F800, Kit.FsSmall, Kit.Text, TextAnchor.MiddleCenter);
             Ui.Stretch(row.Timer.rectTransform, 28, 0, 6, 0);
 
             if (kind.NeedsTap)

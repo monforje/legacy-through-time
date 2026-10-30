@@ -37,12 +37,12 @@ namespace LegacyThroughTime.Prototype
                 cells[i] = cell;
                 icons[i] = Kit.Icon(cell.rectTransform, "Icon", Kit.Pic(items[i].pic), 28, A.TopCenter, new Vector2(0, -2));
                 icons[i].raycastTarget = false;
-                labels[i] = Ui.Txt(cell.rectTransform, "Label", items[i].label, Art.Sub, Kit.FsMicro, Kit.Muted, TextAnchor.LowerCenter);
+                labels[i] = Ui.Txt(cell.rectTransform, "Label", items[i].label, Kit.F700, Kit.FsMicro, Kit.Muted, TextAnchor.LowerCenter);
                 Ui.BottomRow(labels[i].rectTransform, 0, 0, 2, 14);
                 badges[i] = Kit.Round(cell.rectTransform, "Badge", Kit.Danger, 9);
                 badges[i].raycastTarget = false;
                 Ui.Box(badges[i].rectTransform, A.TopCenter, A.TopCenter, new Vector2(16, 0), new Vector2(26, 18));
-                badgeText[i] = Ui.Txt(badges[i].rectTransform, "Text", "", Art.Sub, Kit.FsMicro, Kit.AccentInk, TextAnchor.MiddleCenter);
+                badgeText[i] = Ui.Txt(badges[i].rectTransform, "Text", "", Kit.F800, Kit.FsMicro, Kit.AccentInk, TextAnchor.MiddleCenter);
                 Ui.Stretch(badgeText[i].rectTransform);
                 badges[i].gameObject.SetActive(false);
                 PressButton.On(cell.gameObject, () => select(k), .94f);
@@ -101,13 +101,13 @@ namespace LegacyThroughTime.Prototype
             Ui.Stretch(Panel, Kit.Side, 36 + Viewport.ExtraBottom, Kit.Side, 44 + Viewport.ExtraTop);
             Ui.Group(Panel);
 
-            var head = Ui.Txt(Panel, "Title", title, Art.Sub, Kit.FsTitle, Kit.Text, TextAnchor.MiddleCenter);
+            var head = Ui.Txt(Panel, "Title", title, Kit.F800, Kit.FsTitle, Kit.Text, TextAnchor.MiddleCenter);
             Ui.TopRow(head.rectTransform, 56, 56, Kit.Space3, Kit.Touch);
-            var close = Parts.IconButton(Panel, "close", Close, 40, circle: true);
+            var close = Parts.IconButton(Panel, "close", Close, Kit.Touch, circle: true);
             close.Face.color = Color.clear;
-            Ui.Box(close.Root, A.TopRight, A.TopRight, new Vector2(-Kit.Space3, -Kit.Space3 - 2), new Vector2(40, 40));
+            Ui.Box(close.Root, A.TopRight, A.TopRight, new Vector2(-Kit.Space3, -Kit.Space3), new Vector2(Kit.Touch, Kit.Touch));
             Content = Ui.Rect(Panel, "Content");
-            Ui.Stretch(Content, Kit.Space3, Kit.Space3, Kit.Space3, 64);
+            Ui.Stretch(Content, Kit.Space3, Kit.Space3, Kit.Space3, 68);     // under the head: 12 + 44 + 12
 
             if (anim != null && anim.Enabled)
             {
@@ -149,7 +149,7 @@ namespace LegacyThroughTime.Prototype
             var box = Kit.Round(parent, "Toast", Kit.Surface2, Kit.RadiusM);
             box.raycastTarget = false;
             Ui.BottomRow(box.rectTransform, Kit.Side, Kit.Side, bottom + Viewport.ExtraBottom, 48);
-            var label = Ui.Txt(box.rectTransform, "Text", text, Art.Sub, Kit.FsSmall, Kit.Text, TextAnchor.MiddleCenter);
+            var label = Ui.Txt(box.rectTransform, "Text", text, Kit.F800, Kit.FsSmall, Kit.Text, TextAnchor.MiddleCenter);
             Ui.Stretch(label.rectTransform, Kit.Space4, 0, Kit.Space4, 0);
             var group = Ui.Group(box.rectTransform);
             if (anim == null || !anim.Enabled)

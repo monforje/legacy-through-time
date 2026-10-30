@@ -28,19 +28,19 @@ namespace LegacyThroughTime.Prototype
             foreach (var t in terms) if (Library.IsOpen(t.Name)) open++;
 
             var top = Metrics.InsetTop + Kit.Space3 + Viewport.ExtraTop;
-            var title = Ui.Txt(Root, "Title", "Слова", Art.Sub, Kit.FsTitle, Kit.Text, TextAnchor.MiddleCenter);
+            var title = Ui.Txt(Root, "Title", "Слова", Kit.F800, Kit.FsTitle, Kit.Text, TextAnchor.MiddleCenter);
             Ui.TopRow(title.rectTransform, Kit.Side, Kit.Side, top, 34);
-            var line = MenuUi.Fit(Ui.Txt(Root, "Sub", $"Открыто понятий: {open} из {terms.Count}", Art.Body, Kit.FsSmall, Kit.Muted, TextAnchor.MiddleCenter), 11);
+            var line = MenuUi.Fit(Ui.Txt(Root, "Sub", $"Открыто понятий: {open} из {terms.Count}", Kit.F600, Kit.FsSmall, Kit.Muted, TextAnchor.MiddleCenter), 11);
             Ui.TopRow(line.rectTransform, Kit.Side, Kit.Side, top + 34, 20);
 
-            var list = MenuUi.List(Root, top + 66, 0);
+            var list = MenuUi.List(Root, top + 66, 0, 0);
             var width = Metrics.RefWidth - 2 * Kit.Side;
             var y = 4f;
             foreach (var term in terms)
                 y += (Library.IsOpen(term.Name) ? Open(list, term, y, width) : Locked(list, term, y)) + Gap;
             if (terms.Count == 0)
             {
-                var empty = Ui.Txt(list, "Empty", "Слова, которые объясняют истории, будут собираться здесь.", Art.Body, Kit.FsBody, Kit.Muted, TextAnchor.MiddleCenter);
+                var empty = Ui.Txt(list, "Empty", "Слова, которые объясняют истории, будут собираться здесь.", Kit.F600, Kit.FsBody, Kit.Muted, TextAnchor.MiddleCenter);
                 Ui.TopRow(empty.rectTransform, Kit.Side, Kit.Side, 20, 60);
                 y = 90;
             }
@@ -53,9 +53,9 @@ namespace LegacyThroughTime.Prototype
             var card = Kit.Round(list, "Term " + term.Name, Kit.Surface, Kit.RadiusM);
             var rt = card.rectTransform;
             Kit.Icon(rt, "Mark", Kit.Pic("book"), 26, A.TopLeft, new Vector2(PadX + 13, -28)).raycastTarget = false;
-            var name = MenuUi.Fit(Ui.Txt(rt, "Name", term.Name, Art.Sub, Kit.FsHead, Kit.Text), 13);
+            var name = MenuUi.Fit(Ui.Txt(rt, "Name", term.Name, Kit.F800, Kit.FsHead, Kit.Text), 13);
             Ui.TopRow(name.rectTransform, PadX + 36, PadX, 14, 28);
-            var text = Ui.Txt(rt, "Text", TextRules.NoBreaks(term.Text), Art.Body, Kit.FsBody, Kit.Muted, TextAnchor.UpperLeft);
+            var text = Ui.Txt(rt, "Text", TextRules.NoBreaks(term.Text), Kit.F600, Kit.FsBody, Kit.Muted, TextAnchor.UpperLeft);
             var textHeight = Ui.TextHeight(text, width - 2 * PadX);
             Ui.TopRow(text.rectTransform, PadX, PadX, 48, textHeight);
             var height = 48 + textHeight + 18;
@@ -71,7 +71,7 @@ namespace LegacyThroughTime.Prototype
             var rt = card.rectTransform;
             Ui.Box(rt, A.TopLeft, A.TopLeft, new Vector2(Kit.Side, -top), new Vector2(Metrics.RefWidth - 2 * Kit.Side, LockedHeight));
             Kit.Icon(rt, "Lock", Kit.Glyph("lock"), 22, A.MidLeft, new Vector2(PadX + 11, 0)).color = new Color(1, 1, 1, .6f);
-            var hint = MenuUi.Fit(Ui.Txt(rt, "Name", "Откроется в одной из историй", Art.Sub, Kit.FsSmall, Kit.Muted), 10);
+            var hint = MenuUi.Fit(Ui.Txt(rt, "Name", "Откроется в одной из историй", Kit.F800, Kit.FsSmall, Kit.Muted), 10);
             Ui.Stretch(hint.rectTransform, PadX + 36, 4, PadX, 2);
             PressButton.On(card.gameObject, () => { if (anim.Enabled) anim.Play(Effects.Shake(rt)); }, .98f);
             return LockedHeight;
@@ -82,7 +82,7 @@ namespace LegacyThroughTime.Prototype
         {
             Close();
             detail = new ShellDialog(Root, term.Name, anim, () => detail = null);
-            var text = Ui.Txt(detail.Content, "Text", TextRules.NoBreaks(term.Text), Art.Body, Kit.FsBody, Kit.Text, TextAnchor.UpperLeft);
+            var text = Ui.Txt(detail.Content, "Text", TextRules.NoBreaks(term.Text), Kit.F600, Kit.FsBody, Kit.Text, TextAnchor.UpperLeft);
             Ui.Stretch(text.rectTransform, Kit.Space2, 0, Kit.Space2, 0);
         }
 

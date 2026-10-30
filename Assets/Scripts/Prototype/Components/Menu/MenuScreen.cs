@@ -45,6 +45,9 @@ namespace LegacyThroughTime.Prototype
 
         public Tab Current => tab;
 
+        /// Where the popups go: the column above the menu, so that they also cover the gear of the HUD.
+        Transform Layer => Root.parent;
+
         public MenuScreen(RectTransform column, IReadOnlyList<StoryEntry> stories, Func<ChapterEntry, Progress> progress,
                           Action<StoryEntry, ChapterEntry, bool> open, Action<StoryEntry> openChat, IReadOnlyList<Glossary.Term> terms, bool animated)
         {
@@ -114,7 +117,7 @@ namespace LegacyThroughTime.Prototype
         {
             if (wheel != null && wheel.IsOpen) return;
             CloseRewards();
-            wheel = new WheelDialog(Root, anim, () => { wheel = null; nav.Show(Array.IndexOf(Bar, tab)); }, () => Select(Tab.Shop));
+            wheel = new WheelDialog(Layer, anim, () => { wheel = null; nav.Show(Array.IndexOf(Bar, tab)); }, () => Select(Tab.Shop));
             nav.Show(Array.IndexOf(Bar, Tab.Wheel));
         }
 
@@ -122,7 +125,7 @@ namespace LegacyThroughTime.Prototype
         {
             if (rewards != null && rewards.IsOpen) return;
             CloseWheel();
-            rewards = new RewardsDialog(Root, anim, () => { rewards = null; nav.Show(Array.IndexOf(Bar, tab)); });
+            rewards = new RewardsDialog(Layer, anim, () => { rewards = null; nav.Show(Array.IndexOf(Bar, tab)); });
             nav.Show(Array.IndexOf(Bar, Tab.Rewards));
         }
 
@@ -198,9 +201,9 @@ namespace LegacyThroughTime.Prototype
             card.raycastTarget = true;
             // compact, between the top bar and the deck: the text on the left, the button and "Позже" on the right
             Ui.TopRow(update, Kit.Side, Kit.Side, Metrics.InsetTop + Kit.Space3 + Viewport.ExtraTop + Kit.Touch + Kit.Space2, UpdateHeight);
-            var title = Ui.Txt(update, "Title", "Новая версия", Art.Sub, Kit.FsHead, Kit.Text);
+            var title = Ui.Txt(update, "Title", "Новая версия", Kit.F800, Kit.FsHead, Kit.Text);
             Ui.TopRow(title.rectTransform, 16, 134, 14, 26);
-            var line = Ui.Txt(update, "Version", offer, Art.Body, Kit.FsSmall, Kit.Muted, TextAnchor.UpperLeft);
+            var line = Ui.Txt(update, "Version", offer, Kit.F600, Kit.FsSmall, Kit.Muted, TextAnchor.UpperLeft);
             Ui.TopRow(line.rectTransform, 16, 134, 42, 40);
             void Start() => download(s => { if (line) line.text = s ?? offer; });
             var button = Parts.Button(update, "Обновить", ButtonStyle.Primary, () => { if (!leaving) Start(); }, 40);
@@ -209,7 +212,7 @@ namespace LegacyThroughTime.Prototype
             var later = Ui.Img(update, "Later", ProceduralArt.White);
             later.color = Color.clear; later.raycastTarget = true;
             Ui.Box(later.rectTransform, A.TopRight, A.TopRight, new Vector2(-10, -54), new Vector2(112, 30));
-            var laterText = Ui.Txt(later.rectTransform, "Text", "Позже", Art.Action, Kit.FsBody, Kit.Muted, TextAnchor.MiddleCenter);
+            var laterText = Ui.Txt(later.rectTransform, "Text", "Позже", Kit.F800, Kit.FsBody, Kit.Muted, TextAnchor.MiddleCenter);
             Ui.Stretch(laterText.rectTransform);
             PressButton.On(later.gameObject, HideUpdate, .97f);
 
@@ -251,6 +254,7 @@ namespace LegacyThroughTime.Prototype
             ShellPurse.Changed -= OnPurse;
             Wallet.Changed -= OnCoins;
             shop?.Dispose();
+            CloseWheel(); CloseRewards();
             var group = Root.GetComponent<CanvasGroup>();
             group.blocksRaycasts = false;
             for (var t = 0f; t < .25f && Root; t += Time.unscaledDeltaTime)

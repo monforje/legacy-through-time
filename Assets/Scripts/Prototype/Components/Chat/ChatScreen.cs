@@ -74,13 +74,13 @@ namespace LegacyThroughTime.Prototype
             PressButton.On(hit.gameObject, () => Leave(), .9f);
             var avatar = Kit.Avatar(bar, story.Hero, story.Id, 36);
             Ui.Box(avatar.rectTransform, A.MidLeft, A.MidLeft, new Vector2(48, 0), new Vector2(36, 36));
-            var name = MenuUi.Fit(Ui.Txt(bar, "Name", story.Hero, Art.Sub, 18, Kit.Text), 12);
+            var name = MenuUi.Fit(Ui.Txt(bar, "Name", story.Hero, Kit.F800, 18, Kit.Text), 12);
             Ui.Stretch(name.rectTransform, 94, 0, 118, 0);
 
             energyPill = Kit.Round(bar, "Energy", Kit.Surface, 14).rectTransform;
             Ui.Box(energyPill, A.MidRight, A.MidRight, new Vector2(-48, 0), new Vector2(56, 28));
             Kit.Icon(energyPill, "Bolt", Kit.Pic("energy"), 20, A.MidLeft, new Vector2(13, 0)).raycastTarget = false;
-            energyText = Ui.Txt(energyPill, "Value", energy.value.ToString(), Art.Sub, 15, Kit.Text, TextAnchor.MiddleCenter);
+            energyText = Ui.Txt(energyPill, "Value", energy.value.ToString(), Kit.F800, 15, Kit.Text, TextAnchor.MiddleCenter);
             Ui.Stretch(energyText.rectTransform, 22, 0, 4, 0);
 
             var flag = Ui.Img(bar, "Report", ProceduralArt.White);
@@ -124,7 +124,7 @@ namespace LegacyThroughTime.Prototype
         {
             var row = new Row { Root = Ui.Rect(feed, "Note") };
             rows.Add(row);
-            var t = Ui.Txt(row.Root, "Text", Note, Art.Body, 12, Kit.Muted, TextAnchor.MiddleCenter);
+            var t = Ui.Txt(row.Root, "Text", Note, Kit.F600, 12, Kit.Muted, TextAnchor.MiddleCenter);
             row.Height = Ui.TextHeight(t, contentWidth - 20) + 16;     // measured first: on a stretched rect sizeDelta adds to the width
             Ui.Stretch(t.rectTransform, 10, 0, 10, 0);
         }
@@ -143,7 +143,7 @@ namespace LegacyThroughTime.Prototype
         {
             foreach (Transform child in row.Root) UnityEngine.Object.Destroy(child.gameObject);
             var box = Kit.Round(row.Root, "Bubble", mine ? Kit.Accent : Kit.Surface);
-            var label = Ui.Txt(box.rectTransform, "Text", text, Art.Body, 15, mine ? Kit.AccentInk : Kit.Text, TextAnchor.UpperLeft);
+            var label = Ui.Txt(box.rectTransform, "Text", text, Kit.F600, 15, mine ? Kit.AccentInk : Kit.Text, TextAnchor.UpperLeft);
             label.supportRichText = false;
             var max = contentWidth * MaxShare - 2 * Pad;
             var width = Mathf.Min(max, Ui.TextWidth(label)) + 2 * Pad;
@@ -309,10 +309,10 @@ namespace LegacyThroughTime.Prototype
             Ui.BottomRow(box.rectTransform, Metrics.Side, Metrics.Side, bottom, FieldHeight);
             var out_ = !energy.CanSend;
 
-            var text = Ui.Txt(box.rectTransform, "Text", "", Art.Body, 15, Kit.Text, TextAnchor.MiddleLeft);
+            var text = Ui.Txt(box.rectTransform, "Text", "", Kit.F600, 15, Kit.Text, TextAnchor.MiddleLeft);
             text.supportRichText = false;
             Ui.Stretch(text.rectTransform, 16, 6, 56, 6);
-            var hint = Ui.Txt(box.rectTransform, "Placeholder", out_ ? "Энергия закончилась" : "Сказать…", Art.Body, 15,
+            var hint = Ui.Txt(box.rectTransform, "Placeholder", out_ ? "Энергия закончилась" : "Сказать…", Kit.F600, 15,
                               Kit.Muted, TextAnchor.MiddleLeft);
             Ui.Stretch(hint.rectTransform, 16, 6, 56, 6);
 
@@ -372,15 +372,15 @@ namespace LegacyThroughTime.Prototype
             card.raycastTarget = true;
             var row = limit = new Row { Root = card.rectTransform, Height = CardHeight + Gap };
             rows.Add(row);
-            var head = Ui.Txt(card.rectTransform, "Head", "Энергия закончилась", Art.Sub, 18, Kit.Text, TextAnchor.MiddleCenter);
+            var head = Ui.Txt(card.rectTransform, "Head", "Энергия закончилась", Kit.F800, 18, Kit.Text, TextAnchor.MiddleCenter);
             Ui.TopRow(head.rectTransform, Pad, Pad, 14, 26);
             var text = Ui.Txt(card.rectTransform, "Text", "Каждое сообщение тратит 1 энергию. Она восстанавливается со временем, или пополните её сейчас.",
-                              Art.Body, 13, Kit.Muted, TextAnchor.UpperCenter);
+                              Kit.F600, 13, Kit.Muted, TextAnchor.UpperCenter);
             Ui.TopRow(text.rectTransform, Pad + 4, Pad + 4, 44, 50);
             var button = Kit.Round(card.rectTransform, "Refill", Kit.Accent);
             button.raycastTarget = true;
             Ui.BottomRow(button.rectTransform, Pad, Pad, 12, 44);
-            var label = Ui.Txt(button.rectTransform, "Text", "Пополнить энергию", Art.Action, 16, Kit.AccentInk, TextAnchor.MiddleCenter);
+            var label = Ui.Txt(button.rectTransform, "Text", "Пополнить энергию", Kit.F800, 16, Kit.AccentInk, TextAnchor.MiddleCenter);
             Ui.Stretch(label.rectTransform);
             PressButton.On(button.gameObject, () => { if (!leaving) openShop(); }, .97f);
             Relayout(); ScrollDown();

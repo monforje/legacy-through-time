@@ -37,7 +37,7 @@ namespace LegacyThroughTime.Prototype
             gemPill = Parts.Pill(bar, "gem", ShellPurse.Gems, () => Switch(1));
             Ui.Box(gemPill.Root, A.MidRight, A.MidRight, Vector2.zero, new Vector2((Width - 52 - Kit.Space2) / 2, Kit.Touch));
 
-            var list = MenuUi.List(Root, top + Kit.Touch + Kit.Space3, Kit.NavHeight + Viewport.ExtraBottom);
+            var list = MenuUi.List(Root, top + Kit.Touch + Kit.Space3, Kit.NavHeight + Viewport.ExtraBottom, 0);
             content = list;
             var y = 0f;
 
@@ -57,7 +57,7 @@ namespace LegacyThroughTime.Prototype
             var h = Panel(energyPanel, ShopCatalog.SectionEnergy);
             Panel(gemPanel, ShopCatalog.SectionGems);
             panelHeight = h;
-            note = Ui.Txt(list, "Note", "Покупки проходят через Google Play", Art.Body, Kit.FsSmall, Kit.Muted, TextAnchor.MiddleCenter);
+            note = Ui.Txt(list, "Note", "Покупки проходят через Google Play", Kit.F600, Kit.FsSmall, Kit.Muted, TextAnchor.MiddleCenter);
             noteY = y;
             Switch(0);
 
@@ -115,7 +115,7 @@ namespace LegacyThroughTime.Prototype
         {
             var card = Kit.Round(parent, "Offer " + offer.Id, Kit.Surface2, Kit.RadiusM);
             Ui.Box(card.rectTransform, A.TopLeft, A.TopLeft, new Vector2(Kit.Side, -y), new Vector2(Width, height));
-            var title = Ui.Txt(card.rectTransform, "Title", offer.Title, Art.Sub, Kit.FsHead, Kit.Text, TextAnchor.MiddleCenter);
+            var title = Ui.Txt(card.rectTransform, "Title", offer.Title, Kit.F800, Kit.FsHead, Kit.Text, TextAnchor.MiddleCenter);
             Ui.TopRow(title.rectTransform, 12, 12, 12, 26);
             var art = Kit.Icon(card.rectTransform, "Art", Kit.Pic(offer.Pic), 80, A.MidLeft, new Vector2(Width / 4 - 40 + 6, -14));
             art.raycastTarget = false;
@@ -154,7 +154,7 @@ namespace LegacyThroughTime.Prototype
                 Ui.TopRow(row, 0, 0, i * 44, 44);
                 var icon = Kit.Icon(row, "Icon", Kit.Pic(pic), 28, A.Center, new Vector2(-26, 0));
                 icon.raycastTarget = false;
-                var t = Ui.Txt(row, "Number", n.ToString(), Art.Sub, Kit.FsNum, Kit.Text, TextAnchor.MiddleLeft);
+                var t = Ui.Txt(row, "Number", n.ToString(), Kit.F800, Kit.FsNum, Kit.Text, TextAnchor.MiddleLeft);
                 Ui.Box(t.rectTransform, A.Center, A.MidLeft, new Vector2(-8, 0), new Vector2(70, 30));
                 if (i > 0)
                 {
