@@ -35,7 +35,7 @@ namespace LegacyThroughTime.Prototype
             }
 
             var list = MenuUi.List(Root, top + Kit.Touch + Kit.Space3, 0, 0);
-            var width = Metrics.RefWidth - 2 * Kit.Side;
+            var width = Kit.Width - 2 * Kit.Side;
             var coverHeight = Mathf.Round(width * 9 / 16);
             var y = 0f;
             Cover(list, story, y, width, coverHeight); y += coverHeight + Kit.Space3;

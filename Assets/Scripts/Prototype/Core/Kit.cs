@@ -31,6 +31,21 @@ namespace LegacyThroughTime.Prototype
 
         public const int RadiusS = 10, RadiusM = 16, RadiusL = 24;
         public const float Space1 = 4, Space2 = 8, Space3 = 12, Space4 = 16, Space5 = 24, Space6 = 32;
+        /// The width of the shell's column and the room on each side of it up to the edges of the canvas (backgrounds and
+        /// bars run into it, content does not).
+        public static float Width => Viewport.ColumnWidth;
+        public static float Wing => (Viewport.Width - Viewport.ColumnWidth) / 2;
+
+        /// A column of the shell's width in the middle of `parent` (a full-canvas layer): what the screen puts on it keeps the
+        /// phone's proportions on a tablet.
+        public static RectTransform Column(RectTransform parent, string name = "Column")
+        {
+            var column = Ui.Rect(parent, name);
+            column.anchorMin = A.BottomCenter; column.anchorMax = A.TopCenter; column.pivot = A.Center;
+            column.offsetMin = new Vector2(-Width / 2, 0); column.offsetMax = new Vector2(Width / 2, 0);
+            return column;
+        }
+
         /// The side margin of the shell (the stories' plates use Metrics.Side = 20).
         public const float Side = Space4;
         /// The smallest tap target.
@@ -151,7 +166,9 @@ namespace LegacyThroughTime.Prototype
         {
             text = (text ?? "").Replace('\n', ' ');
             t.text = text;
-            if (Ui.TextWidth(t) <= width) return;
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;               // one line, never wrapped: cut with "…" instead
+            width -= 2;
+            if (Ui.TextWidth(t) <= width) { t.horizontalOverflow = HorizontalWrapMode.Overflow; return; }
             var lo = 0; var hi = text.Length;
             while (lo < hi)
             {
@@ -160,6 +177,7 @@ namespace LegacyThroughTime.Prototype
                 if (Ui.TextWidth(t) <= width) lo = mid; else hi = mid - 1;
             }
             t.text = text.Substring(0, lo).TrimEnd() + "…";
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
         }
 
         /// The whole screen in the colour of the kit (covers the painting of the menu behind it).
@@ -167,7 +185,7 @@ namespace LegacyThroughTime.Prototype
         {
             var ground = Ui.Img(parent, "Ground", ProceduralArt.White);
             ground.color = Bg; ground.raycastTarget = true;
-            Ui.Bleed(ground.rectTransform);
+            Ui.Bleed(ground.rectTransform, Width);
             return ground;
         }
     }

@@ -27,10 +27,10 @@ namespace LegacyThroughTime.Prototype
         {
             this.anim = anim;
             Root = Ui.Rect(parent, "Rewards sheet");
-            Ui.Bleed(Root);
+            Ui.Stretch(Root);
             var catcher = Ui.Img(Root, "Catcher", ProceduralArt.White);
             catcher.color = Color.clear; catcher.raycastTarget = true;
-            Ui.Bleed(catcher.rectTransform);
+            Ui.Bleed(catcher.rectTransform, Kit.Width);
             PressButton.On(catcher.gameObject, () => Close(closed), 1f);
 
             var height = 3 * RowHeight + 2 * Pad;
@@ -73,7 +73,7 @@ namespace LegacyThroughTime.Prototype
         {
             var row = Kit.Round(panel, "Row " + title, Color.clear, Kit.RadiusS);
             row.raycastTarget = true;
-            Ui.Box(row.rectTransform, A.TopLeft, A.TopLeft, new Vector2(Pad, -(Pad + index * RowHeight)), new Vector2(Metrics.RefWidth - 2 * Kit.Side - 2 * Pad, RowHeight));
+            Ui.Box(row.rectTransform, A.TopLeft, A.TopLeft, new Vector2(Pad, -(Pad + index * RowHeight)), new Vector2(Kit.Width - 2 * Kit.Side - 2 * Pad, RowHeight));
             var rt = row.rectTransform;
             Kit.Icon(rt, "Icon", picture ? Kit.Pic(icon) : Kit.Glyph(icon), 22, A.MidLeft, new Vector2(Kit.Space3, 0)).raycastTarget = false;
             var head = Ui.Txt(rt, "Title", title, Kit.F700, Kit.FsBody, Kit.Text);

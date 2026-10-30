@@ -16,9 +16,10 @@ namespace LegacyThroughTime.Editor
     /// runs between the shots, so that the pictures loaded in the background arrive.
     public static class UiShots
     {
-        const int Width = 1080, Height = 2340, Settle = 12;      // editor updates between building a screen and the shot
+        static int Width = 1080, Height = 2340;                  // LTT_SHOT=1080x1920 for a 16:9 phone (Huawei P10), 1600x2560 for a tablet
+        const int Settle = 12;                                    // editor updates between building a screen and the shot
         const string EpisodePath = "Assets/StreamingAssets/stories/golden-cage/episode-01.json";
-        const string Out = "Builds/ui-shots";
+        static string Out = "Builds/ui-shots";
 
         sealed class Shot { public string Name; public Action<RectTransform> Build; }
 
@@ -31,7 +32,16 @@ namespace LegacyThroughTime.Editor
 
         public static void Run()
         {
-            Viewport.Set(Metrics.RefHeight);
+            var size = Environment.GetEnvironmentVariable("LTT_SHOT");
+            if (!string.IsNullOrEmpty(size))
+            {
+                var parts = size.Split('x');
+                Width = int.Parse(parts[0]); Height = int.Parse(parts[1]);
+                Out = "Builds/ui-shots-" + size;
+            }
+            float.TryParse(Environment.GetEnvironmentVariable("LTT_DPI"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var dpi);
+            var scale = Viewport.ScaleFor(Width, Height, dpi, dpi <= 0);              // LTT_DPI=224 for a tablet: a unit is at most 1.35 dp
+            Viewport.Set(Height / scale, 0, 0, Width / scale);
             Plan();
             camera = new GameObject("ShotCamera").AddComponent<Camera>();
             camera.clearFlags = CameraClearFlags.SolidColor;
@@ -47,7 +57,7 @@ namespace LegacyThroughTime.Editor
             c.planeDistance = 10;
             var scaler = go.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
-            scaler.scaleFactor = Width / Metrics.RefWidth;
+            scaler.scaleFactor = scale;
             canvas = (RectTransform)go.transform;
 
             index = 0; kit = 0; wait = -1;
@@ -62,7 +72,14 @@ namespace LegacyThroughTime.Editor
                 if (wait < 0)
                 {
                     Clear();
-                    shots[index].Build(canvas);
+                    // the shell lives in its own column (as wide as the canvas up to 440), the story screens in a 360 one
+                    var name = shots[index].Name;
+                    var shell = name.StartsWith("menu-") || name.StartsWith("chat");
+                    var column = Ui.Rect(canvas, shell ? "Shell" : "Pages");
+                    var wide = shell ? Viewport.ColumnWidth : Metrics.RefWidth;
+                    column.anchorMin = A.BottomCenter; column.anchorMax = A.TopCenter; column.pivot = A.Center;
+                    column.offsetMin = new Vector2(-wide / 2, 0); column.offsetMax = new Vector2(wide / 2, 0);
+                    shots[index].Build(column);
                     wait = Settle;
                     return;
                 }

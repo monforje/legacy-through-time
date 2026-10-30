@@ -31,6 +31,7 @@ namespace LegacyThroughTime.Prototype
         readonly KeyboardLift lift;
         readonly List<Row> rows = new();
         readonly Text energyText;
+        readonly Text nameText;
         readonly RectTransform energyPill;
         Row limit;                                      // the card of the empty energy
         Row typing;                                     // the hero's bubble while she "types", then her reply as it comes
@@ -61,7 +62,7 @@ namespace LegacyThroughTime.Prototype
             anim = animated ? Root.gameObject.AddComponent<CoroutineAnimator>() : NoAnimator.Instance;
             Kit.Ground(Root);
             SettingsToast.ShowGear(false);                   // the flag takes the corner of the gear
-            contentWidth = Metrics.RefWidth - 2 * Kit.Side;
+            contentWidth = Kit.Width - 2 * Kit.Side;
 
             // ---- the top bar (templates/shell/chat.html): back, hero, the energy pill and the flag
             var top = Metrics.InsetTop + Kit.Space3 + Viewport.ExtraTop;
@@ -72,15 +73,15 @@ namespace LegacyThroughTime.Prototype
             Ui.Box(back.Root, A.MidLeft, A.MidLeft, Vector2.zero, new Vector2(Kit.Touch, Kit.Touch));
             var avatar = Kit.Avatar(bar, story.Hero, story.Id, 40);
             Ui.Box(avatar.rectTransform, A.MidLeft, A.MidLeft, new Vector2(52, 0), new Vector2(40, 40));
-            var name = MenuUi.Fit(Ui.Txt(bar, "Name", story.Hero, Kit.F800, Kit.FsHead, Kit.Text), 12);
-            Ui.Stretch(name.rectTransform, 100, 0, 52 + 56 + 8, 0);
+            nameText = MenuUi.Fit(Ui.Txt(bar, "Name", story.Hero, Kit.F800, Kit.FsHead, Kit.Text), 12);
 
             // the compact pill: 56 x 32, a 20 px picture, the number
             energyPill = Kit.Round(bar, "Energy", Kit.Surface, 16).rectTransform;
-            Ui.Box(energyPill, A.MidRight, A.MidRight, new Vector2(-(Kit.Touch + 8), 0), new Vector2(56, 32));
             Kit.Icon(energyPill, "Bolt", Kit.Pic("energy"), 20, A.MidLeft, new Vector2(Kit.Space3, 0)).raycastTarget = false;
             energyText = Ui.Txt(energyPill, "Value", energy.value.ToString(), Kit.F800, Kit.FsSmall, Kit.Text, TextAnchor.MiddleLeft);
+            energyText.horizontalOverflow = HorizontalWrapMode.Overflow;
             Ui.Stretch(energyText.rectTransform, Kit.Space3 + 20 + Kit.Space1, 0, Kit.Space3, 0);
+            FitEnergy();
 
             var flag = Parts.IconButton(bar, "flag", Report, Kit.Touch);
             Ui.Box(flag.Root, A.MidRight, A.MidRight, Vector2.zero, new Vector2(Kit.Touch, Kit.Touch));
@@ -96,6 +97,7 @@ namespace LegacyThroughTime.Prototype
             Ui.Stretch(panel);
             lift = panel.gameObject.AddComponent<KeyboardLift>();
             lift.Feed = viewport; lift.FeedBottom = bottom;
+            lift.Typing = () => input && input.isFocused;
             bottomRoot = Ui.Rect(panel, "Bottom");
             Ui.Stretch(bottomRoot);
 
@@ -104,6 +106,7 @@ namespace LegacyThroughTime.Prototype
             Field(floor);
             if (!energy.CanSend) OutOfEnergy();
             Relayout(); ScrollDown();
+            EdgeBack.Attach(Root, () => { Leave(); return true; }, Kit.Wing);      // a swipe from the left edge leaves the chat
 
             if (anim.Enabled)
             {
@@ -321,9 +324,18 @@ namespace LegacyThroughTime.Prototype
         }
 
         // ------------------------------------------------------------ energy
+        /// The pill is as wide as its number (12 + 20 + 4 + the digits + 12) and the name takes the room that is left.
+        void FitEnergy()
+        {
+            var width = Mathf.Max(56, Mathf.Ceil(Kit.Space3 + 20 + Kit.Space1 + energyText.preferredWidth + Kit.Space3));
+            Ui.Box(energyPill, A.MidRight, A.MidRight, new Vector2(-(Kit.Touch + 8), 0), new Vector2(width, 32));
+            Ui.Stretch(nameText.rectTransform, 100, 0, Kit.Touch + 8 + width + 8, 0);
+        }
+
         void ShowEnergy(bool pulse = false)
         {
             energyText.text = energy.value.ToString();
+            FitEnergy();
             if (pulse && anim.Enabled)
             {
                 var rt = energyPill;
@@ -435,11 +447,8 @@ namespace LegacyThroughTime.Prototype
             if (!Root) yield break;
             var group = Ui.Group(Root);
             group.blocksRaycasts = false;
-            for (var t = 0f; t < .2f && Root; t += Time.unscaledDeltaTime)
-            {
-                group.alpha = 1 - t / .2f;
-                yield return null;
-            }
+            // it stays whole while the next screen comes in over it: nothing of the scene behind shows through
+            for (var t = 0f; t < .5f && Root; t += Time.unscaledDeltaTime) yield return null;
             if (Root) UnityEngine.Object.Destroy(Root.gameObject);
         }
     }

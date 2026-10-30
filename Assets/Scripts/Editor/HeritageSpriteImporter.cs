@@ -22,7 +22,7 @@ namespace LegacyThroughTime.Editor
         public const float PixelsPerUnit = 400f;
 
         /// Bump when the settings below change: Unity then reimports every texture and sound with them.
-        public override uint GetVersion() => 5;
+        public override uint GetVersion() => 6;
 
         void OnPreprocessTexture()
         {
@@ -103,6 +103,7 @@ namespace LegacyThroughTime.Editor
             importer.npotScale = TextureImporterNPOTScale.None;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.maxTextureSize = 1024;
+            AndroidAstc4x4(importer);
         }
 
         /// Icons of the shell: rendered once at 512 (pictures) or 192 (glyphs), shown from 20 to 100 canvas units, so mip-maps and
@@ -148,7 +149,7 @@ namespace LegacyThroughTime.Editor
             android.overridden = true;
             android.format = TextureImporterFormat.ASTC_4x4;
             android.compressionQuality = 100;
-            android.maxTextureSize = 2048;
+            android.maxTextureSize = importer.maxTextureSize;
             importer.SetPlatformTextureSettings(android);
         }
 

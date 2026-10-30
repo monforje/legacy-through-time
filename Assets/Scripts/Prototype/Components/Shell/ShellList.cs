@@ -28,7 +28,7 @@ namespace LegacyThroughTime.Prototype
         {
             var face = Kit.Round(list, name, Color.clear, Kit.RadiusM);
             face.raycastTarget = true;
-            Ui.Box(face.rectTransform, A.TopLeft, A.TopLeft, new Vector2(RowInset, -y), new Vector2(Metrics.RefWidth - 2 * RowInset, height));
+            Ui.Box(face.rectTransform, A.TopLeft, A.TopLeft, new Vector2(RowInset, -y), new Vector2(Kit.Width - 2 * RowInset, height));
             if (!last)
             {
                 var rule = Ui.Img(face.rectTransform, "Line", ProceduralArt.White);
@@ -43,7 +43,7 @@ namespace LegacyThroughTime.Prototype
         public static void Empty(RectTransform root, string pic, string head, string text, Action toStories, IAnimator anim)
         {
             var box = Ui.Rect(root, "Empty");
-            Ui.Box(box, A.Center, A.Center, new Vector2(0, 20), new Vector2(Metrics.RefWidth - 2 * Kit.Side, 260));
+            Ui.Box(box, A.Center, A.Center, new Vector2(0, 20), new Vector2(Kit.Width - 2 * Kit.Side, 260));
             var picture = Kit.Icon(box, "Picture", Kit.Pic(pic), 96, A.TopCenter, new Vector2(0, -8));
             picture.raycastTarget = false;
             var title = Ui.Txt(box, "Head", head, Kit.F800, Kit.FsHead, Kit.Text, TextAnchor.MiddleCenter);

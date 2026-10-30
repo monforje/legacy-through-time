@@ -20,9 +20,9 @@ namespace LegacyThroughTime.Prototype
             var bg = Ui.Img(parent, "Nav", ProceduralArt.White);
             bg.color = Kit.Surface; bg.raycastTarget = true;
             Root = bg.rectTransform;
-            Ui.BottomRow(Root, 0, 0, 0, Kit.NavHeight + Viewport.ExtraBottom);
+            Ui.BottomRow(Root, -Kit.Wing, -Kit.Wing, 0, Kit.NavHeight + Viewport.ExtraBottom);       // the bar runs to the edges of the screen
             var row = Ui.Rect(Root, "Row");
-            Ui.Stretch(row, Kit.Space2, Metrics.InsetBottom - Kit.Space4 + Viewport.ExtraBottom, Kit.Space2, Kit.Space1);
+            Ui.Stretch(row, Kit.Space2 + Kit.Wing, Metrics.InsetBottom - Kit.Space4 + Viewport.ExtraBottom, Kit.Space2 + Kit.Wing, Kit.Space1);
 
             cells = new Image[items.Length]; icons = new Image[items.Length]; labels = new Text[items.Length];
             badges = new Image[items.Length]; badgeText = new Text[items.Length];
@@ -90,10 +90,10 @@ namespace LegacyThroughTime.Prototype
         {
             this.anim = anim; this.closed = closed;
             Root = Ui.Rect(parent, "Dialog");
-            Ui.Bleed(Root);
+            Ui.Stretch(Root);
             dim = Ui.Img(Root, "Dim", ProceduralArt.White);
             dim.color = Kit.Scrim.WithAlpha(.3f); dim.raycastTarget = true;     // the dim also catches the taps meant for the screen below
-            Ui.Bleed(dim.rectTransform);
+            Ui.Bleed(dim.rectTransform, Kit.Width);
 
             var panel = Kit.Round(Root, "Panel", Kit.Bg, Kit.RadiusL);
             panel.raycastTarget = true;
@@ -142,6 +142,41 @@ namespace LegacyThroughTime.Prototype
         void Finish() { if (Root) UnityEngine.Object.Destroy(Root.gameObject); closed?.Invoke(); }
     }
 
+    /// A swipe from the left edge of the screen to the right steps back (the arrows at the top do the same): a thin strip at the
+    /// edge that listens for the drag. `back` answers whether it stepped.
+    static class EdgeBack
+    {
+        const float Strip = 14, Reach = 56;
+
+        public static void Attach(RectTransform parent, Func<bool> back, float wing)
+        {
+            var strip = Ui.Img(parent, "Edge back", ProceduralArt.White);
+            strip.color = Color.clear; strip.raycastTarget = true;
+            var rt = strip.rectTransform;
+            rt.anchorMin = new Vector2(0, 0); rt.anchorMax = new Vector2(0, 1); rt.pivot = new Vector2(0, .5f);
+            rt.sizeDelta = new Vector2(wing + Strip, 0); rt.anchoredPosition = new Vector2(-wing, 0);
+            strip.gameObject.AddComponent<Drag>().Back = back;
+        }
+
+        sealed class Drag : MonoBehaviour, UnityEngine.EventSystems.IBeginDragHandler, UnityEngine.EventSystems.IDragHandler
+        {
+            public Func<bool> Back;
+            float dx;
+            bool done;
+
+            public void OnBeginDrag(UnityEngine.EventSystems.PointerEventData e) { dx = 0; done = false; }
+
+            public void OnDrag(UnityEngine.EventSystems.PointerEventData e)
+            {
+                if (done) return;
+                dx += e.delta.x / Mathf.Max(.1f, Viewport.Scale);
+                if (dx < Reach) return;
+                done = true;
+                Back?.Invoke();
+            }
+        }
+    }
+
     /// A line of text that rises over the bottom bar and leaves by itself: "Сохранено", "Награда получена: 3 алмаза".
     static class ShellToast
     {
@@ -150,7 +185,7 @@ namespace LegacyThroughTime.Prototype
             // 13 px / 700 on a 1.4 line, padding 12 x 16, wraps; its height is that of the text
             var wrap = Ui.Rect(parent, "Toast");
             var probe = Ui.Txt(wrap, "Probe", text, Kit.F700, Kit.FsSmall, Kit.Text, TextAnchor.MiddleCenter);
-            var lines = Mathf.Max(1, Mathf.Round(Ui.TextHeight(probe, Metrics.RefWidth - 4 * Kit.Side) / 18.2f));
+            var lines = Mathf.Max(1, Mathf.Round(Ui.TextHeight(probe, Kit.Width - 4 * Kit.Side) / 18.2f));
             UnityEngine.Object.Destroy(probe.gameObject);
             Ui.BottomRow(wrap, Kit.Side, Kit.Side, bottom + Viewport.ExtraBottom, Mathf.Round(lines * 18.2f) + 2 * Kit.Space3);
             var box = Kit.Round(wrap, "Box", Kit.Surface2, Kit.RadiusM);

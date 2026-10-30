@@ -9,11 +9,12 @@ namespace LegacyThroughTime.Prototype
     /// (or a stat banner for "ПАМЯТЬ СТЕПИ +1"), `# flashback` keeps its speakers, `# sfx` is a sound caption.
     static class BeatMapper
     {
-        public const string Heroine = "Сююмбике";
+        /// The hero of the story being read: the label of the thoughts.
+        public static string Heroine => Cast.HeroLabel;
         const string PlaceMark = "МЕСТО:";
 
-        public static bool IsHeroine(string speaker) =>
-            speaker != null && speaker.EndsWith(Heroine, StringComparison.Ordinal);   // also "Маленькая Сююмбике"
+        /// Is the speaker on the hero's side (the plate on the left)? Also "Маленькая Сююмбике".
+        public static bool IsHeroine(string speaker) => Cast.IsHeroSpeaker(speaker);
 
         /// The banner text for a stat change line, or null for any other beat.
         public static string StatBanner(Beat beat) =>

@@ -19,11 +19,13 @@ namespace LegacyThroughTime.Prototype
 
         readonly MonoBehaviour owner;
         readonly IAnimator overlayAnimator;      // banners outlive the screens, so they animate on the host's owner
-        readonly RectTransform pages, overlay;
+        readonly RectTransform pages, shell, overlay;
 
         /// The 360-wide column of the screens (the menu is built here too), the column of the corner buttons above
         /// it, and the full-canvas layer above everything (loading, banners, the settings toast).
         public RectTransform Pages => pages;
+        /// The column of the shell (menu, chats): as wide as the canvas up to Viewport.MaxColumn.
+        public RectTransform Shell => shell;
         public RectTransform Hud { get; }
         public RectTransform Overlay => overlay;
         public IAnimator OverlayAnimator => overlayAnimator;
@@ -35,17 +37,18 @@ namespace LegacyThroughTime.Prototype
         {
             this.owner = owner;
             pages = Column(canvas, "Pages");
-            Hud = Column(canvas, "Hud");
+            shell = Column(canvas, "Shell", Viewport.ColumnWidth);
+            Hud = Column(canvas, "Hud", Viewport.ColumnWidth);
             overlay = Ui.Rect(canvas, "Overlay"); Ui.Stretch(overlay);
             overlayAnimator = owner.gameObject.AddComponent<CoroutineAnimator>();
         }
 
         /// The 360-wide column in the middle of a wider canvas.
-        static RectTransform Column(RectTransform canvas, string name)
+        static RectTransform Column(RectTransform canvas, string name, float width = Metrics.RefWidth)
         {
             var column = Ui.Rect(canvas, name);
             column.anchorMin = A.BottomCenter; column.anchorMax = A.TopCenter; column.pivot = A.Center;
-            column.offsetMin = new Vector2(-Metrics.RefWidth / 2, 0); column.offsetMax = new Vector2(Metrics.RefWidth / 2, 0);
+            column.offsetMin = new Vector2(-width / 2, 0); column.offsetMax = new Vector2(width / 2, 0);
             return column;
         }
 

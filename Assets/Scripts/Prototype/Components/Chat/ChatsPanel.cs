@@ -48,8 +48,9 @@ namespace LegacyThroughTime.Prototype
 
             // the right column is as wide as the time or the badge, the text stops 12 before it
             var time = Ui.Txt(rt, "Time", ChatList.When(row.At, now), Kit.F600, Kit.FsSmall, Kit.Muted, TextAnchor.MiddleRight);
+            time.horizontalOverflow = HorizontalWrapMode.Overflow;                 // never wraps: the column is as wide as the time
             var badgeWidth = row.Unread > 0 ? Mathf.Max(20, (row.Unread > 99 ? 3 : row.Unread > 9 ? 2 : 1) * 7 + 12) : 0;
-            var meta = Mathf.Ceil(Mathf.Max(time.preferredWidth, badgeWidth));
+            var meta = Mathf.Ceil(Mathf.Max(time.preferredWidth, badgeWidth)) + 2;
             Ui.Box(time.rectTransform, A.TopRight, A.TopRight, new Vector2(-Kit.Space2, -12), new Vector2(meta, 18));
             if (row.Unread > 0)
             {
@@ -62,7 +63,7 @@ namespace LegacyThroughTime.Prototype
 
             const float left = Kit.Space2 + AvatarSize + Kit.Space3;
             var right = Kit.Space2 + meta + Kit.Space3;
-            var width = Metrics.RefWidth - 2 * ShellList.RowInset - left - right;
+            var width = Kit.Width - 2 * ShellList.RowInset - left - right;
             var name = Ui.Txt(rt, "Name", row.Hero, Kit.F800, Kit.FsBody, Kit.Text);
             Ui.TopRow(name.rectTransform, left, right, 8, 20);
             var said = row.Preview != null;

@@ -115,7 +115,7 @@ namespace LegacyThroughTime.Prototype
                 for (var i = content.childCount - 1; i >= 0; i--) UnityEngine.Object.Destroy(content.GetChild(i).gameObject);
                 var q = (query ?? "").Trim().ToLowerInvariant();
                 var y = 0f; var shown = 0;
-                var width = Metrics.RefWidth - 2 * Kit.Side - 2 * GroupPad;
+                var width = Kit.Width - 2 * Kit.Side - 2 * GroupPad;
                 foreach (var term in opened)
                 {
                     if (q.Length > 0 && !term.Name.ToLowerInvariant().Contains(q)) continue;

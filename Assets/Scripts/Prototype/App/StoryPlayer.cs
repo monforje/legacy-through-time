@@ -150,7 +150,7 @@ namespace LegacyThroughTime.Prototype
         {
             if (restored && menu != null && story == null)
             {
-                StartCoroutine(menu.Leave());
+                StartCoroutine(menu.Leave(opaque: true));
                 menu = null;
                 ShowMenu();
             }
@@ -207,7 +207,7 @@ namespace LegacyThroughTime.Prototype
             if (chatScreen != null) { StartCoroutine(chatScreen.Close()); chatScreen = null; }
             if (Persist) CloudSave.Sync();
             Scenery(MenuBackground);
-            menu = new MenuScreen(host.Pages, StoryCatalog.All, ProgressOf, Open, OpenChat, Terms(), animated: true);
+            menu = new MenuScreen(host.Shell, StoryCatalog.All, ProgressOf, Open, OpenChat, Terms(), animated: true);
             if (update != null) menu.ShowUpdate(update, ShowUpdateProgress);
             if (tab != MenuScreen.Tab.Stories) menu.Select(tab);
             TellNews();
@@ -259,7 +259,7 @@ namespace LegacyThroughTime.Prototype
             if (id == null) return;
             var look = beat.TagValue("look");
             var travel = look != null ? look == "travel" : Cast.Travel(tintId);
-            var heroine = id == Cast.Heroine || id == Cast.Child;
+            var heroine = Cast.IsHero(id);
             cast.Show(Cast.Sprite(id, beat.TagValue("emo"), travel), Cast.Plain(id, travel), heroine, Cast.Height(id));
         }
 
@@ -270,6 +270,7 @@ namespace LegacyThroughTime.Prototype
             if (part == null || part.Soon) return;
             if (menu != null) { StartCoroutine(menu.Leave()); menu = null; }
             story = entry; chapter = part; Ended = false; lastPlate = null; hints.Clear();
+            Cast.Use(entry.Id);
             StartCoroutine(Load(entry, part, fresh, ++session));
         }
 
@@ -390,13 +391,13 @@ namespace LegacyThroughTime.Prototype
         void OpenChat(StoryEntry entry)
         {
             session++;
-            if (menu != null) { StartCoroutine(menu.Leave()); menu = null; }
+            if (menu != null) { StartCoroutine(menu.Leave(opaque: true)); menu = null; }      // the chat comes in over the menu, the picture behind does not show
             story = null; chapter = null; machine = null; lastPlate = null; hints.Clear();
             host.Clear();
             Scenery(MenuBackground);
             var read = new List<ChapterStats>();
             foreach (var c in entry.Chapters) if (!c.Soon) read.Add(SaveStore.ReadStats(c.SaveId));
-            chatScreen = new ChatScreen(host.Pages, this, entry, ChatStore.Open(entry), ChatStore.Energy, ChatList.Latest(read),
+            chatScreen = new ChatScreen(host.Shell, this, entry, ChatStore.Open(entry), ChatStore.Energy, ChatList.Latest(read),
                                         () => ShowMenu(MenuScreen.Tab.Chat), () => chatScreen.Leave(() => ShowMenu(MenuScreen.Tab.Shop)),
                                         (text, icon) => host.Banner(text, icon));
         }

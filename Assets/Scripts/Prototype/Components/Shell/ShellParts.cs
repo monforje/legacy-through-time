@@ -103,6 +103,16 @@ namespace LegacyThroughTime.Prototype
             }
         }
 
+        /// Two pills side by side, each half of the row (a gap of 8 between them): the row stretches with the screen.
+        public static void TwoPills(ShellPill left, ShellPill right)
+        {
+            var a = left.Root; var b = right.Root;
+            a.anchorMin = new Vector2(0, 0); a.anchorMax = new Vector2(.5f, 1); a.pivot = new Vector2(0, .5f);
+            a.offsetMin = Vector2.zero; a.offsetMax = new Vector2(-Kit.Space1, 0);
+            b.anchorMin = new Vector2(.5f, 0); b.anchorMax = new Vector2(1, 1); b.pivot = new Vector2(1, .5f);
+            b.offsetMin = new Vector2(Kit.Space1, 0); b.offsetMax = Vector2.zero;
+        }
+
         // ------------------------------------------------------------------ switch
         /// The switch of a settings row: a 52x30 track in a 56x44 tap target, the thumb slides in Kit.Dur.Normal.
         public static ShellSwitch Switch(Transform parent, bool on, Action<bool> changed, IAnimator anim)

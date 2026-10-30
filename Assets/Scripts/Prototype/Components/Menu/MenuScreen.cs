@@ -68,11 +68,9 @@ namespace LegacyThroughTime.Prototype
             // the pills of the top bar: two equal ones, the corner on the right is the gear of the HUD
             pills = Ui.Rect(Root, "Pills");
             Ui.TopRow(pills, Kit.Side, Kit.Side + 52, top, Kit.Touch);
-            var each = (Metrics.RefWidth - 2 * Kit.Side - 52 - Kit.Space2) / 2;
             energyPill = Parts.Pill(pills, "energy", ShellPurse.Energy, () => Select(Tab.Shop));
-            Ui.Box(energyPill.Root, A.MidLeft, A.MidLeft, Vector2.zero, new Vector2(each, Kit.Touch));
             gemPill = Parts.Pill(pills, "gem", ShellPurse.Gems, () => Select(Tab.Shop));
-            Ui.Box(gemPill.Root, A.MidRight, A.MidRight, Vector2.zero, new Vector2(each, Kit.Touch));
+            Parts.TwoPills(energyPill, gemPill);
             ShellPurse.Changed += OnPurse;
             Wallet.Changed += OnCoins;
 
@@ -80,6 +78,7 @@ namespace LegacyThroughTime.Prototype
                                0, i => Select(Bar[i]));
 
             UpdateBadge();
+            EdgeBack.Attach(Root, Back, Kit.Wing);                  // a swipe from the left edge steps back, like the arrows do
             if (anim.Enabled) { Entrance(); anim.Play(BadgeLoop()); }
         }
 
@@ -115,16 +114,19 @@ namespace LegacyThroughTime.Prototype
             CloseChapters();
             library?.Close();
             if (next == tab && next != Tab.Stories) return;
-            if (library != null) { UnityEngine.Object.Destroy(library.Root.gameObject); library = null; }
-            if (shop != null) { shop.Dispose(); UnityEngine.Object.Destroy(shop.Root.gameObject); shop = null; }
-            if (chats != null) { UnityEngine.Object.Destroy(chats.Root.gameObject); chats = null; }
+            // the old screen is not torn down at once: it stays until the new one is over it (or fades away if the home is
+            // under it), so the ground is never bare between two screens
+            var toHome = next == Tab.Stories;
+            if (library != null) { Retire(library.Root, toHome); library = null; }
+            if (shop != null) { shop.Dispose(); Retire(shop.Root, toHome); shop = null; }
+            if (chats != null) { Retire(chats.Root, toHome); chats = null; }
             tab = next;
             home.Root.gameObject.SetActive(tab == Tab.Stories);
             if (tab == Tab.Chat) chats = new ChatsPanel(stage, ChatStore.Rows(stories, Started), s => { if (!leaving) openChat(s); }, () => Select(Tab.Stories), DateTime.Now, anim);
             if (tab == Tab.Library) library = new LibraryPanel(stage, stories, terms, anim, () => Select(Tab.Stories));
             if (tab == Tab.Shop) shop = new ShopScreen(Root, anim, () => Select(Tab.Stories));
             pills.gameObject.SetActive(tab == Tab.Stories);                    // the other sections have their own headers
-            SettingsToast.ShowGear(tab == Tab.Stories || tab == Tab.Shop);     // the lists have no gear in the mockups
+            UpdateGear();
             nav.Root.gameObject.SetActive(tab != Tab.Shop);                    // the shop has its own bar
             var panel = tab == Tab.Chat ? chats.Root : tab == Tab.Library ? library.Root : tab == Tab.Shop ? shop.Root : null;
             if (panel && anim.Enabled)
@@ -139,7 +141,8 @@ namespace LegacyThroughTime.Prototype
         {
             if (wheel != null && wheel.IsOpen) return;
             CloseRewards(); CloseSheet();
-            wheel = new WheelDialog(Layer, anim, () => { wheel = null; nav.Show(Array.IndexOf(Bar, tab)); }, () => Select(Tab.Shop));
+            wheel = new WheelDialog(Layer, anim, () => { wheel = null; nav.Show(Array.IndexOf(Bar, tab)); UpdateGear(); }, () => Select(Tab.Shop));
+            UpdateGear();
             nav.Show(Array.IndexOf(Bar, Tab.Wheel));
         }
 
@@ -147,7 +150,8 @@ namespace LegacyThroughTime.Prototype
         {
             if (rewards != null && rewards.IsOpen) return;
             CloseWheel();
-            rewards = new RewardsDialog(Layer, anim, () => { rewards = null; nav.Show(Array.IndexOf(Bar, tab)); }, ChaptersRead);
+            rewards = new RewardsDialog(Layer, anim, () => { rewards = null; nav.Show(Array.IndexOf(Bar, tab)); UpdateGear(); }, ChaptersRead);
+            UpdateGear();
             nav.Show(Array.IndexOf(Bar, Tab.Rewards));
         }
 
@@ -179,6 +183,14 @@ namespace LegacyThroughTime.Prototype
         /// For the tools (smoke, screenshots): the chapters of a story, a turn of the deck, a word of the library.
         public void ShowChapters(StoryEntry story) => OpenChapters(story);
         public void Turn(int step) => home.Turn(step);
+
+        /// The gear of the HUD shows on the home and the shop only: the other screens have their own button in that corner or
+        /// none, and the popups (the wheel, the rewards) have a close button there.
+        void UpdateGear()
+        {
+            var on = (tab == Tab.Stories || tab == Tab.Shop) && chapters == null && !(wheel != null && wheel.IsOpen) && !(rewards != null && rewards.IsOpen);
+            SettingsToast.ShowGear(on);
+        }
 
         /// How many chapters have been read to the end (the reward for a chapter waits for the first).
         int ChaptersRead()
@@ -215,16 +227,28 @@ namespace LegacyThroughTime.Prototype
             chapters = new ChapterList(stage, story, progress, (chapter, fresh) => { if (!leaving) open(story, chapter, fresh); },
                                        () => { if (!leaving) openChat(story); }, CloseChapters, anim);
             Home(false);                                     // the list over the ground, not over the deck
-            SettingsToast.ShowGear(false);                   // the chat button takes the corner of the gear
+            UpdateGear();                                    // the chat button takes the corner of the gear
+        }
+
+        /// Takes a screen away after the next one has come over it; `fade`: the screen is on top of the one that stays, so it
+        /// fades out.
+        void Retire(RectTransform rt, bool fade)
+        {
+            if (!rt) return;
+            var group = Ui.Group(rt);
+            group.blocksRaycasts = false;
+            if (!anim.Enabled) { UnityEngine.Object.Destroy(rt.gameObject); return; }
+            if (fade) anim.Play(Tween.To(Kit.Dur.Normal, e => { if (group) group.alpha = 1 - e; }, Easing.Linear));
+            anim.Play(Tween.After(Kit.Dur.Normal + .05f, () => { if (rt) UnityEngine.Object.Destroy(rt.gameObject); }));
         }
 
         void CloseChapters()
         {
             if (chapters == null) return;
-            UnityEngine.Object.Destroy(chapters.Root.gameObject);
+            Retire(chapters.Root, true);
             chapters = null;
             Home(true);
-            SettingsToast.ShowGear(true);
+            UpdateGear();
         }
 
         void Home(bool on)
@@ -305,7 +329,9 @@ namespace LegacyThroughTime.Prototype
         }
 
         /// Fades away and destroys itself; run by the owner (the menu's own animator dies with it).
-        public IEnumerator Leave()
+        /// `opaque`: the next screen of the shell comes in over this one, which stays whole until it is covered (nothing of the
+        /// scene behind shows through); else it fades away.
+        public IEnumerator Leave(bool opaque = false)
         {
             if (leaving || !Root) yield break;
             leaving = true;
@@ -316,9 +342,9 @@ namespace LegacyThroughTime.Prototype
             CloseWheel(); CloseRewards();
             var group = Root.GetComponent<CanvasGroup>();
             group.blocksRaycasts = false;
-            for (var t = 0f; t < .25f && Root; t += Time.unscaledDeltaTime)
+            for (var t = 0f; t < (opaque ? .45f : .25f) && Root; t += Time.unscaledDeltaTime)
             {
-                group.alpha = 1 - t / .25f;
+                if (!opaque) group.alpha = 1 - t / .25f;
                 yield return null;
             }
             if (Root) UnityEngine.Object.Destroy(Root.gameObject);

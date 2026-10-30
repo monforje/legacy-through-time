@@ -11,7 +11,8 @@ namespace LegacyThroughTime.Prototype
     /// dots, the search, the lenses and the grid of covers. A tap on a card opens the chapters of its story.
     sealed class HomeTab
     {
-        public const float CardWidth = 276, CardHeight = 300, Gap = 12, SideScale = .88f;
+        public const float Gap = 12, SideScale = .88f;
+        readonly float cardWidth, cardHeight;
         const float GridGap = Kit.Space3, TagHeight = 26;
 
         public readonly RectTransform Root;
@@ -33,12 +34,15 @@ namespace LegacyThroughTime.Prototype
         public HomeTab(RectTransform parent, IReadOnlyList<StoryEntry> stories, Action<StoryEntry> openChapters, IAnimator anim, float top)
         {
             this.stories = stories; this.openChapters = openChapters; this.anim = anim;
+            // the cards follow the screen: 84% of the column (as in the mockup's carousel) and about a third of the height
+            cardWidth = Mathf.Round((Kit.Width - 2 * Kit.Side) * .84f);
+            cardHeight = Mathf.Round(Mathf.Clamp(Viewport.Height * .385f, 236f, 340f));
             Root = Ui.Rect(parent, "Home");
             Ui.Stretch(Root);
             content = MenuUi.List(Root, top, 0, 0);
 
             deck = Ui.Rect(content, "Deck");
-            Ui.TopRow(deck, Kit.Side, Kit.Side, 0, CardHeight);
+            Ui.TopRow(deck, Kit.Side, Kit.Side, 0, cardHeight);
             deck.gameObject.AddComponent<RectMask2D>();                  // the sides are cut by the box of the deck, as in the mockup
             var swipe = Ui.Img(deck, "Swipe", ProceduralArt.White);
             swipe.color = Color.clear; swipe.raycastTarget = true;
@@ -52,9 +56,9 @@ namespace LegacyThroughTime.Prototype
 
             // on the left edge of the middle card, in the gap
             var shuffle = Parts.IconButton(content, "shuffle", Shuffle, Kit.Touch, circle: true, accent: true);
-            Ui.Box(shuffle.Root, A.TopLeft, A.TopLeft, new Vector2(16.2f, -96), new Vector2(Kit.Touch, Kit.Touch));
+            Ui.Box(shuffle.Root, A.TopLeft, A.TopLeft, new Vector2(16.2f, -Mathf.Round(cardHeight * .32f)), new Vector2(Kit.Touch, Kit.Touch));
 
-            var y = CardHeight + Kit.Space3;
+            var y = cardHeight + Kit.Space3;
             var dotsRow = Ui.Rect(content, "Dots");
             Ui.TopRow(dotsRow, 0, 0, y, 8);
             for (var i = 0; i < stories.Count; i++)
@@ -103,7 +107,7 @@ namespace LegacyThroughTime.Prototype
         RectTransform Card(RectTransform parent, StoryEntry story)
         {
             var card = Ui.Rect(parent, "Card " + story.Id);
-            Ui.Box(card, A.TopCenter, A.TopCenter, Vector2.zero, new Vector2(CardWidth, CardHeight));
+            Ui.Box(card, A.TopCenter, A.TopCenter, Vector2.zero, new Vector2(cardWidth, cardHeight));
             var group = Ui.Group(card);
             groups.Add(group);
 
@@ -117,14 +121,14 @@ namespace LegacyThroughTime.Prototype
             {
                 if (!picture || !sprite) return;
                 picture.sprite = sprite; picture.enabled = true;
-                Ui.Cover(picture, new Vector2(CardWidth, CardHeight), .4f);
+                Ui.Cover(picture, new Vector2(cardWidth, cardHeight), .4f);
             });
             var shade = Ui.Img(face.rectTransform, "Shade", Scrim());
             shade.raycastTarget = false;
             Ui.Stretch(shade.rectTransform);
 
             const float pad = Kit.Space4;
-            var inner = CardWidth - 2 * pad;
+            var inner = cardWidth - 2 * pad;
 
             if (story.Recommended)
             {
@@ -133,11 +137,6 @@ namespace LegacyThroughTime.Prototype
                 Ui.Box(badge.rectTransform, A.TopRight, A.TopRight, new Vector2(-Kit.Space3, -Kit.Space3), new Vector2(label.preferredWidth + 2 * Kit.Space3, TagHeight));
                 Ui.Stretch(label.rectTransform);
             }
-
-            // the name: 28 px, centred, from 64 px down, 1.1 line height
-            var name = Ui.Txt(face.rectTransform, "Name", story.Title, Kit.F800, 28, Kit.Text, TextAnchor.UpperCenter);
-            name.lineSpacing = 1.1f / 1.364f;
-            Ui.TopRow(name.rectTransform, pad, pad, 64, 62);
 
             // the stack from the bottom: the button, the text (up to three lines), the tag
             var button = Parts.Button(face.rectTransform, story.Soon ? "Скоро" : "Открыть", ButtonStyle.Primary, () => Tapped(story), 44);
@@ -158,6 +157,14 @@ namespace LegacyThroughTime.Prototype
                        new Vector2(tagText.preferredWidth + 2 * Kit.Space3, TagHeight));
                 Ui.Stretch(tagText.rectTransform);
             }
+            // the name: 28 px, centred, 64 px down (less on a short card, so that it stays clear of the stack), 1.1 line height
+            var stackTop = blurbBottom + lines + (string.IsNullOrEmpty(story.Genre) ? 0 : Kit.Space2 + TagHeight);
+            var name = Ui.Txt(face.rectTransform, "Name", story.Title, Kit.F800, 28, Kit.Text, TextAnchor.UpperCenter);
+            name.lineSpacing = 1.1f / 1.364f;
+            var nameHeight = Mathf.Min(62, Mathf.Ceil(Ui.TextHeight(name, inner)));
+            var nameTop = Mathf.Clamp(cardHeight - stackTop - nameHeight - Kit.Space2, story.Recommended ? Kit.Space3 + TagHeight + Kit.Space1 : 16, 64);     // clear of the flag and of the stack
+            Ui.TopRow(name.rectTransform, pad, pad, nameTop, 62);
+            name.transform.SetSiblingIndex(shade.transform.GetSiblingIndex() + 1);
             PressButton.On(face.gameObject, () => Tapped(story), .99f);
             return card;
         }
@@ -177,7 +184,7 @@ namespace LegacyThroughTime.Prototype
             {
                 var d = i - at; var a = Mathf.Abs(d);
                 var scale = Mathf.Lerp(1f, SideScale, Mathf.Clamp01(a));
-                cards[i].anchoredPosition = new Vector2(d * (CardWidth * (1f + SideScale) / 2f + Gap), 0);
+                cards[i].anchoredPosition = new Vector2(d * (cardWidth * (1f + SideScale) / 2f + Gap), 0);
                 cards[i].localScale = Vector3.one * scale;
                 groups[i].alpha = Mathf.Lerp(1f, .5f, Mathf.Clamp01(a));
                 groups[i].blocksRaycasts = a < 1.5f;
@@ -252,8 +259,10 @@ namespace LegacyThroughTime.Prototype
             for (var i = grid.childCount - 1; i >= 0; i--) UnityEngine.Object.Destroy(grid.GetChild(i).gameObject);
             var q = (query ?? "").Trim().ToLowerInvariant();
             var shown = 0;
-            const float w = (Metrics.RefWidth - 2 * Kit.Side - GridGap) / 2, coverH = w * 9 / 16, headH = 24, smallH = 18;
-            const float cellH = coverH + Kit.Space2 + headH + Kit.Space2 + smallH;
+            var w = Mathf.Floor((Kit.Width - 2 * Kit.Side - GridGap) / 2 * 2) / 2;
+            var coverH = Mathf.Round(w * 9 / 16);
+            const float headH = 24, smallH = 18;
+            var cellH = coverH + Kit.Space2 + headH + Kit.Space2 + smallH;
             foreach (var story in stories)
             {
                 if (q.Length > 0 && !story.Title.ToLowerInvariant().Contains(q)) continue;

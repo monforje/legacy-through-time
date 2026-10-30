@@ -31,12 +31,17 @@ namespace LegacyThroughTime.Prototype
         {
             this.anim = anim;
             dialog = new ShellDialog(parent, "Колесо фортуны", anim, closed);
-            var c = dialog.Content;
+            var c = MenuUi.List(dialog.Content, 0, 0, 0);                  // the content scrolls when the screen is short
+            MenuUi.SetHeight(c, 616);
+            // the scroll reaches 8 beyond the content on both sides (kit.css `.scroll`), so that the halo of the wheel is not cut at its edge
+            var viewport = (RectTransform)c.parent;
+            viewport.offsetMin = new Vector2(-Kit.Space2, viewport.offsetMin.y); viewport.offsetMax = new Vector2(Kit.Space2, viewport.offsetMax.y);
+            c.offsetMin = new Vector2(Kit.Space2, c.offsetMin.y); c.offsetMax = new Vector2(-Kit.Space2, c.offsetMax.y);
             Prizes(c);
 
             // the wheel: the halo, the disc with the icons, the light, the hub; its centre is 298 down and in the middle
             var holder = Ui.Rect(c, "Wheel");
-            Ui.Box(holder, A.TopLeft, A.TopLeft, new Vector2(152 - WheelArt.GlowSize / 2, -(298 - WheelArt.GlowSize / 2)), new Vector2(WheelArt.GlowSize, WheelArt.GlowSize));
+            Ui.Box(holder, A.TopCenter, A.TopCenter, new Vector2(0, -(298 - WheelArt.GlowSize / 2)), new Vector2(WheelArt.GlowSize, WheelArt.GlowSize));
             Layer(holder, "Halo", WheelArt.Glow, WheelArt.GlowSize);
             var discImage = Layer(holder, "Disc", WheelArt.Disc, WheelArt.DiscSize);
             disc = discImage.rectTransform;
@@ -62,7 +67,7 @@ namespace LegacyThroughTime.Prototype
             // "Вращать колесо": the label on the left, the wheel and the number on the right
             spin = Parts.Button(c, "Вращать колесо", ButtonStyle.Primary, Spin, 52);
             Ui.TopRow(spin.Root, 0, 0, 500, 52);
-            Split(spin, 205);
+            Split(spin, 83);
             spinIcon = Kit.Icon(spin.Root, "Tail icon", Kit.Pic("wheel"), 22, A.MidRight, Vector2.zero);
             spinIcon.raycastTarget = false;
             spinCount = Ui.Txt(spin.Root, "Tail", "", Kit.F800, Kit.FsBody, Kit.AccentInk, TextAnchor.MiddleRight);
@@ -72,7 +77,7 @@ namespace LegacyThroughTime.Prototype
             var boost = Parts.Button(c, "Удвоить шансы на редкие призы", ButtonStyle.Neutral,
                                      () => ShellToast.Show(dialog.Root, "Скоро: удвоение шансов за 150 алмазов", anim, 2.5f, 52), 52);
             Ui.TopRow(boost.Root, 0, 0, 564, 52);
-            Split(boost, 205);
+            Split(boost, 83);
             var cost = Ui.Txt(boost.Root, "Cost", "150", Kit.F800, Kit.FsBody, Kit.Text, TextAnchor.MiddleRight);
             Ui.Box(cost.rectTransform, A.MidRight, A.MidRight, new Vector2(-16, 0), new Vector2(40, 22));
             var gemX = -(16 + cost.preferredWidth + 8);
@@ -81,11 +86,11 @@ namespace LegacyThroughTime.Prototype
         }
 
         /// `.btn-split`: the label on the left in its own width (it wraps), the tail on the right.
-        static void Split(ShellButton button, float labelWidth)
+        static void Split(ShellButton button, float labelRight)
         {
             button.Label.alignment = TextAnchor.MiddleLeft;
             button.Label.horizontalOverflow = HorizontalWrapMode.Wrap;
-            Ui.Box(button.Label.rectTransform, A.MidLeft, A.MidLeft, new Vector2(16, 0), new Vector2(labelWidth, 52));
+            Ui.Stretch(button.Label.rectTransform, 16, 0, labelRight, 0);              // stops before the tail, wraps
         }
 
         static Image Layer(Transform holder, string name, Sprite sprite, float size)
@@ -99,25 +104,28 @@ namespace LegacyThroughTime.Prototype
         // ------------------------------------------------------------------ the prizes on top: .prizes
         void Prizes(RectTransform c)
         {
-            const float step = (304 - 4 * 4) / 5f + 4, cellW = (304 - 4 * 4) / 5f;
             for (var i = 0; i < Wheel.Prizes.Length; i++)
             {
                 var p = Wheel.Prizes[i];
-                var cx = (i % 5) * step + cellW / 2;
                 var top = 12 + (i / 5) * 74;
-                var pic = Kit.Icon(c, "Prize " + p.Id, Kit.Pic(p.Pic), 46, A.TopLeft, new Vector2(cx - 23, -(top - 1)));
+                // a cell is a fifth of the width; what is in it is centred
+                var cell = Ui.Rect(c, "Prize " + p.Id);
+                cell.anchorMin = new Vector2((i % 5) / 5f, 1); cell.anchorMax = new Vector2((i % 5 + 1) / 5f, 1);
+                cell.pivot = new Vector2(.5f, 1);
+                cell.anchoredPosition = new Vector2(0, -top); cell.sizeDelta = new Vector2(-Kit.Space1, 66);
+                var pic = Kit.Icon(cell, "Icon", Kit.Pic(p.Pic), 46, A.TopCenter, new Vector2(0, 1));
                 pic.raycastTarget = false;
                 if (p.Amount > 0)
                 {
-                    var badge = Kit.Round(c, "Badge", Kit.Accent, 9);
+                    var badge = Kit.Round(cell, "Badge", Kit.Accent, 9);
                     var amount = Ui.Txt(badge.rectTransform, "Amount", p.Amount.ToString(), Kit.F800, Kit.FsMicro, Kit.AccentInk, TextAnchor.MiddleCenter);
                     var w = Mathf.Max(20, amount.preferredWidth + 10);
-                    Ui.Box(badge.rectTransform, A.TopLeft, A.TopLeft, new Vector2(cx + 28 - w, -(top - 6)), new Vector2(w, 18));
+                    Ui.Box(badge.rectTransform, A.TopCenter, A.TopCenter, new Vector2(28 - w / 2, 6), new Vector2(w, 18));
                     Ui.Stretch(amount.rectTransform);
                 }
                 var chance = p.Weight >= 10 ? Mathf.Floor((float)p.Weight).ToString() : p.Weight.ToString("0.##").Replace('.', ',');
-                var pct = Ui.Txt(c, "Chance", chance + "%", Kit.F800, Kit.FsSmall, Kit.Text, TextAnchor.MiddleCenter);
-                Ui.Box(pct.rectTransform, A.TopLeft, A.TopLeft, new Vector2(cx - 29, -(top + 48)), new Vector2(58, 18));
+                var pct = Ui.Txt(cell, "Chance", chance + "%", Kit.F800, Kit.FsSmall, Kit.Text, TextAnchor.MiddleCenter);
+                Ui.Box(pct.rectTransform, A.TopCenter, A.TopCenter, new Vector2(0, -48), new Vector2(58, 18));
             }
         }
 

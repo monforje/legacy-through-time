@@ -56,6 +56,18 @@ namespace LegacyThroughTime.Prototype
             },
             new StoryEntry
             {
+                Id = "sikhote-alin", Title = "По хребтам Сихотэ-Алиня", Episode = "Пролог", Genre = "История · 1900",
+                Blurb = "Мальчик из Петербурга рисует карты несуществующих стран. Через много лет он сходит на берег во Владивостоке.",
+                Cover = "sa_title", Hero = "Арсеньев", Opening = "Не спится. Карта на столе, за окном горы. Садись, поговорим.",
+                Chapters = new[]
+                {
+                    new ChapterEntry { Number = 1, Title = "Мальчик, который хотел увидеть весь мир", Path = "stories/sikhote-alin/episode-01.json",
+                                         SaveId = "sikhote-alin", Night = "ep01", Heroine = "Арсеньев" },
+                    new ChapterEntry { Number = 2, Title = "Скоро", SaveId = "sikhote-alin-2" },
+                },
+            },
+            new StoryEntry
+            {
                 Id = "zilant", Title = "Зилант", Episode = "Скоро", Genre = "Легенда · Казань",
                 Blurb = "Легенда о крылатом змее, хранителе холма, на котором встала Казань.", Cover = "kazan_panorama", Soon = true,
             },

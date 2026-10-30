@@ -11,7 +11,8 @@ namespace LegacyThroughTime.Prototype
     /// as a stand-in. A purchase: the button loads, the numbers run up, the gift opens, sparks fly.
     sealed class ShopScreen : IDisposable
     {
-        const float CardGap = Kit.Space3, Width = Metrics.RefWidth - 2 * Kit.Side;
+        const float CardGap = Kit.Space3;
+        static float Width => Kit.Width - 2 * Kit.Side;
 
         public readonly RectTransform Root;
         readonly IAnimator anim;
@@ -33,9 +34,8 @@ namespace LegacyThroughTime.Prototype
             var bar = Ui.Rect(Root, "Pills");
             Ui.TopRow(bar, Kit.Side, Kit.Side + 52, top, Kit.Touch);
             energyPill = Parts.Pill(bar, "energy", ShellPurse.Energy, () => Switch(0));
-            Ui.Box(energyPill.Root, A.MidLeft, A.MidLeft, Vector2.zero, new Vector2((Width - 52 - Kit.Space2) / 2, Kit.Touch));
             gemPill = Parts.Pill(bar, "gem", ShellPurse.Gems, () => Switch(1));
-            Ui.Box(gemPill.Root, A.MidRight, A.MidRight, Vector2.zero, new Vector2((Width - 52 - Kit.Space2) / 2, Kit.Touch));
+            Parts.TwoPills(energyPill, gemPill);
 
             var list = MenuUi.List(Root, top + Kit.Touch + Kit.Space3, Kit.NavHeight + Viewport.ExtraBottom, 0);
             content = list;

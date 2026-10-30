@@ -27,7 +27,7 @@ namespace LegacyThroughTime.Prototype
             get
             {
                 if (disc) return disc;
-                const int n = 64;
+                const int n = 256;                                       // large: it is drawn from 8 to 100 units, at up to 3 pixels a unit
                 var t = NewTexture(n, n);
                 for (var y = 0; y < n; y++)
                     for (var x = 0; x < n; x++)
@@ -36,29 +36,33 @@ namespace LegacyThroughTime.Prototype
                         t.SetPixel(x, y, new Color(1, 1, 1, Mathf.Clamp01(n / 2f - d)));      // one pixel of anti-aliasing
                     }
                 t.Apply();
-                return disc = Sprite.Create(t, new Rect(0, 0, n, n), new Vector2(.5f, .5f), 100);
+                return disc = Sprite.Create(t, new Rect(0, 0, n, n), new Vector2(.5f, .5f), 400);
             }
         }
 
         static readonly System.Collections.Generic.Dictionary<int, Sprite> rounded = new();
 
+        /// Pixels in a unit of the rounded rectangle: the device draws up to 3 pixels a unit, so the corners are cut at 4.
+        const int RoundedScale = 4;
+
         /// A white rounded rectangle as a 9-slice (the game tints it): bubbles, fields, rows of the neutral kit.
         public static Sprite Rounded(int radius)
         {
             if (rounded.TryGetValue(radius, out var cached) && cached) return cached;
-            var n = radius * 2 + 2;
+            var r = radius * RoundedScale;
+            var n = (radius * 2 + 2) * RoundedScale;
             var t = NewTexture(n, n);
             for (var y = 0; y < n; y++)
                 for (var x = 0; x < n; x++)
                 {
                     // distance to the nearest corner centre, 0 along the straight edges
-                    var dx = Mathf.Max(0, Mathf.Max(radius - (x + .5f), x + .5f - (n - radius)));
-                    var dy = Mathf.Max(0, Mathf.Max(radius - (y + .5f), y + .5f - (n - radius)));
-                    t.SetPixel(x, y, new Color(1, 1, 1, Mathf.Clamp01(radius - Mathf.Sqrt(dx * dx + dy * dy) + .5f)));
+                    var dx = Mathf.Max(0, Mathf.Max(r - (x + .5f), x + .5f - (n - r)));
+                    var dy = Mathf.Max(0, Mathf.Max(r - (y + .5f), y + .5f - (n - r)));
+                    t.SetPixel(x, y, new Color(1, 1, 1, Mathf.Clamp01(r - Mathf.Sqrt(dx * dx + dy * dy) + .5f)));
                 }
             t.Apply();
-            var border = new Vector4(radius, radius, radius, radius);
-            return rounded[radius] = Sprite.Create(t, new Rect(0, 0, n, n), new Vector2(.5f, .5f), 100, 0, SpriteMeshType.FullRect, border);
+            var border = new Vector4(r, r, r, r);
+            return rounded[radius] = Sprite.Create(t, new Rect(0, 0, n, n), new Vector2(.5f, .5f), 100 * RoundedScale, 0, SpriteMeshType.FullRect, border);
         }
 
         // 8-bit alpha has only 256 levels, so a smooth dark gradient stretched over a phone screen shows as

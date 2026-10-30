@@ -54,24 +54,26 @@ namespace LegacyThroughTime.Prototype
         {
             if (IsOpen) return;
             page = Ui.Rect(layer, "Settings");
-            Ui.Bleed(page);
+            Ui.Stretch(page);
             group = page.gameObject.AddComponent<CanvasGroup>();
             var ground = Kit.Ground(page);
             ground.raycastTarget = true;
+            var content = Kit.Column(page);                                     // the content keeps the width of the shell
 
             var top = Metrics.InsetTop + Viewport.ExtraTop;
-            var title = Ui.Txt(page, "Title", "Настройки", Kit.F800, Kit.FsTitle, Kit.Text, TextAnchor.MiddleCenter);
+            var title = Ui.Txt(content, "Title", "Настройки", Kit.F800, Kit.FsTitle, Kit.Text, TextAnchor.MiddleCenter);
             Ui.TopRow(title.rectTransform, Kit.Side + 56, Kit.Side + 56, top, Kit.Touch);
-            var close = Parts.IconButton(page, "close", Close, Kit.Touch, circle: true);
+            var close = Parts.IconButton(content, "close", Close, Kit.Touch, circle: true);
             close.Face.color = Color.clear;
             Ui.Box(close.Root, A.TopRight, A.TopRight, new Vector2(-Kit.Side, -top), new Vector2(Kit.Touch, Kit.Touch));
 
-            var list = MenuUi.List(page, top + Kit.Touch, Viewport.ExtraBottom, 0);
+            var list = MenuUi.List(content, top + Kit.Touch, Viewport.ExtraBottom, 0);
             var y = 0f;
             y += Switches(list, y) + GroupGap;
             y += Account(list, y, cloud) + GroupGap;
             y += Links(list, y, toMenu) + GroupGap;
             MenuUi.SetHeight(list, y);
+            EdgeBack.Attach(page, () => { Close(); return true; }, 0);
 
             if (!anim.Enabled) return;
             group.alpha = 0;
@@ -93,14 +95,14 @@ namespace LegacyThroughTime.Prototype
         RectTransform Group(RectTransform list, string name, float top, float height)
         {
             var card = Kit.Round(list, name, Kit.Surface, Kit.RadiusM);
-            Ui.Box(card.rectTransform, A.TopLeft, A.TopLeft, new Vector2(Kit.Side, -top), new Vector2(Metrics.RefWidth - 2 * Kit.Side, height));
+            Ui.Box(card.rectTransform, A.TopLeft, A.TopLeft, new Vector2(Kit.Side, -top), new Vector2(Kit.Width - 2 * Kit.Side, height));
             return card.rectTransform;
         }
 
         /// A row of a group: 52 high, the glyph at 12, the label at 46 from the row's left.
         RectTransform Row(RectTransform group, int index, string glyph, string label, float labelRight = 46)
         {
-            var width = Metrics.RefWidth - 2 * Kit.Side - 2 * GroupPad;
+            var width = Kit.Width - 2 * Kit.Side - 2 * GroupPad;
             var row = Kit.Round(group, "Row " + label, Color.clear, Kit.RadiusS);
             row.raycastTarget = true;
             Ui.Box(row.rectTransform, A.TopLeft, A.TopLeft, new Vector2(GroupPad, -(GroupPad + index * RowHeight)), new Vector2(width, RowHeight));
@@ -139,7 +141,7 @@ namespace LegacyThroughTime.Prototype
         {
             const float pad = Kit.Space3, buttonHeight = 44, gap = Kit.Space2;
             var signedIn = cloud != null && cloud.SignIn == null;
-            var inner = Metrics.RefWidth - 2 * Kit.Side - 2 * pad;
+            var inner = Kit.Width - 2 * Kit.Side - 2 * pad;
             var count = signedIn ? 0 : 3;
             var line = signedIn ? (string.IsNullOrEmpty(cloud.Line) ? "Прогресс сохраняется в облаке" : "Google Play Игры · " + cloud.Line)
                                 : "Войдите, чтобы прогресс сохранялся в облаке";

@@ -62,7 +62,9 @@ namespace LegacyThroughTime.Prototype
         /// (108 wide) on the right, then the foot with the timer and the action. Returns its height.
         float Card(RectTransform list, Rewards.Kind kind, float y)
         {
-            const float pad = Kit.Space3, info = 134, art = 108, foot = 40;
+            const float pad = Kit.Space3, art = 108, foot = 40;
+            var inner = Kit.Width - 2 * Kit.Side - 2 * Kit.Space3;                 // the width of the dialog's content
+            var info = Mathf.Floor((inner - 2 * pad - Kit.Space3) / 2);          // grid 1fr 1fr
             var row = new Row { Kind = kind };
             var card = Kit.Round(list, "Reward " + kind.Id, Kit.Surface, Kit.RadiusM);
             var title = Ui.Txt(card.rectTransform, "Title", kind.Title, Kit.F800, Kit.FsHead, Kit.Text, TextAnchor.UpperLeft);
@@ -71,11 +73,11 @@ namespace LegacyThroughTime.Prototype
             var textHeight = Mathf.Ceil(Ui.TextHeight(text, info));
             var infoHeight = titleHeight + Kit.Space2 + textHeight;
             var rowHeight = Mathf.Max(infoHeight, 88);
-            Ui.TopRow(title.rectTransform, pad, 304 - pad - info, pad, titleHeight);
-            Ui.TopRow(text.rectTransform, pad, 304 - pad - info, pad + titleHeight + Kit.Space2, textHeight);
+            Ui.TopRow(title.rectTransform, pad, inner - pad - info, pad, titleHeight);
+            Ui.TopRow(text.rectTransform, pad, inner - pad - info, pad + titleHeight + Kit.Space2, textHeight);
 
             // the picture is centred in its column, so its centre meets the centre of the action under it
-            row.Art = Kit.Icon(card.rectTransform, "Art", Kit.Pic(kind.Pic), 88, A.TopLeft, new Vector2(304 - pad - art / 2 - 44, -(pad + (rowHeight - 88) / 2)));
+            row.Art = Kit.Icon(card.rectTransform, "Art", Kit.Pic(kind.Pic), 88, A.TopRight, new Vector2(-(pad + art / 2 - 44), -(pad + (rowHeight - 88) / 2)));
             row.Art.raycastTarget = false;
 
             var footTop = pad + rowHeight + Kit.Space2;
@@ -95,20 +97,20 @@ namespace LegacyThroughTime.Prototype
                 var two = kind.Id == "ad";
                 row.Action = Parts.Button(card.rectTransform, two ? "Смотреть рекламу" : chapter ? "Не готово" : "Получить",
                                           ButtonStyle.Primary, () => Claim(row), foot, Kit.RadiusM);
-                Ui.Box(row.Action.Root, A.TopLeft, A.TopLeft, new Vector2(304 - pad - art, -footTop), new Vector2(art, foot));
+                Ui.Box(row.Action.Root, A.TopRight, A.TopRight, new Vector2(-pad, -footTop), new Vector2(art, foot));
                 row.Action.Label.fontSize = two ? Kit.FsMicro : Kit.FsBody;
                 row.Action.Label.resizeTextForBestFit = false;
                 if (two) { row.Action.Label.horizontalOverflow = HorizontalWrapMode.Wrap; row.Action.Label.lineSpacing = .9f; }
                 if (!chapter)
                 {
                     row.Lock = Parts.IconButton(card.rectTransform, "lock", null, 28, circle: false);
-                    Ui.Box(row.Lock.Root, A.TopLeft, A.TopLeft, new Vector2(304 - pad - art - Kit.Space2 - 28, -(footTop + 6)), new Vector2(28, 28));
+                    Ui.Box(row.Lock.Root, A.TopRight, A.TopRight, new Vector2(-(pad + art + Kit.Space2), -(footTop + 6)), new Vector2(28, 28));
                     row.Lock.Glyph.rectTransform.sizeDelta = new Vector2(16, 16);
                     row.Lock.SetEnabled(false);
                 }
             }
             var height = footTop + foot + pad;
-            Ui.Box(card.rectTransform, A.TopLeft, A.TopLeft, new Vector2(0, -y), new Vector2(304, height));
+            Ui.TopRow(card.rectTransform, 0, 0, y, height);
             rows.Add(row);
             return height;
         }

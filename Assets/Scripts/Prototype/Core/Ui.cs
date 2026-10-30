@@ -29,9 +29,9 @@ namespace LegacyThroughTime.Prototype
         }
 
         /// Stretches over the whole canvas even from inside the 360-wide column (dims on a tablet must not end at the column).
-        public static RectTransform Bleed(RectTransform r)
+        public static RectTransform Bleed(RectTransform r, float columnWidth = Metrics.RefWidth)
         {
-            var side = (Viewport.Width - Metrics.RefWidth) / 2;
+            var side = (Viewport.Width - columnWidth) / 2;
             return Stretch(r, -side, 0, -side, 0);
         }
 
