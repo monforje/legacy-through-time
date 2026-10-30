@@ -138,6 +138,7 @@ namespace LegacyThroughTime.Editor
             Add("menu-shop", c => Menu(c, terms).Select(MenuScreen.Tab.Shop));
             Add("menu-wheel", c => Menu(c, terms).Select(MenuScreen.Tab.Wheel));
             Add("menu-rewards", c => Menu(c, terms).ShowRewards());
+            Add("menu-wheel-to-shop", c => { var m = Menu(c, terms); m.Select(MenuScreen.Tab.Wheel); m.Select(MenuScreen.Tab.Shop); });     // the wheel is gone, the shop is in front
             Add("menu-sheet", c => Menu(c, terms).Select(MenuScreen.Tab.Rewards));
             Add("menu-settings", c =>
             {

@@ -120,6 +120,22 @@ namespace LegacyThroughTime.Prototype
 
         static Sprite logo;
 
+        /// A sprite from Resources/Brand (the loader's ring and hourglass).
+        public static Sprite Brand(string name)
+        {
+            if (brand.TryGetValue(name, out var s) && s) return s;
+            s = Resources.Load<Sprite>("Brand/" + name);
+            if (!s)
+            {
+                Missing++;
+                Debug.LogError($"Brand art missing: Resources/Brand/{name}.png");
+                s = ProceduralArt.White;
+            }
+            return brand[name] = s;
+        }
+
+        static readonly Dictionary<string, Sprite> brand = new();
+
         public static Font Font(string name)
         {
             if (fonts.TryGetValue(name, out var f) && f) return f;

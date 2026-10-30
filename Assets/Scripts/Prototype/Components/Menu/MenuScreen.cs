@@ -111,6 +111,7 @@ namespace LegacyThroughTime.Prototype
             if (next == Tab.Wheel) { OpenWheel(); return; }
             if (next == Tab.Rewards) { ToggleSheet(); return; }
             CloseSheet();
+            CloseWheel(); CloseRewards();                            // a popup never stays over another screen: the screen it opens is the one in front
             CloseChapters();
             library?.Close();
             if (next == tab && next != Tab.Stories) return;
@@ -124,7 +125,7 @@ namespace LegacyThroughTime.Prototype
             home.Root.gameObject.SetActive(tab == Tab.Stories);
             if (tab == Tab.Chat) chats = new ChatsPanel(stage, ChatStore.Rows(stories, Started), s => { if (!leaving) openChat(s); }, () => Select(Tab.Stories), DateTime.Now, anim);
             if (tab == Tab.Library) library = new LibraryPanel(stage, stories, terms, anim, () => Select(Tab.Stories));
-            if (tab == Tab.Shop) shop = new ShopScreen(Root, anim, () => Select(Tab.Stories));
+            if (tab == Tab.Shop) shop = new ShopScreen(Root, anim, ShopBack);
             pills.gameObject.SetActive(tab == Tab.Stories);                    // the other sections have their own headers
             UpdateGear();
             nav.Root.gameObject.SetActive(tab != Tab.Shop);                    // the shop has its own bar
@@ -137,11 +138,22 @@ namespace LegacyThroughTime.Prototype
             nav.Show(Array.IndexOf(Bar, tab));
         }
 
+        bool backToWheel;
+
+        /// "Назад" in the shop: to the wheel if it was opened from there, else to the stories.
+        void ShopBack()
+        {
+            var wheelAgain = backToWheel;
+            backToWheel = false;
+            Select(Tab.Stories);
+            if (wheelAgain) OpenWheel();
+        }
+
         void OpenWheel()
         {
             if (wheel != null && wheel.IsOpen) return;
             CloseRewards(); CloseSheet();
-            wheel = new WheelDialog(Layer, anim, () => { wheel = null; nav.Show(Array.IndexOf(Bar, tab)); UpdateGear(); }, () => Select(Tab.Shop));
+            wheel = new WheelDialog(Layer, anim, () => { wheel = null; nav.Show(Array.IndexOf(Bar, tab)); UpdateGear(); }, () => { backToWheel = true; Select(Tab.Shop); });          // "+" buys spins: the shop, and "Назад" comes back to the wheel
             UpdateGear();
             nav.Show(Array.IndexOf(Bar, Tab.Wheel));
         }
@@ -266,6 +278,7 @@ namespace LegacyThroughTime.Prototype
             if (rewards != null && rewards.IsOpen) { rewards.Close(); return true; }
             if (library != null && library.DetailOpen) { library.Close(); return true; }
             if (chapters != null) { CloseChapters(); return true; }
+            if (tab == Tab.Shop) { ShopBack(); return true; }
             if (tab != Tab.Stories) { Select(Tab.Stories); return true; }
             return false;
         }
