@@ -4,11 +4,12 @@ using UnityEngine.UI;
 
 namespace LegacyThroughTime.Prototype
 {
-    /// The chapters of a story over the dimmed fire (and the way into the chat with its hero): read ones with a gold check, the one being read with "Продолжить"
-    /// and a two-tap "Начать сначала", open ones with "Читать", those to come dark with a lock.
+    /// The chapters of a story (templates/shell/chapters.html): the back arrow, the title and the way into the chat with
+    /// its hero on top, the cover, the progress, then a card of rows: read ones with a check, the one being read with
+    /// "Продолжить" and a two-tap restart, new ones with "Читать", those to come with a lock.
     sealed class ChapterList
     {
-        const float RowHeight = 104, RowGap = 12;
+        const float RowHeight = 68, CoverHeight = 150;
 
         public readonly RectTransform Root;
         readonly IAnimator anim;
@@ -20,107 +21,136 @@ namespace LegacyThroughTime.Prototype
             this.open = open; this.anim = anim;
             Root = Ui.Rect(parent, "Chapters");
             Ui.Stretch(Root);
-            MenuUi.Veil(Root, .74f);
+            Kit.Ground(Root);
 
-            var top = Metrics.HudBottom + Viewport.ExtraTop;
-            MenuUi.Title(Root, story.Title, $"Глав: {story.Chapters.Count}", top, side: 58, size: 27);
-            var back = Ui.Icon(Root, "Back", "arrow", A.TopLeft, A.Center, new Vector2(Metrics.Side + 8, -(top + 20)), 22);
-            back.rectTransform.localScale = new Vector3(-1, 1, 1);
-            back.raycastTarget = true;
-            PressButton.On(back.gameObject, close, .9f);
-
-            var list = MenuUi.List(Root, top + MenuUi.HeaderHeight, 0);
-            var y = 6f;
-            foreach (var chapter in story.Chapters)
-            {
-                Row(list, chapter, progress(chapter), y);
-                y += RowHeight + RowGap;
-            }
+            var top = Metrics.InsetTop + Kit.Space3 + Viewport.ExtraTop;
+            var back = Parts.IconButton(Root, "chevron-l", close, Kit.Touch);
+            Ui.Box(back.Root, A.TopLeft, A.TopLeft, new Vector2(Kit.Side, -top), new Vector2(Kit.Touch, Kit.Touch));
+            var title = MenuUi.Fit(Ui.Txt(Root, "Title", story.Title, Art.Sub, Kit.FsHead, Kit.Text, TextAnchor.MiddleCenter), 12);
+            Ui.TopRow(title.rectTransform, Kit.Side + 56, Kit.Side + 56, top, Kit.Touch);
             if (!string.IsNullOrEmpty(story.Hero))
             {
-                // the way into the chat with the hero of the story
-                var talk = MenuUi.Button(list, "Chat", "Чат с героем: " + story.Hero, openChat, "btn-chosen", "bubble");
-                Ui.TopRow(talk.rectTransform, 0, 0, y, 52);
-                y += 52 + RowGap;
+                var chat = Parts.IconButton(Root, "chat", openChat, Kit.Touch);
+                Ui.Box(chat.Root, A.TopRight, A.TopRight, new Vector2(-Kit.Side, -top), new Vector2(Kit.Touch, Kit.Touch));
             }
-            MenuUi.SetHeight(list, y + 20);
+
+            var list = MenuUi.List(Root, top + Kit.Touch + Kit.Space3, 0);
+            var width = Metrics.RefWidth - 2 * Kit.Side;
+            var y = 0f;
+            Cover(list, story, y, width); y += CoverHeight + Kit.Space3;
+
+            var done = 0;
+            foreach (var chapter in story.Chapters) if (progress(chapter) == MenuScreen.Progress.Finished) done++;
+            Progress(list, y, width, done, story.Chapters.Count); y += 34 + Kit.Space3;
+
+            var group = Kit.Round(list, "Rows", Kit.Surface, Kit.RadiusM);
+            Ui.Box(group.rectTransform, A.TopLeft, A.TopLeft, new Vector2(Kit.Side, -y), new Vector2(width, story.Chapters.Count * RowHeight + 8));
+            var ry = 4f;
+            foreach (var chapter in story.Chapters)
+            {
+                Row(group.rectTransform, chapter, progress(chapter), ry, width - 8);
+                ry += RowHeight;
+            }
+            y += story.Chapters.Count * RowHeight + 8 + Kit.Space4;
+            MenuUi.SetHeight(list, y);
 
             if (!anim.Enabled) return;
-            var group = Ui.Group(Root); group.alpha = 0;
-            anim.Play(Tween.To(.28f, e => group.alpha = e, Easing.Linear));
+            var fade = Ui.Group(Root); fade.alpha = 0;
+            anim.Play(Tween.To(Kit.Dur.Normal, e => fade.alpha = e, Easing.Linear));
         }
 
-        void Row(RectTransform list, ChapterEntry chapter, MenuScreen.Progress state, float top)
+        static void Cover(RectTransform list, StoryEntry story, float top, float width)
         {
-            var row = Ui.Sliced(list, "Chapter " + chapter.Number, "card");
+            var card = Kit.Round(list, "Cover", Kit.ArtColor(story.Id), Kit.RadiusL);
+            Ui.Box(card.rectTransform, A.TopLeft, A.TopLeft, new Vector2(Kit.Side, -top), new Vector2(width, CoverHeight));
+            card.gameObject.AddComponent<Mask>().showMaskGraphic = true;
+            var picture = Ui.Img(card.rectTransform, "Picture", null);
+            picture.enabled = false; picture.raycastTarget = false;
+            Art.Background(story.Cover, sprite =>
+            {
+                if (!picture || !sprite) return;
+                picture.sprite = sprite; picture.enabled = true;
+                Ui.Cover(picture, new Vector2(width, CoverHeight), .4f);
+            });
+        }
+
+        static void Progress(RectTransform list, float top, float width, int done, int all)
+        {
+            var text = Ui.Txt(list, "Progress", $"Пройдено {done} из {all} глав", Art.Body, Kit.FsSmall, Kit.Muted);
+            Ui.Box(text.rectTransform, A.TopLeft, A.TopLeft, new Vector2(Kit.Side, -top), new Vector2(width, 18));
+            var track = Kit.Round(list, "Track", Kit.Surface2, 4);
+            Ui.Box(track.rectTransform, A.TopLeft, A.TopLeft, new Vector2(Kit.Side, -(top + 24)), new Vector2(width, 8));
+            if (all == 0 || done == 0) return;
+            var fill = Kit.Round(track.rectTransform, "Fill", Kit.Accent, 4);
+            fill.rectTransform.anchorMin = Vector2.zero; fill.rectTransform.anchorMax = new Vector2((float)done / all, 1);
+            fill.rectTransform.offsetMin = fill.rectTransform.offsetMax = Vector2.zero;
+        }
+
+        void Row(RectTransform group, ChapterEntry chapter, MenuScreen.Progress state, float top, float width)
+        {
+            var current = state == MenuScreen.Progress.InProgress;
+            var row = Kit.Round(group, "Chapter " + chapter.Number, current ? Kit.Surface2 : Color.clear, Kit.RadiusS);
             row.raycastTarget = true;
-            Ui.TopRow(row.rectTransform, 0, 0, top, RowHeight);
-            Ui.Lift(row, 6, .45f);
+            Ui.Box(row.rectTransform, A.TopLeft, A.TopLeft, new Vector2(4, -top), new Vector2(width, RowHeight - 4));
             var rt = row.rectTransform;
             var locked = state == MenuScreen.Progress.Locked;
 
-            var seal = Ui.Icon(rt, "Seal", "round", A.MidLeft, A.MidLeft, new Vector2(16, 2), 48);
-            var number = Ui.Txt(seal.rectTransform, "Number", chapter.Number.ToString(), Art.Accent, 22, Theme.Parchment, TextAnchor.MiddleCenter);
-            Ui.Stretch(number.rectTransform, 0, 2, 0, 0);
-            Ui.Emboss(number);
-
-            var head = Ui.Txt(rt, "Head", $"Глава {chapter.Number}", Art.Sub, 13, locked ? Theme.Ink.WithAlpha(.6f) : Theme.Scarlet);
-            Ui.TopRow(head.rectTransform, 78, 64, 18, 18);
-            var title = MenuUi.Fit(Ui.Txt(rt, "Title", chapter.Title, Art.Accent, 21, Theme.Ink), 14);
-            Ui.TopRow(title.rectTransform, 78, 64, 36, 28);
-            var line = MenuUi.Fit(Ui.Txt(rt, "State", Line(state), Art.Body, 14, Theme.Ink.WithAlpha(.7f)), 10);
-            Ui.TopRow(line.rectTransform, 78, 64, 64, 22);
-
-            var icon = state switch
+            var mark = state switch
             {
-                MenuScreen.Progress.Finished => "check",
-                MenuScreen.Progress.Locked => "lock",
-                _ => "play",
+                MenuScreen.Progress.Finished => Kit.Glyph("check"),
+                MenuScreen.Progress.Locked => Kit.Glyph("lock"),
+                MenuScreen.Progress.InProgress => Kit.Pic("book"),
+                _ => Kit.Pic("star"),
             };
-            // the mark of the state on the right; the chapter being read has "Начать сначала" there instead
-            if (state != MenuScreen.Progress.InProgress)
-                Ui.Icon(rt, "Mark", icon, A.MidRight, A.MidRight, new Vector2(-22, 2), 28,
-                        state == MenuScreen.Progress.Finished ? Theme.Emerald : locked ? Theme.Ink.WithAlpha(.55f) : Theme.Scarlet);
+            var icon = Kit.Icon(rt, "Mark", mark, state == MenuScreen.Progress.Finished || locked ? 22 : 30, A.MidLeft, new Vector2(24, 0));
+            icon.raycastTarget = false;
+            if (locked) icon.color = new Color(1, 1, 1, .6f);
+
+            var head = MenuUi.Fit(Ui.Txt(rt, "Head", $"Глава {chapter.Number}. {chapter.Title}", Art.Sub, Kit.FsBody, locked ? Kit.Muted : Kit.Text), 11);
+            Ui.TopRow(head.rectTransform, 52, current ? 132 : 12, 10, 22);
+            var line = MenuUi.Fit(Ui.Txt(rt, "State", Line(state), Art.Body, Kit.FsSmall, Kit.Muted), 10);
+            Ui.TopRow(line.rectTransform, 52, current ? 132 : 12, 34, 20);
 
             if (locked)
             {
-                row.color = new Color(.62f, .6f, .58f, 1);
                 PressButton.On(row.gameObject, () => { if (anim.Enabled) anim.Play(Effects.Shake(rt)); }, .99f);
                 return;
             }
-            PressButton.On(row.gameObject, () => open(chapter, state != MenuScreen.Progress.InProgress), .98f);
-            if (state == MenuScreen.Progress.InProgress) Restart(rt, chapter, line);
+            PressButton.On(row.gameObject, () => open(chapter, !current), .98f);
+            if (current) Resume(rt, chapter, line);
         }
 
         static string Line(MenuScreen.Progress state) => state switch
         {
             MenuScreen.Progress.Finished => "Прочитана · читать снова",
-            MenuScreen.Progress.InProgress => "С того же места",
-            MenuScreen.Progress.Locked => "Скоро у костра",
-            _ => "Читать",
+            MenuScreen.Progress.InProgress => "Вы остановились здесь",
+            MenuScreen.Progress.Locked => "Скоро",
+            _ => "Новая",
         };
 
-        /// "Начать сначала" at the bottom right of the row: the first tap asks, the second one starts over.
-        void Restart(RectTransform row, ChapterEntry chapter, Text line)
+        /// "Продолжить" and, beside it, "Начать сначала": the first tap asks, the second one starts over.
+        void Resume(RectTransform row, ChapterEntry chapter, Text line)
         {
-            var link = Ui.Img(row, "Restart", ProceduralArt.White);
-            link.color = Color.clear; link.raycastTarget = true;
-            Ui.Box(link.rectTransform, A.MidRight, A.MidRight, new Vector2(-12, 2), new Vector2(48, 48));
-            Ui.Icon(link.rectTransform, "Icon", "restart", A.Center, A.Center, Vector2.zero, 24, Theme.Scarlet);
+            var go = Parts.Button(row, "Читать", ButtonStyle.Primary, () => open(chapter, false), 40);
+            Ui.Box(go.Root, A.MidRight, A.MidRight, new Vector2(-6, 0), new Vector2(76, 40));
+            go.Label.fontSize = Kit.FsBody;
+
+            var again = Parts.IconButton(row, "shuffle", null, 40, circle: false);
+            Ui.Box(again.Root, A.MidRight, A.MidRight, new Vector2(-6 - 76 - Kit.Space2, 0), new Vector2(40, 40));
             var armed = false;
-            PressButton.On(link.gameObject, () =>
+            again.Press.Click = () =>
             {
                 if (armed) { open(chapter, true); return; }
                 armed = true;                                  // the first tap asks: the progress will be lost
                 line.text = "Прогресс сотрётся. Ещё раз — сначала";
-                line.color = Theme.Scarlet;
+                line.color = Kit.Danger;
                 if (anim.Enabled) anim.Play(Effects.Shake(line.rectTransform));
                 anim.Play(Tween.After(3f, () =>
                 {
                     if (!line) return;
-                    armed = false; line.text = Line(MenuScreen.Progress.InProgress); line.color = Theme.Ink.WithAlpha(.7f);
+                    armed = false; line.text = Line(MenuScreen.Progress.InProgress); line.color = Kit.Muted;
                 }));
-            }, .95f);
+            };
         }
     }
 }
