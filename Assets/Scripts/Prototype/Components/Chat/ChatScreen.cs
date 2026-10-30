@@ -66,8 +66,7 @@ namespace LegacyThroughTime.Prototype
             var top = Metrics.InsetTop + Viewport.ExtraTop;
             var bar = Ui.Rect(Root, "Bar");
             Ui.TopRow(bar, Metrics.Side - 8, Metrics.Side - 8, top, BarHeight);
-            var back = Ui.Icon(bar, "Back", "arrow", A.MidLeft, A.Center, new Vector2(22, 0), 22, Kit.Text);
-            back.rectTransform.localScale = new Vector3(-1, 1, 1);
+            var back = Kit.Icon(bar, "Back", Kit.Glyph("chevron-l"), 26, A.MidLeft, new Vector2(22, 0));
             back.raycastTarget = true;
             var hit = Ui.Img(bar, "BackHit", ProceduralArt.White);
             hit.color = Color.clear; hit.raycastTarget = true;
@@ -80,16 +79,14 @@ namespace LegacyThroughTime.Prototype
 
             energyPill = Kit.Round(bar, "Energy", Kit.Surface, 14).rectTransform;
             Ui.Box(energyPill, A.MidRight, A.MidRight, new Vector2(-48, 0), new Vector2(56, 28));
-            var bolt = Ui.Img(energyPill, "Bolt", ProceduralArt.Disc);
-            bolt.color = Kit.Energy;
-            Ui.Box(bolt.rectTransform, A.MidLeft, A.MidLeft, new Vector2(9, 0), new Vector2(10, 10));
+            Kit.Icon(energyPill, "Bolt", Kit.Pic("energy"), 20, A.MidLeft, new Vector2(13, 0)).raycastTarget = false;
             energyText = Ui.Txt(energyPill, "Value", energy.value.ToString(), Art.Sub, 15, Kit.Text, TextAnchor.MiddleCenter);
             Ui.Stretch(energyText.rectTransform, 22, 0, 4, 0);
 
             var flag = Ui.Img(bar, "Report", ProceduralArt.White);
             flag.color = Color.clear; flag.raycastTarget = true;
             Ui.Box(flag.rectTransform, A.MidRight, A.MidRight, Vector2.zero, new Vector2(44, 44));
-            Ui.Icon(flag.rectTransform, "Flag", "flag", A.Center, A.Center, Vector2.zero, 20, Kit.Muted);
+            Kit.Icon(flag.rectTransform, "Flag", Kit.Glyph("flag"), 24).raycastTarget = false;
             PressButton.On(flag.gameObject, Report, .9f);
 
             // ---- the feed and the bottom (no tab bar on this screen)
@@ -334,7 +331,7 @@ namespace LegacyThroughTime.Prototype
             send = Kit.Round(box.rectTransform, "Send", Kit.Accent, Kit.RadiusS);
             send.raycastTarget = true;
             Ui.Box(send.rectTransform, A.MidRight, A.MidRight, new Vector2(-4, 0), new Vector2(44, 44));
-            Ui.Icon(send.rectTransform, "Arrow", "arrow", A.Center, A.Center, Vector2.zero, 20, Kit.AccentInk);
+            Kit.Icon(send.rectTransform, "Arrow", Kit.Glyph("arrow-right", ink: true), 24).raycastTarget = false;
             sendButton = PressButton.On(send.gameObject, SendField, .92f);
             ShowSend();
         }
