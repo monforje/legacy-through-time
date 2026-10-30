@@ -80,7 +80,7 @@ namespace LegacyThroughTime.Prototype
             Ui.TopRow(head.rectTransform, 46, 12, 6, 22);
             lineText = Ui.Txt(rt, "Line", line, Kit.F700, Kit.FsSmall, Kit.Muted);
             Ui.TopRow(lineText.rectTransform, 46, 12, 28, 18);
-            press = PressButton.On(row.gameObject, tap ?? (() => { }), .98f, row);
+            press = PressButton.On(row.gameObject, tap ?? (() => { }), .98f, row, null, Kit.Surface);
             return rt;
         }
 

@@ -57,7 +57,7 @@ namespace LegacyThroughTime.Prototype
         /// Durations of the motion tokens in seconds (kit.css --dur-*). One place: change here, not at the call.
         public static class Dur
         {
-            public const float Fast = .12f, Normal = .2f, Slow = .32f, Stagger = .04f, Spin = 3.6f, Net = .9f;
+            public const float Fast = .12f, Normal = .2f, Slow = .32f, Stagger = .04f, Spin = 3.6f, Net = .9f, Loop = .8f, Shimmer = 1.4f, Pulse = 1.6f, Float = 3.2f;
         }
 
         // ------------------------------------------------------------------ icons

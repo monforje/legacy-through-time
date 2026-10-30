@@ -12,6 +12,9 @@ namespace LegacyThroughTime.Prototype
         public bool Interactable = true;
         public Image Face;
         public Sprite Normal, Pressed;
+        /// A row's highlight while the finger is down (kit.css `.row:active`): the colour of its rounded face turns to this.
+        public bool Tint;
+        public Color NormalColor, PressedColor;
         public float PressScale = .97f;
         bool down;
 
@@ -26,13 +29,14 @@ namespace LegacyThroughTime.Prototype
             down = on;
             transform.localScale = on ? Vector3.one * PressScale : Vector3.one;
             if (Face && Pressed && Interactable) Face.sprite = on ? Pressed : Normal;
+            if (Face && Tint && Interactable) Face.color = on ? PressedColor : NormalColor;
         }
 
         /// Drops the pressed look (the button is about to change state).
-        public void Settle() { down = false; transform.localScale = Vector3.one; }
+        public void Settle() { down = false; transform.localScale = Vector3.one; if (Face && Tint) Face.color = NormalColor; }
 
         /// Makes any image react like a button.
-        public static PressButton On(GameObject go, Action click, float pressScale = .97f, Image face = null, string pressedSprite = null)
+        public static PressButton On(GameObject go, Action click, float pressScale = .97f, Image face = null, string pressedSprite = null, Color? pressedColor = null)
         {
             var b = go.AddComponent<PressButton>();
             b.Click = click; b.PressScale = pressScale;
@@ -41,6 +45,7 @@ namespace LegacyThroughTime.Prototype
                 face.raycastTarget = true;
                 b.Face = face; b.Normal = face.sprite;
                 if (pressedSprite != null) b.Pressed = Art.Sprite(pressedSprite);
+                if (pressedColor.HasValue) { b.Tint = true; b.NormalColor = face.color; b.PressedColor = pressedColor.Value; }
             }
             return b;
         }

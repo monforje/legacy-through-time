@@ -358,6 +358,10 @@ namespace LegacyThroughTime.Prototype
                               Kit.Muted, TextAnchor.MiddleLeft);
             Ui.Stretch(hint.rectTransform, 16, 6, 56, 6);
 
+            // the field's outline while it is typed in: 3 px of accent, 2 px off the box
+            var outline = Ui.Img(box.rectTransform, "Focus", ProceduralArt.RoundedRing(Kit.RadiusM + 5, 3), Image.Type.Sliced);
+            outline.color = Kit.Accent; outline.raycastTarget = false; outline.enabled = false;
+            Ui.Stretch(outline.rectTransform, -5, -5, -5, -5);
             var keep = input ? input.text : "";
             input = box.gameObject.AddComponent<InputField>();
             input.targetGraphic = box; input.textComponent = text; input.placeholder = hint;
@@ -370,6 +374,7 @@ namespace LegacyThroughTime.Prototype
             input.onSubmit.AddListener(_ => SendField());
             input.onValueChanged.AddListener(_ => ShowSend());
 
+            box.gameObject.AddComponent<FocusWatch>().Set(input, outline);
             send = Kit.Round(box.rectTransform, "Send", Kit.Accent, Kit.RadiusS);
             send.raycastTarget = true;
             Ui.Box(send.rectTransform, A.MidRight, A.MidRight, new Vector2(-4, 0), new Vector2(44, 44));

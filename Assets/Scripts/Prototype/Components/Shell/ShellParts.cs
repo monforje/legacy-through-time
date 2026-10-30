@@ -103,6 +103,31 @@ namespace LegacyThroughTime.Prototype
             }
         }
 
+        /// A box that shimmers while something loads (kit.css `.skeleton`): the band runs across it, 1.4 s a pass.
+        public static Image Skeleton(Transform parent, IAnimator anim, int radius = Kit.RadiusS)
+        {
+            var box = Kit.Round(parent, "Skeleton", Kit.Surface, radius);
+            box.raycastTarget = false;
+            box.gameObject.AddComponent<Mask>().showMaskGraphic = true;
+            var band = Ui.Img(box.rectTransform, "Band", ProceduralArt.Shimmer);
+            band.raycastTarget = false;
+            var rt = band.rectTransform;
+            rt.anchorMin = new Vector2(0, 0); rt.anchorMax = new Vector2(2, 1); rt.pivot = new Vector2(0, .5f);
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            if (anim != null && anim.Enabled) anim.Play(Shimmer(box.rectTransform, rt));
+            return box;
+        }
+
+        static System.Collections.IEnumerator Shimmer(RectTransform box, RectTransform band)
+        {
+            for (var t = 0f; box && band; t += Time.unscaledDeltaTime)
+            {
+                var w = box.rect.width;
+                band.anchoredPosition = new Vector2(Mathf.Lerp(w, -w, t / Kit.Dur.Shimmer % 1f), 0);
+                yield return null;
+            }
+        }
+
         /// Two pills side by side, each half of the row (a gap of 8 between them): the row stretches with the screen.
         public static void TwoPills(ShellPill left, ShellPill right)
         {
@@ -164,6 +189,11 @@ namespace LegacyThroughTime.Prototype
         {
             var box = Kit.Round(parent, "Search", Kit.Surface, Kit.RadiusS);
             box.raycastTarget = true;
+            // `box-shadow: inset 0 0 0 1px surface-2`, and 2 px of accent while it is being typed in
+            var rim = Ui.Img(box.rectTransform, "Rim", ProceduralArt.RoundedRing(Kit.RadiusS, 1), Image.Type.Sliced);
+            rim.color = Kit.Surface2; rim.raycastTarget = false; Ui.Stretch(rim.rectTransform);
+            var focusRing = Ui.Img(box.rectTransform, "Focus", ProceduralArt.RoundedRing(Kit.RadiusS, 2), Image.Type.Sliced);
+            focusRing.color = Kit.Accent; focusRing.raycastTarget = false; focusRing.enabled = false; Ui.Stretch(focusRing.rectTransform);
             box.rectTransform.sizeDelta = new Vector2(box.rectTransform.sizeDelta.x, 36);
             var glyph = Kit.Icon(box.rectTransform, "Glyph", Kit.Glyph("search"), 18, A.MidLeft, new Vector2(20, 0));
             glyph.raycastTarget = false; glyph.color = new Color(1, 1, 1, .6f);
@@ -178,6 +208,7 @@ namespace LegacyThroughTime.Prototype
             field.caretColor = Kit.Text; field.customCaretColor = true;
             field.selectionColor = Kit.Accent.WithAlpha(.35f);
             var search = new ShellSearch { Root = box.rectTransform, Field = field };
+            box.gameObject.AddComponent<FocusWatch>().Set(field, focusRing);
 
             var clear = Ui.Img(box.rectTransform, "Clear", ProceduralArt.White);
             clear.color = Color.clear; clear.raycastTarget = true;
@@ -202,14 +233,24 @@ namespace LegacyThroughTime.Prototype
         /// A ready button breathes (the owner runs it while this is true).
         public bool Pulsing;
         bool loading;
-        Image[] dots;
+        Image spinner, skeleton;
 
         /// A button that cannot be pressed now: 45% opaque, as in the kit.
         public void SetEnabled(bool on) { Press.Interactable = on && !loading; Group.alpha = on ? 1 : .45f; }
 
         public void SetLabel(string text) { if (Label) Label.text = text; }
 
-        /// Three dots instead of the label while the action runs; the taps are ignored meanwhile.
+        /// A shimmering skeleton instead of the button while its text (a price) is not known yet; no taps meanwhile.
+        public void SetSkeleton(bool on, IAnimator anim)
+        {
+            if (on == (skeleton != null)) return;
+            Press.Interactable = !on && !loading;
+            if (Label) Label.enabled = !on && !loading;
+            if (on) { var s = Parts.Skeleton(Root, anim, Kit.RadiusM); Ui.Stretch(s.rectTransform); skeleton = s; }
+            else { UnityEngine.Object.Destroy(skeleton.gameObject); skeleton = null; }
+        }
+
+        /// The ring of the kit turns instead of the label while the action runs (800 ms a turn); the taps are ignored meanwhile.
         public void SetLoading(bool on, IAnimator anim)
         {
             if (loading == on) return;
@@ -217,29 +258,33 @@ namespace LegacyThroughTime.Prototype
             if (Label) Label.enabled = !on;
             if (on)
             {
-                dots = new Image[3];
-                for (var i = 0; i < 3; i++)
-                {
-                    dots[i] = Ui.Img(Root, "Dot", ProceduralArt.Disc);
-                    dots[i].raycastTarget = false; dots[i].color = Ink;
-                    Ui.Box(dots[i].rectTransform, A.Center, A.Center, new Vector2((i - 1) * 12, 0), new Vector2(7, 7));
-                }
-                if (anim != null && anim.Enabled) anim.Play(Pulse());
+                spinner = Ui.Img(Root, "Spinner", ProceduralArt.Spinner);
+                spinner.raycastTarget = false; spinner.color = Ink;
+                Ui.Box(spinner.rectTransform, A.Center, A.Center, Vector2.zero, new Vector2(18, 18));
+                if (anim != null && anim.Enabled) anim.Play(Spin());
             }
-            else if (dots != null) { foreach (var d in dots) if (d) UnityEngine.Object.Destroy(d.gameObject); dots = null; }
+            else if (spinner) { UnityEngine.Object.Destroy(spinner.gameObject); spinner = null; }
         }
 
-        System.Collections.IEnumerator Pulse()
+        System.Collections.IEnumerator Spin()
         {
-            var t = 0f;
-            while (loading && dots != null)
+            for (var t = 0f; loading && spinner; t += Time.unscaledDeltaTime)
             {
-                for (var i = 0; i < dots.Length; i++)
-                    if (dots[i]) dots[i].color = Ink.WithAlpha(.3f + .7f * Mathf.Max(0, Mathf.Sin((t * 6f) - i * .9f)));
-                t += Time.unscaledDeltaTime;
+                spinner.rectTransform.localRotation = Quaternion.Euler(0, 0, -360f * (t / Kit.Dur.Loop % 1f));
                 yield return null;
             }
         }
+    }
+
+    /// Shows a ring while an input field has the focus.
+    sealed class FocusWatch : MonoBehaviour
+    {
+        InputField field;
+        Graphic ring;
+
+        public void Set(InputField field, Graphic ring) { this.field = field; this.ring = ring; }
+
+        void Update() { if (ring && field) ring.enabled = field.isFocused; }
     }
 
     sealed class ShellPill

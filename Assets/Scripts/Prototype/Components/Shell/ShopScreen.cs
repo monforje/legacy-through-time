@@ -229,7 +229,12 @@ namespace LegacyThroughTime.Prototype
         {
             if (!Root) return;
             foreach (var (offer, button) in buttons)
-                button.SetLabel(Store.Price(offer.Id) ?? offer.Placeholder);
+            {
+                var price = Store.Price(offer.Id);
+                button.SetLabel(price ?? offer.Placeholder);
+                // on a device the price comes from the store: the button shimmers until it is known
+                button.SetSkeleton(price == null && !Application.isEditor && Store.Status == Store.State.Connecting, anim);
+            }
         }
 
         void Rise(RectTransform list)

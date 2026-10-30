@@ -124,10 +124,10 @@ namespace LegacyThroughTime.Prototype
 
             if (locked)
             {
-                PressButton.On(row.gameObject, () => { if (anim.Enabled) anim.Play(Effects.Shake(rt)); }, .99f);
+                PressButton.On(row.gameObject, () => { if (anim.Enabled) anim.Play(Effects.Shake(rt)); }, .99f, row, null, Kit.Surface2);
                 return;
             }
-            PressButton.On(row.gameObject, () => open(chapter, !current), .98f);
+            PressButton.On(row.gameObject, () => open(chapter, !current), .98f, row, null, current ? Kit.Surface2.WithAlpha(1) : Kit.Surface2);
             if (!current) return;
             var go = Parts.Button(rt, "Читать", ButtonStyle.Primary, () => open(chapter, false), Kit.Touch);
             Ui.Box(go.Root, A.MidRight, A.MidRight, new Vector2(-12, 0), new Vector2(84, Kit.Touch));

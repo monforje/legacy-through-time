@@ -35,7 +35,7 @@ namespace LegacyThroughTime.Prototype
                 rule.color = Kit.Surface2; rule.raycastTarget = false;
                 Ui.BottomRow(rule.rectTransform, RowInset, RowInset, 0, 1);
             }
-            if (tap != null) PressButton.On(face.gameObject, tap, .985f, face);
+            if (tap != null) PressButton.On(face.gameObject, tap, .985f, face, null, Kit.Surface2);
             return face.rectTransform;
         }
 

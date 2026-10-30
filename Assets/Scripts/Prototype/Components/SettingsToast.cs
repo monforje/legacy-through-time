@@ -185,13 +185,13 @@ namespace LegacyThroughTime.Prototype
                 var tap = rows[i].tap;
                 var row = Row(card, i, rows[i].glyph, rows[i].label);
                 Kit.Icon(row, "Chevron", Kit.Glyph("chevron-r"), 22, A.MidRight, new Vector2(-12, 0)).raycastTarget = false;
-                PressButton.On(row.gameObject, tap, .98f);
+                PressButton.On(row.gameObject, tap, .98f, row.GetComponent<Image>(), null, Kit.Surface2);
             }
             if (toMenu != null)
             {
                 var row = Row(card, rows.Length, "back", "В меню");
                 Kit.Icon(row, "Chevron", Kit.Glyph("chevron-r"), 22, A.MidRight, new Vector2(-12, 0)).raycastTarget = false;
-                PressButton.On(row.gameObject, () => { Close(); toMenu(); }, .98f);
+                PressButton.On(row.gameObject, () => { Close(); toMenu(); }, .98f, row.GetComponent<Image>(), null, Kit.Surface2);
             }
             return count * RowHeight + 2 * GroupPad;
         }

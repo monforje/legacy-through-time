@@ -156,6 +156,20 @@ namespace LegacyThroughTime.Editor
             });
 
             Add("chats", c => Menu(c, terms).Select(MenuScreen.Tab.Chat));
+            Add("chats-three", c =>                                       // several rows: the lines between them, the unread badges, the times
+            {
+                Backdrop(c, "menu_campfire");
+                var now = DateTime.Now;
+                long Ms(TimeSpan ago) => new DateTimeOffset(now - ago).ToUnixTimeMilliseconds();
+                var rows = new List<ChatRow>
+                {
+                    new ChatRow { Story = StoryCatalog.All[0], Hero = "Сююмбике", Preview = "Привет. Я рада, что ты пришёл. О чём поговорим сегодня вечером, пока нет ветра?", At = Ms(TimeSpan.FromMinutes(20)), Unread = 2 },
+                    new ChatRow { Story = StoryCatalog.All[1], Hero = "Зилант", Preview = "Холм помнит всё.", At = Ms(TimeSpan.FromDays(1)), Unread = 0 },
+                    new ChatRow { Story = StoryCatalog.All[2], Hero = "Шурале", Preview = null, At = Ms(TimeSpan.FromDays(3)), Unread = 12 },
+                };
+                new ChatsPanel(c, rows, _ => { }, () => { }, now, NoAnimator.Instance);
+                var nav = new ShellNav(c, new[] { ("book", "Истории"), ("chat", "Чат"), ("wheel", "Колесо"), ("star", "Слова"), ("gift", "Награды") }, 1, _ => { });
+            });
             Add("chat", c => Chat(c, said: 2, energy: 7));
             Add("chat-long", c => Chat(c, said: 3, energy: 6, longReply: true));
             Add("chat-empty-energy", c => Chat(c, said: 2, energy: 0));

@@ -70,7 +70,7 @@ namespace LegacyThroughTime.Prototype
             Ui.TopRow(head.rectTransform, 68, 44, 16, 20);
             MenuUi.Fit(head, 11);
             var count = TermsOf(story).Count;
-            var line = Ui.Txt(rt, "Line", story.Soon ? "Скоро" : $"Открыто {Opened(story)} из {count}", Kit.F600, Kit.FsSmall, Kit.Muted);
+            var line = Ui.Txt(rt, "Line", story.Soon ? "Скоро" : count == 0 ? "Слов пока нет" : $"Открыто {Opened(story)} из {count}", Kit.F600, Kit.FsSmall, Kit.Muted);
             Ui.TopRow(line.rectTransform, 68, 44, 38, 18);
             Kit.Icon(rt, "Chevron", Kit.Glyph("chevron-r"), 22, A.MidRight, new Vector2(-Kit.Space2, 0)).raycastTarget = false;
             return rt;
@@ -123,7 +123,7 @@ namespace LegacyThroughTime.Prototype
                     var name = term.Name;
                     var row = WordRow_(content, term, y, width, expanded.Contains(name), out var height);
                     var rowRt = row;
-                    PressButton.On(row.gameObject, () => { if (!expanded.Remove(name)) expanded.Add(name); Rebuild(query); }, .985f, row.GetComponent<Image>());
+                    PressButton.On(row.gameObject, () => { if (!expanded.Remove(name)) expanded.Add(name); Rebuild(query); }, .985f, row.GetComponent<Image>(), null, Kit.Surface2);
                     y += height;
                 }
                 if (q.Length == 0)
@@ -195,7 +195,7 @@ namespace LegacyThroughTime.Prototype
             Ui.TopRow(head.rectTransform, 46, 12, 6, 22);
             var line = Ui.Txt(rt, "Line", "Откроется позже в истории", Kit.F700, Kit.FsSmall, Kit.Muted);
             Ui.TopRow(line.rectTransform, 46, 12, 28, 18);
-            PressButton.On(face.gameObject, () => { if (anim.Enabled) anim.Play(Effects.Shake(rt)); }, .99f);
+            PressButton.On(face.gameObject, () => { if (anim.Enabled) anim.Play(Effects.Shake(rt)); }, .99f, face, null, Kit.Surface2);
         }
 
         /// The word on its own (kept for the tools): its story opens with it expanded.
