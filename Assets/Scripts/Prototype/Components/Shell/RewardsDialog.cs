@@ -14,6 +14,8 @@ namespace LegacyThroughTime.Prototype
         readonly ShellDialog dialog;
         readonly IAnimator anim;
         readonly List<Row> rows = new();
+        readonly Func<int> chaptersRead;
+        const string ChapterClaimed = "reward:chapter:claimed";
 
         sealed class Row
         {
@@ -28,9 +30,9 @@ namespace LegacyThroughTime.Prototype
         public bool IsOpen => dialog.IsOpen;
         public void Close() => dialog.Close();
 
-        public RewardsDialog(Transform parent, IAnimator anim, Action closed)
+        public RewardsDialog(Transform parent, IAnimator anim, Action closed, Func<int> chaptersRead = null)
         {
-            this.anim = anim;
+            this.anim = anim; this.chaptersRead = chaptersRead ?? (() => 0);
             dialog = new ShellDialog(parent, "Награды", anim, closed);
             var list = MenuUi.List(dialog.Content, 0, 0, 0);
             var band = Kit.Round(list, "Band", Kit.Surface2, Kit.RadiusM);
@@ -127,16 +129,30 @@ namespace LegacyThroughTime.Prototype
             foreach (var row in rows)
             {
                 if (row.Claimed || !row.Timer) continue;
-                var left = row.Kind.Id == "chapter" ? 1 : ShellPurse.Remaining(row.Kind, now);
-                row.Timer.text = row.Kind.Id == "chapter" ? "0 из 1" : Rewards.Clock(left);
+                if (row.Kind.Id == "chapter") { TickChapter(row); continue; }
+                var left = ShellPurse.Remaining(row.Kind, now);
+                row.Timer.text = Rewards.Clock(left);
                 if (row.Kind.Id == "energy" && left == 0 && ShellPurse.Take(row.Kind, now))
                     ShellToast.Show(dialog.Root, "Бесплатная энергия: +" + row.Kind.Energy, anim, 2.5f, 52);
                 if (row.Action == null) continue;
-                var ready = row.Kind.Id != "chapter" && left == 0;
+                var ready = left == 0;
                 row.Action.SetEnabled(ready);
                 if (row.Lock != null) row.Lock.Root.gameObject.SetActive(!ready);
                 if (ready && anim.Enabled && !row.Action.Pulsing) { row.Action.Pulsing = true; anim.Play(Pulse(row)); }
             }
+        }
+
+        /// The reward for a chapter: "0 из 1" until a chapter is read to the end, then "Получить" once.
+        void TickChapter(Row row)
+        {
+            var claimed = PlayerPrefs.GetInt(ChapterClaimed, 0) == 1;
+            var done = Mathf.Min(1, chaptersRead());
+            row.Timer.text = (claimed ? 1 : done) + " из 1";
+            if (claimed) { row.Claimed = true; row.Action.SetLabel("Получено"); row.Action.SetEnabled(false); return; }
+            var ready = done >= 1;
+            row.Action.SetLabel(ready ? "Получить" : "Не готово");
+            row.Action.SetEnabled(ready);
+            if (ready && anim.Enabled && !row.Action.Pulsing) { row.Action.Pulsing = true; anim.Play(Pulse(row)); }
         }
 
         /// A reward that is ready breathes a little (a scale pulse, no glow) until it is taken.
@@ -163,7 +179,13 @@ namespace LegacyThroughTime.Prototype
             {
                 if (!dialog.IsOpen) return;
                 button.SetLoading(false, anim);
-                if (!ShellPurse.Take(row.Kind, DateTime.Now)) return;
+                if (row.Kind.Id == "chapter")
+                {
+                    if (PlayerPrefs.GetInt(ChapterClaimed, 0) == 1 || chaptersRead() < 1) return;
+                    PlayerPrefs.SetInt(ChapterClaimed, 1); PlayerPrefs.Save();
+                    ShellPurse.AddGems(row.Kind.Gems);
+                }
+                else if (!ShellPurse.Take(row.Kind, DateTime.Now)) return;
                 row.Claimed = row.Kind.Id == "daily" || row.Kind.Id == "chapter";
                 if (row.Claimed) { button.SetLabel("Получено"); button.SetEnabled(false); }
                 var gives = row.Kind.Gems > 0 ? row.Kind.Gems + " " + ShopCatalog.Plural(row.Kind.Gems, "алмаз", "алмаза", "алмазов") : row.Kind.Energy + " энергии";

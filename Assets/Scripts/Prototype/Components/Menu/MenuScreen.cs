@@ -147,7 +147,7 @@ namespace LegacyThroughTime.Prototype
         {
             if (rewards != null && rewards.IsOpen) return;
             CloseWheel();
-            rewards = new RewardsDialog(Layer, anim, () => { rewards = null; nav.Show(Array.IndexOf(Bar, tab)); });
+            rewards = new RewardsDialog(Layer, anim, () => { rewards = null; nav.Show(Array.IndexOf(Bar, tab)); }, ChaptersRead);
             nav.Show(Array.IndexOf(Bar, Tab.Rewards));
         }
 
@@ -179,6 +179,16 @@ namespace LegacyThroughTime.Prototype
         /// For the tools (smoke, screenshots): the chapters of a story, a turn of the deck, a word of the library.
         public void ShowChapters(StoryEntry story) => OpenChapters(story);
         public void Turn(int step) => home.Turn(step);
+
+        /// How many chapters have been read to the end (the reward for a chapter waits for the first).
+        int ChaptersRead()
+        {
+            var n = 0;
+            foreach (var story in stories)
+                foreach (var c in story.Chapters)
+                    if (!c.Soon && progress(c) == Progress.Finished) n++;
+            return n;
+        }
 
         /// A story the reader has begun (a chapter in progress or read): its hero is in the chats.
         bool Started(StoryEntry story)

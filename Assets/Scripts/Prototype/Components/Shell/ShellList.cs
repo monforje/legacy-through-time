@@ -51,6 +51,7 @@ namespace LegacyThroughTime.Prototype
             var line = Ui.Txt(box, "Text", text, Kit.F600, Kit.FsSmall, Kit.Muted, TextAnchor.UpperCenter);
             Ui.TopRow(line.rectTransform, 50, 50, 152, 36);
             var button = Parts.Button(box, "К историям", ButtonStyle.Primary, toStories, Kit.Touch);
+            button.Face.gameObject.name = "ToStories";
             Ui.Box(button.Root, A.TopCenter, A.TopCenter, new Vector2(0, -204), new Vector2(button.Label.preferredWidth + 2 * Kit.Space4, Kit.Touch));
             if (anim != null && anim.Enabled) anim.Play(Parts.Float(picture.rectTransform));
         }

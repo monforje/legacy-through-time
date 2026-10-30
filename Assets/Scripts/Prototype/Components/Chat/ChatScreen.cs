@@ -68,6 +68,7 @@ namespace LegacyThroughTime.Prototype
             var bar = Ui.Rect(Root, "Bar");
             Ui.TopRow(bar, Kit.Side, Kit.Side, top, Kit.Touch);
             var back = Parts.IconButton(bar, "chevron-l", () => Leave(), Kit.Touch);
+            back.Face.gameObject.name = "BackHit";
             Ui.Box(back.Root, A.MidLeft, A.MidLeft, Vector2.zero, new Vector2(Kit.Touch, Kit.Touch));
             var avatar = Kit.Avatar(bar, story.Hero, story.Id, 40);
             Ui.Box(avatar.rectTransform, A.MidLeft, A.MidLeft, new Vector2(52, 0), new Vector2(40, 40));
